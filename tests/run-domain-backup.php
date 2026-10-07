@@ -7,6 +7,7 @@ define( 'WP_CONTENT_DIR', $root . '/web/wp-content' );
 define( 'ARRAY_A', 'ARRAY_A' );
 define( 'DAY_IN_SECONDS', 86400 );
 define( 'MINUTE_IN_SECONDS', 60 );
+require_once __DIR__ . '/support/option-database.php';
 
 if ( ! class_exists( 'WP_Error' ) ) {
 	class WP_Error {
@@ -39,10 +40,15 @@ final class BackupFakeWpdb {
 	public $last_error = '';
 	public $tables = array();
 	public $saw_backup_lock = false;
+	public $generation_read_error = false;
 	public function prepare( $query, ...$args ) { return array( 'query' => $query, 'args' => $args ); }
 	public function get_var( $p ) {
 		$this->last_error = '';
+		if ( is_string( $p ) && 'SELECT @@SESSION.innodb_lock_wait_timeout' === $p ) { return 50; }
 		$q = $p['query']; $a = $p['args'];
+		if ( $this->generation_read_error && strpos( $q, 'SELECT option_value' ) === 0 && ( $a[1] ?? '' ) === 'certloom_domain_data_generation' ) { $this->last_error = 'generation read failed'; return null; }
+		if ( strpos( $q, 'SELECT ENGINE' ) === 0 ) { return 'InnoDB'; }
+		if ( strpos( $q, 'SELECT option_value' ) === 0 && ( $a[1] ?? '' ) === 'certloom_domain_write_fence' ) { return '1'; }
 		if ( strpos( $q, 'SELECT GET_LOCK' ) === 0 || strpos( $q, 'SELECT RELEASE_LOCK' ) === 0 ) return '1';
 		if ( strpos( $q, 'SELECT option_value' ) === 0 ) return $GLOBALS['db_options'][$a[1]] ?? null;
 		if ( strpos( $q, 'SELECT option_name' ) === 0 ) { foreach ( array_slice($a,1) as $key ) if (isset($GLOBALS['db_options'][$key])) return $key; }
@@ -74,6 +80,8 @@ final class BackupFakeWpdb {
 		return array( 'row_count' => count( $rows ), 'max_id' => $max );
 	}
 	public function get_results( $prepared, $format ) {
+		$options = certloom_test_option_rows( $prepared, $GLOBALS['db_options'] );
+		if ( null !== $options ) { return $options; }
 		$args = $prepared['args'];
 		$table = $args[0] ?? '';
 		$after = (int) ( $args[1] ?? 0 );
@@ -181,6 +189,19 @@ db_same( false, file_exists( $path2 ), 'mixed backup deleted' );
 echo "PASS  concurrent domain generation change rejects and deletes mixed-state backup\n";
 
 
+// A failed final marker read must delete an unverifiable file rather than publish it.
+$unverifiable = $builder->start( str_repeat( '7', 32 ), '1.5.4' );
+db_same( false, is_wp_error( $unverifiable ), 'unverifiable backup start' );
+$unverifiable_path = $unverifiable['path'];
+while ( $unverifiable['entity_index'] < $last_index ) { $unverifiable = $builder->continue_build( $unverifiable, 500 ); }
+$unverifiable = $builder->continue_build( $unverifiable, 500 );
+$GLOBALS['wpdb']->generation_read_error = true;
+$unverifiable = $builder->continue_build( $unverifiable, 500 );
+$GLOBALS['wpdb']->generation_read_error = false;
+db_same( 'certloom_domain_generation_read_failed', $unverifiable->get_error_code(), 'failed final marker read refuses acceptance' );
+db_same( false, file_exists( $unverifiable_path ), 'unverifiable backup deleted' );
+echo "PASS  failed final generation read rejects and deletes an unverifiable backup\n";
+
 // Configuration changes must also invalidate an otherwise generation-stable backup.
 $GLOBALS['db_options']['certloom_domain_data_generation'] = 'generation-4';
 $GLOBALS['db_options']['certverify_settings'] = array( 'verification_page' => 10 );
@@ -274,7 +295,7 @@ echo "PASS  domain-state fingerprint can retain one owner-matched maintenance bo
 $generation_saved = $GLOBALS['db_options']['certloom_domain_data_generation'];
 $GLOBALS['db_options']['certloom_domain_data_generation'] = '';
 $fp_bad_start = $fingerprinter->start( str_repeat( '1', 32 ) );
-db_same( 'certloom_domain_fingerprint_snapshot_invalid', $fp_bad_start->get_error_code(), 'invalid fingerprint boundary rejected' );
+db_same( 'certloom_domain_generation_read_failed', $fp_bad_start->get_error_code(), 'invalid fingerprint boundary rejected at its fresh database read' );
 db_same( false, array_key_exists( 'certloom_domain_maintenance_lock', $GLOBALS['db_options'] ), 'invalid fingerprint boundary releases maintenance lease' );
 $GLOBALS['db_options']['certloom_domain_data_generation'] = $generation_saved;
 echo "PASS  invalid fingerprint start boundary releases its maintenance lease\n";
@@ -293,4 +314,4 @@ db_rm( $root );
 @unlink( $count_bad );
 @unlink( $trailing );
 @unlink( $unsupported );
-echo "\n12 tests, 0 failures\n";
+echo "\n13 tests, 0 failures\n";

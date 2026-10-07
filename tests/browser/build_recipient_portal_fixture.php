@@ -1,5 +1,7 @@
 <?php
 /** Browser-only POR-01 Recipient Portal layout fixture. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $state = getenv( 'CERTLOOM_RECIPIENT_PORTAL_STATE' );
 $allowed = array( 'cards', 'grid', 'table', 'logged_out', 'unlinked', 'authority_ready', 'empty' );
 if ( ! in_array( $state, $allowed, true ) ) { $state = 'cards'; }

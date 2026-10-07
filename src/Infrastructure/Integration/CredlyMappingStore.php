@@ -5,6 +5,9 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 /** Server-owned Certloom Program → Credly badge-template mappings. */
 final class CredlyMappingStore {
+	public function validate_recovery_value( $value ) {
+		return \Certloom\Application\Restore\WholeStateOptionRows::validate( $value, 1, 'mappings', self::MAX_MAPPINGS, function ( array $row ) { return $this->normalize( $row, false ); }, array( 'program_id' ), 'program_id' );
+	}
 	const OPTION = 'certloom_credly_mappings_v1';
 	const MAX_MAPPINGS = 500;
 
@@ -75,7 +78,6 @@ final class CredlyMappingStore {
 	/** @return true|\WP_Error */
 	private function persist( array $mappings ) {
 		$payload = array( 'schema_version' => 1, 'mappings' => $mappings );
-		$saved = update_option( self::OPTION, $payload, false );
-		return $saved || $payload === get_option( self::OPTION, null ) ? true : new \WP_Error( 'certloom_credly_mapping_save_failed', __( 'Certloom could not save the Credly mapping.', 'certloom' ) );
+		return ( new \Certloom\Infrastructure\Data\DurableOptionMutation() )->set( self::OPTION, $payload );
 	}
 }

@@ -1,5 +1,7 @@
 <?php
 /** Pure public visibility/presenter tests. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define( 'ABSPATH', __DIR__ . '/fake-wp/' );
 require_once __DIR__ . '/bootstrap-autoload.php';
 use Certloom\Application\PublicCredentialPresenter;

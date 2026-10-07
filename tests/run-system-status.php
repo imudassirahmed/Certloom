@@ -1,5 +1,7 @@
 <?php
 /** Regression tests for privacy-conscious, read-only Certloom system diagnostics. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define( 'ABSPATH', __DIR__ . '/fake-wp/' );
 define( 'MB_IN_BYTES', 1024 * 1024 );
 define( 'MINUTE_IN_SECONDS', 60 );
@@ -75,7 +77,7 @@ $authority_corrupt=Ecapla_CertVerify_System_Status::get_checks();
 ss_assert( 'bad' === ss_find( $authority_corrupt, 'authority' )['status'], 'Corrupt non-empty authority state should be visible as fail-closed.' );
 $GLOBALS['system_status_options']['certloom_domain_write_authority']='legacy';
 ss_assert( 'good' === ss_find( $checks, 'domain_feature_gates' )['status'], 'All future-domain gates off should be healthy.' );
-ss_assert( 'warning' === ss_find( $checks, 'renderer_authority' )['status'] && false !== strpos( ss_find( $checks, 'renderer_authority' )['value'], 'Not accepted' ), 'Current release must report renderer authority as intentionally unopened while PDF-04 remains open.' );
+ss_assert( 'warning' === ss_find( $checks, 'renderer_authority' )['status'] && false !== strpos( ss_find( $checks, 'renderer_authority' )['value'], 'Awaiting release acceptance' ) && false !== strpos( ss_find( $checks, 'renderer_authority' )['note'], 'File downloads remain disabled' ), 'Current release must explain that downloads are unavailable while renderer acceptance remains open.' );
 ss_assert( 'warning' === ss_find( $checks, 'database_proof' )['status'], 'Database proof should request a run when no stored evidence exists.' );
 ss_assert( 'warning' === ss_find( $checks, 'domain_acceptance_proof' )['status'], 'Gated-domain proof should remain unavailable/not-run without its diagnostic class in this isolated status test.' );
 ss_assert( 0 === $GLOBALS['system_status_db_writes'], 'System diagnostics must be read-only.' );

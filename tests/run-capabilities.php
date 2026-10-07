@@ -1,5 +1,7 @@
 <?php
 /** Pure granular capability migration tests for 1.5.3. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define( 'ABSPATH', __DIR__ . '/fake-wp/' );
 define( 'DAY_IN_SECONDS', 86400 );
 define( 'ECAPLA_CERTVERIFY_CAP', 'manage_certverify' );

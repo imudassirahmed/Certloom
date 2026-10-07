@@ -1,5 +1,7 @@
 <?php
 /** INT-01 + LMSCTX-01 generic integration architecture gate. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define( 'ABSPATH', __DIR__ . '/' );
 if ( ! class_exists( 'WP_Error' ) ) { class WP_Error { private $c,$m,$d; public function __construct($c='',$m='',$d=null){$this->c=$c;$this->m=$m;$this->d=$d;} public function get_error_code(){return $this->c;} public function get_error_message(){return $this->m;} public function get_error_data(){return $this->d;} } }
 function is_wp_error($v){return $v instanceof WP_Error;} function __($v){return $v;} function absint($v){return abs((int)$v);} function sanitize_key($v){return strtolower(preg_replace('/[^a-z0-9_\-]/','',(string)$v));} function sanitize_text_field($v){return trim(strip_tags(preg_replace('/[\r\n\t]+/',' ',(string)$v)));} function sanitize_email($v){return filter_var((string)$v,FILTER_SANITIZE_EMAIL);} function is_email($v){return (bool)filter_var((string)$v,FILTER_VALIDATE_EMAIL);} function wp_json_encode($v,$flags=0){return json_encode($v,$flags);} function current_time($format,$gmt=false){return '2026-08-27 12:00:00';} function get_bloginfo($k){return 'Certloom Academy';}

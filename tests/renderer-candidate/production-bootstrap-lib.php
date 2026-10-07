@@ -6,6 +6,8 @@
  * two already-frozen renderer candidates plus the exact content-addressed font
  * store into the strict config consumed by produce-production-bundle.php.
  */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 require_once dirname( __DIR__ ) . '/bootstrap-autoload.php';
 require_once __DIR__ . '/frozen-candidate-lib.php';
 require_once dirname( __DIR__ ) . '/render-plan-reference/reference_lib.php';

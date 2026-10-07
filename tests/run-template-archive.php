@@ -1,5 +1,7 @@
 <?php
 /** Phase 4 Gamma-02 portable .certloom / .certloom-pack archive contract tests. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define( 'ABSPATH', __DIR__ . '/' );
 if ( ! class_exists( 'WP_Error' ) ) {
 	class WP_Error {

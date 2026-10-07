@@ -1,5 +1,7 @@
 <?php
 /** Pure commit-accounting/idempotency-boundary tests for domain import. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 if(!class_exists('WP_Error')){ class WP_Error{private $c,$m;function __construct($c='',$m=''){ $this->c=$c;$this->m=$m;} function get_error_code(){return $this->c;} function get_error_message(){return $this->m;} } }
 function is_wp_error($v){return $v instanceof WP_Error;} function absint($v){return abs((int)$v);} function sanitize_key($k){return strtolower(preg_replace('/[^a-z0-9_\-]/','',(string)$k));} function is_email($e){return false!==filter_var($e,FILTER_VALIDATE_EMAIL);}
 require_once __DIR__ . '/bootstrap-autoload.php';

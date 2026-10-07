@@ -39,7 +39,8 @@ final class IntegrationConfigurationDependencyGuard {
 	public function validate_program_context_change( array $program, ?array $proposed_assignment = null ) {
 		$program_id = absint( $program['id'] ?? 0 );
 		if ( ! $program_id ) { return true; }
-		foreach ( $this->mapping_sets() as $set ) {
+		$sets = $this->mapping_sets(); if ( is_wp_error( $sets ) ) { return $sets; }
+		foreach ( $sets as $set ) {
 			foreach ( $set['rows'] as $row ) {
 				if ( ! is_array( $row ) || empty( $row['active'] ) || absint( $row['program_id'] ?? 0 ) !== $program_id ) { continue; }
 				$batch = null;
@@ -51,7 +52,7 @@ final class IntegrationConfigurationDependencyGuard {
 						return $this->broken_mapping( $set['label'], __( 'its selected Batch no longer belongs to this Program', 'certloom' ) );
 					}
 				}
-				$valid = $this->targets->validate_snapshot( $program, is_array( $batch ) ? $batch : null, null, $proposed_assignment );
+				$valid = $this->targets->validate_snapshot( $program, is_array( $batch ) ? $batch : null, null, $proposed_assignment, $row['v2_fields'] ?? null );
 				if ( is_wp_error( $valid ) ) { return $this->wrap_context( $set['label'], $valid ); }
 			}
 		}
@@ -70,13 +71,14 @@ final class IntegrationConfigurationDependencyGuard {
 	public function validate_batch_context_change( array $program, array $batch, ?array $proposed_assignment = null ) {
 		$batch_id = absint( $batch['id'] ?? 0 );
 		if ( ! $batch_id ) { return true; }
-		foreach ( $this->mapping_sets() as $set ) {
+		$sets = $this->mapping_sets(); if ( is_wp_error( $sets ) ) { return $sets; }
+		foreach ( $sets as $set ) {
 			foreach ( $set['rows'] as $row ) {
 				if ( ! is_array( $row ) || empty( $row['active'] ) || absint( $row['batch_id'] ?? 0 ) !== $batch_id ) { continue; }
 				if ( absint( $row['program_id'] ?? 0 ) !== absint( $program['id'] ?? 0 ) ) {
 					return $this->broken_mapping( $set['label'], __( 'it points this Batch at a different Program', 'certloom' ) );
 				}
-				$valid = $this->targets->validate_snapshot( $program, $batch, null, $proposed_assignment );
+				$valid = $this->targets->validate_snapshot( $program, $batch, null, $proposed_assignment, $row['v2_fields'] ?? null );
 				if ( is_wp_error( $valid ) ) { return $this->wrap_context( $set['label'], $valid ); }
 			}
 		}
@@ -100,7 +102,8 @@ final class IntegrationConfigurationDependencyGuard {
 		if ( 'global' !== $scope_type && ! $scope_id ) { return true; }
 
 		$programs = new ProgramRepository();
-		foreach ( $this->mapping_sets() as $set ) {
+		$sets = $this->mapping_sets(); if ( is_wp_error( $sets ) ) { return $sets; }
+		foreach ( $sets as $set ) {
 			foreach ( $set['rows'] as $row ) {
 				if ( ! is_array( $row ) || empty( $row['active'] ) ) { continue; }
 				$program_id = absint( $row['program_id'] ?? 0 );
@@ -126,7 +129,8 @@ final class IntegrationConfigurationDependencyGuard {
 				$valid = $this->targets->validate_snapshot(
 					$program,
 					is_array( $batch ) ? $batch : null,
-					array( 'scope_type' => $scope_type, 'scope_id' => $scope_id )
+					array( 'scope_type' => $scope_type, 'scope_id' => $scope_id ),
+					null, $row['v2_fields'] ?? null
 				);
 				if ( is_wp_error( $valid ) ) {
 					return new \WP_Error(
@@ -151,7 +155,8 @@ final class IntegrationConfigurationDependencyGuard {
 		if ( ! $program_id ) { return true; }
 		$program = array( 'id' => $program_id, 'field_contract' => $program_contract );
 		$catalog = $this->catalog();
-		foreach ( $this->mapping_sets() as $set ) {
+		$sets = $this->mapping_sets(); if ( is_wp_error( $sets ) ) { return $sets; }
+		foreach ( $sets as $set ) {
 			foreach ( $set['rows'] as $row ) {
 				if ( ! is_array( $row ) || empty( $row['active'] ) || absint( $row['program_id'] ?? 0 ) !== $program_id ) { continue; }
 				$batch = null;
@@ -163,7 +168,7 @@ final class IntegrationConfigurationDependencyGuard {
 						return $this->broken_mapping( $set['label'], __( 'its selected Batch no longer belongs to this Program', 'certloom' ) );
 					}
 				}
-				$valid = $this->fields->validate_context( $program, $batch, $catalog );
+				$valid = $this->validate_field_change( $program, $batch, $catalog, $row );
 				if ( is_wp_error( $valid ) ) { return $this->wrap( $set['label'], $valid ); }
 			}
 		}
@@ -177,13 +182,14 @@ final class IntegrationConfigurationDependencyGuard {
 		$program_id = absint( $program['id'] ?? 0 );
 		$batch = array( 'id' => $batch_id, 'program_id' => $program_id, 'field_contract' => $batch_contract );
 		$catalog = $this->catalog();
-		foreach ( $this->mapping_sets() as $set ) {
+		$sets = $this->mapping_sets(); if ( is_wp_error( $sets ) ) { return $sets; }
+		foreach ( $sets as $set ) {
 			foreach ( $set['rows'] as $row ) {
 				if ( ! is_array( $row ) || empty( $row['active'] ) || absint( $row['batch_id'] ?? 0 ) !== $batch_id ) { continue; }
 				if ( absint( $row['program_id'] ?? 0 ) !== $program_id ) {
 					return $this->broken_mapping( $set['label'], __( 'it points this Batch at a different Program', 'certloom' ) );
 				}
-				$valid = $this->fields->validate_context( $program, $batch, $catalog );
+				$valid = $this->validate_field_change( $program, $batch, $catalog, $row );
 				if ( is_wp_error( $valid ) ) { return $this->wrap( $set['label'], $valid ); }
 			}
 		}
@@ -195,7 +201,8 @@ final class IntegrationConfigurationDependencyGuard {
 		$batch_id = absint( $batch_id );
 		$new_program_id = absint( $new_program_id );
 		if ( ! $batch_id || ! $new_program_id ) { return true; }
-		foreach ( $this->mapping_sets() as $set ) {
+		$sets = $this->mapping_sets(); if ( is_wp_error( $sets ) ) { return $sets; }
+		foreach ( $sets as $set ) {
 			foreach ( $set['rows'] as $row ) {
 				if ( ! is_array( $row ) || absint( $row['batch_id'] ?? 0 ) !== $batch_id ) { continue; }
 				if ( absint( $row['program_id'] ?? 0 ) !== $new_program_id ) {
@@ -213,9 +220,35 @@ final class IntegrationConfigurationDependencyGuard {
 		return true;
 	}
 
-	/** @return array<int,array{label:string,rows:array}> */
+	private function validate_field_change( array $program, $batch, array $catalog, array $row ) {
+		if ( ! isset( $row['v2_fields'] ) ) { return $this->fields->validate_context( $program, $batch, $catalog ); }
+		$current = ( new ProgramRepository() )->find( $program['id'] );
+		if ( is_wp_error( $current ) ) { return $current; }
+		if ( ! is_array( $current ) ) { return $this->broken_mapping( __( 'App results / API v2', 'certloom' ), __( 'its Program no longer exists', 'certloom' ) ); }
+		$program = array_merge( $current, $program );
+		if ( is_array( $batch ) ) {
+			$current_batch = $this->batches->find( $batch['id'] ); if ( is_wp_error( $current_batch ) ) { return $current_batch; }
+			if ( ! is_array( $current_batch ) ) { return $this->broken_mapping( __( 'App results / API v2', 'certloom' ), __( 'its Batch no longer exists', 'certloom' ) ); }
+			$batch = array_merge( $current_batch, $batch );
+		}
+		return $this->targets->validate_snapshot( $program, $batch, null, null, $row['v2_fields'] );
+	}
+
+	/** @return array<int,array{label:string,rows:array}>|\WP_Error */
 	private function mapping_sets() {
+		$v2 = ( new \Certloom\Infrastructure\Integration\WebhookV2ConnectionRepository() )->read();
+		if ( is_wp_error( $v2 ) ) { return $v2; }
+		foreach ( $v2 as &$row ) { $row['v2_fields'] = $row['fields']; } unset( $row );
+		$tutor_pending = ( new \Certloom\Infrastructure\Integration\TutorPendingMappingRepository() )->read();
+		if ( is_wp_error( $tutor_pending ) ) { return $tutor_pending; }
+		foreach ( $tutor_pending as &$row ) { $row['v2_fields'] = array(); } unset( $row );
+		$woo_pending = ( new \Certloom\Infrastructure\Integration\WooCommercePendingMappingRepository() )->read();
+		if ( is_wp_error( $woo_pending ) ) { return $woo_pending; }
+		foreach ( $woo_pending as &$row ) { $row['v2_fields'] = array(); } unset( $row );
 		return array(
+			array( 'label' => __( 'WooCommerce customer details', 'certloom' ), 'rows' => array_values( $woo_pending ) ),
+			array( 'label' => __( 'Tutor customer details', 'certloom' ), 'rows' => array_values( $tutor_pending ) ),
+			array( 'label' => __( 'App results / API v2', 'certloom' ), 'rows' => array_values( $v2 ) ),
 			array( 'label' => __( 'Tutor LMS', 'certloom' ), 'rows' => array_values( ( new TutorLmsMappingStore() )->all() ) ),
 			array( 'label' => __( 'LearnDash', 'certloom' ), 'rows' => array_values( ( new LearnDashMappingStore() )->all() ) ),
 			array( 'label' => __( 'WooCommerce', 'certloom' ), 'rows' => array_values( ( new WooCommerceMappingStore() )->all() ) ),

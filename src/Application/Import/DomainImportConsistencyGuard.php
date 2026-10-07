@@ -24,8 +24,10 @@ final class DomainImportConsistencyGuard {
 	public function snapshot() {
 		$config = $this->backup->configuration_snapshot();
 		if ( is_wp_error( $config ) ) { return $config; }
+		$generation = $this->generation->read_current();
+		if ( is_wp_error( $generation ) ) { return $generation; }
 		return array(
-			'generation'         => $this->generation->current(),
+			'generation'         => $generation,
 			'configuration_hash' => strtolower( (string) $config['hash'] ),
 		);
 	}
@@ -37,7 +39,9 @@ final class DomainImportConsistencyGuard {
 		if ( '' === $baseline_generation || ! preg_match( '/^[a-f0-9]{64}$/', $baseline_configuration_hash ) ) {
 			return new \WP_Error( 'certloom_import_baseline_invalid', __( 'The import review is missing its consistency baseline.', 'certloom' ) );
 		}
-		if ( ! hash_equals( $baseline_generation, $this->generation->current() ) ) {
+		$generation = $this->generation->read_current();
+		if ( is_wp_error( $generation ) ) { return $generation; }
+		if ( ! hash_equals( $baseline_generation, $generation ) ) {
 			return new \WP_Error( 'certloom_import_domain_changed', __( 'Credential data changed while this import was being reviewed. Restart the import so duplicate/status decisions are based on current data.', 'certloom' ) );
 		}
 		$config = $this->backup->configuration_snapshot();

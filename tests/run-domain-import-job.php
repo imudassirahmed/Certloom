@@ -1,9 +1,13 @@
 <?php
 /** End-to-end application tests for non-writing CSV preflight job orchestration. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
+require_once __DIR__ . '/support/option-database.php';
 if(!class_exists('WP_Error')){class WP_Error{private $c,$m;function __construct($c='',$m=''){ $this->c=$c;$this->m=$m;}function get_error_code(){return $this->c;}function get_error_message(){return $this->m;}}}
 function is_wp_error($v){return $v instanceof WP_Error;} function __($t){return $t;} function absint($v){return abs((int)$v);} function sanitize_key($k){$k=strtolower((string)$k);return preg_replace('/[^a-z0-9_\-]/','',$k);} function sanitize_text_field($v){return trim(preg_replace('/\s+/', ' ', str_replace(array("\r","\n","\t"),' ',(string)$v)));} function sanitize_textarea_field($v){return trim((string)$v);} function sanitize_email($v){return filter_var((string)$v,FILTER_SANITIZE_EMAIL);} function is_email($v){return false!==filter_var((string)$v,FILTER_VALIDATE_EMAIL);} function trailingslashit($v){return rtrim((string)$v,'/\\').'/';} function untrailingslashit($v){return rtrim((string)$v,'/\\');} function wp_normalize_path($v){return str_replace('\\','/',(string)$v);} function wp_mkdir_p($v){return is_dir($v)||mkdir($v,0700,true);} function wp_json_encode($v,$flags=0){return json_encode($v,$flags);}
 $di_options=array('certloom_domain_data_generation'=>'G0','certverify_fields'=>array(),'certverify_retired_fields'=>array(),'certverify_settings'=>array());
 function get_option($k,$d=false){global $di_options;return array_key_exists($k,$di_options)?$di_options[$k]:$d;}
+$wpdb = new CertloomOptionDatabase( $di_options );
 $di_private_dir=sys_get_temp_dir().'/certloom-import-job-'.bin2hex(random_bytes(4));
 function apply_filters($name,$value){global $di_private_dir;return 'certloom_private_job_directory'===$name?$di_private_dir:$value;}
 require_once __DIR__.'/bootstrap-autoload.php';

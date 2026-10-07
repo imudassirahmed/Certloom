@@ -1,5 +1,7 @@
 <?php
 /** Phase 4 Gamma-02R contextual Inspector + accordion contract. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define( 'ABSPATH', __DIR__ . '/' );
 $root=dirname(__DIR__);$admin=file_get_contents($root.'/src/Infrastructure/Admin/TemplateAdmin.php');$js=file_get_contents($root.'/admin/assets/designer.js');$css=file_get_contents($root.'/admin/assets/designer.css');
 $pass=0;$fail=0; function p43($ok,$label){global$pass,$fail;if($ok){$pass++;echo"PASS  $label\n";}else{$fail++;echo"FAIL  $label\n";}}

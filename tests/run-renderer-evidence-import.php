@@ -1,5 +1,7 @@
 <?php
 /** 1.6.24 cross-linked three-format PDF-04 verifier report/environment import regression. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 require_once __DIR__ . '/bootstrap-autoload.php';
 
 use Certloom\Application\Rendering\RendererAcceptanceContract;

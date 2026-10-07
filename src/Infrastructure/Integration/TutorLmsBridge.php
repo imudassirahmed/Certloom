@@ -25,13 +25,15 @@ final class TutorLmsBridge {
 	/** @return array<string,mixed> */
 	public static function status() {
 		$mappings = ( new TutorLmsMappingStore() )->all();
+		$pending = ( new TutorPendingMappingRepository() )->read();
+		$pending = is_wp_error( $pending ) ? array() : $pending;
 		$last = get_option( self::LAST_RESULT_OPTION, array() );
 		return array(
 			'available' => TutorLmsAdapter::is_available(),
 			'version' => defined( 'TUTOR_VERSION' ) ? sanitize_text_field( (string) TUTOR_VERSION ) : '',
 			'authority_ready' => self::authority_ready(),
-			'mapping_count' => count( $mappings ),
-			'active_mapping_count' => count( array_filter( $mappings, static function ( $row ) { return is_array( $row ) && ! empty( $row['active'] ); } ) ),
+			'mapping_count' => count( $mappings ) + count( $pending ),
+			'active_mapping_count' => count( array_filter( array_merge( $mappings, $pending ), static function ( $row ) { return is_array( $row ) && ! empty( $row['active'] ); } ) ),
 			'last_result' => is_array( $last ) ? $last : array(),
 		);
 	}
@@ -41,6 +43,14 @@ final class TutorLmsBridge {
 		$course_id = absint( $course_id );
 		$user_id = absint( $user_id );
 		if ( ! TutorLmsAdapter::is_available() || $course_id < 1 || $user_id < 1 ) { return; }
+		$pending = ( new TutorPendingMappingRepository() )->for_course( $course_id );
+		if ( is_wp_error( $pending ) ) { self::record_result( 'blocked', $course_id, $pending->get_error_code() ); return; }
+		if ( is_array( $pending ) && $pending['active'] ) {
+			$result = ( new \Certloom\Application\Integration\TutorPendingIntake() )->receive( $course_id, $user_id );
+			if ( is_wp_error( $result ) ) { self::record_result( 'blocked', $course_id, $result->get_error_code() ); return; }
+			$status = 'issued' === $result['status'] ? ( ! empty( $result['idempotent_replay'] ) ? 'replayed' : 'issued' ) : ( in_array( $result['status'], array( 'waiting', 'received', 'ready', 'processing' ), true ) ? 'waiting' : 'blocked' );
+			self::record_result( $status, $course_id, '', '', (int) ( $result['version_id'] ?? 0 ) ); return;
+		}
 		$store = new TutorLmsMappingStore();
 		$mapping = $store->find( $course_id );
 		if ( ! is_array( $mapping ) || empty( $mapping['active'] ) ) { return; }
@@ -72,7 +82,7 @@ final class TutorLmsBridge {
 
 	/** Privacy-safe bounded operational evidence only. */
 	private static function record_result( $status, $course_id, $error_code = '', $context_sha256 = '', $version_id = 0 ) {
-		$status = in_array( $status, array( 'issued', 'replayed', 'blocked', 'failed' ), true ) ? $status : 'failed';
+		$status = in_array( $status, array( 'issued', 'replayed', 'waiting', 'blocked', 'failed' ), true ) ? $status : 'failed';
 		$error_code = sanitize_key( (string) $error_code );
 		$context_sha256 = strtolower( trim( (string) $context_sha256 ) );
 		if ( ! preg_match( '/^[a-f0-9]{64}$/', $context_sha256 ) ) { $context_sha256 = ''; }

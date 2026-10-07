@@ -102,6 +102,21 @@ final class BulkIssuanceAdmin {
 	public function upload() {
 		$this->cap();
 		check_admin_referer( 'certloom_bulk_issuance_upload' );
+		if ( isset( $_POST['download_template'] ) ) {
+			$program_id = isset( $_POST['program_id'] ) && is_scalar( $_POST['program_id'] ) ? absint( $_POST['program_id'] ) : 0;
+			$batch_id = isset( $_POST['batch_id'] ) && is_scalar( $_POST['batch_id'] ) ? absint( $_POST['batch_id'] ) : 0;
+			$schema = $this->runtime->bulk_issuance()->csv_schema( $program_id, $batch_id );
+			if ( is_wp_error( $schema ) ) { $this->fail( $schema->get_error_message() ); }
+			$numbering = \Ecapla_CertVerify_Numbering::policy();
+			$columns = ( new \Certloom\Application\Issuance\BulkIssuanceCsvSchema() )->columns( $schema, 'manual' !== ( $numbering['numbering_mode'] ?? 'manual' ) );
+			if ( is_wp_error( $columns ) ) { $this->fail( $columns->get_error_message() ); }
+			$stream = fopen( 'php://output', 'wb' );
+			if ( false === $stream ) { $this->fail( __( 'The CSV template could not be downloaded. Try again.', 'certloom' ) ); }
+			nocache_headers();
+			header( 'Content-Type: text/csv; charset=UTF-8' );
+			header( 'Content-Disposition: attachment; filename="certloom-program-' . $program_id . '-bulk.csv"' );
+			fputcsv( $stream, $columns, ',', '"', '' ); fclose( $stream ); exit;
+		}
 
 		if ( empty( $_FILES['bulk_csv'] ) || ! is_array( $_FILES['bulk_csv'] ) ) {
 			$this->fail( __( 'Choose a CSV file before starting Bulk Issuance.', 'certloom' ) );
@@ -125,6 +140,7 @@ final class BulkIssuanceAdmin {
 			'expiry_mode' => isset( $_POST['expiry_mode'] ) ? wp_unslash( $_POST['expiry_mode'] ) : 'program',
 			'expires_at'  => isset( $_POST['expires_at'] ) ? wp_unslash( $_POST['expires_at'] ) : '',
 			'grade'       => isset( $_POST['grade'] ) ? wp_unslash( $_POST['grade'] ) : '',
+			'waiting_policy' => isset( $_POST['waiting_policy'] ) && is_string( $_POST['waiting_policy'] ) ? wp_unslash( $_POST['waiting_policy'] ) : 'stop',
 		);
 		$shared_policy = $this->validate_shared_lifecycle( $shared );
 		if ( is_wp_error( $shared_policy ) ) {
@@ -152,12 +168,13 @@ final class BulkIssuanceAdmin {
 		$fp  = isset( $_POST['review_fingerprint'] ) ? strtolower( sanitize_text_field( wp_unslash( $_POST['review_fingerprint'] ) ) ) : '';
 
 		check_admin_referer( 'certloom_bulk_issuance_commit_' . $fp );
-		$key = $this->runtime->bulk_issuance()->enqueue_commit( $pre, get_current_user_id(), $fp, true );
+		$qualified_waiting = isset( $_POST['qualified_waiting'] ) && '1' === $_POST['qualified_waiting'];
+		$key = $this->runtime->bulk_issuance()->enqueue_commit( $pre, get_current_user_id(), $fp, true, $qualified_waiting );
 		if ( is_wp_error( $key ) ) {
 			$this->fail( $key->get_error_message(), $pre );
 		}
 
-		$this->success( __( 'Bulk Issuance started. Each row is checked independently and can be retried safely without creating duplicates.', 'certloom' ) );
+		$this->success( __( 'The reviewed rows are being checked independently. Ready rows issue now; confirmed qualified rows with missing customer details become waiting requests. Retries preserve their original receipts.', 'certloom' ) );
 		$this->go( $key );
 	}
 
@@ -201,7 +218,8 @@ final class BulkIssuanceAdmin {
 		echo '<label class="certloom-bulk-expiry"><span>' . esc_html__( 'Specific expiry date', 'certloom' ) . '</span><input type="date" name="expires_at"></label>';
 
 		echo '<div class="certloom-bulk-csv"><label><span>' . esc_html__( 'Bulk Issuance CSV', 'certloom' ) . '</span><input type="file" name="bulk_csv" accept=".csv,text/csv" required></label><div class="certloom-bulk-schema" data-certloom-bulk-field-schema><strong>' . esc_html__( 'Accepted columns', 'certloom' ) . '</strong><div data-certloom-bulk-field-schema-body><code>recipient_id</code> <em>' . esc_html__( 'or', 'certloom' ) . '</em> <code>display_name</code> + <code>email</code>/<code>external_id</code>, <code>first_name</code>, <code>middle_name</code>, <code>last_name</code>, <code>grade</code>, <code>certificate_number</code>, <code>custom:machine_key</code>.</div><small>' . esc_html__( 'Choose a Program and optional Batch to see the exact credential-field columns before uploading.', 'certloom' ) . '</small></div></div>';
-		echo '<div class="certloom-manual-actions"><button class="button button-primary button-hero" type="submit" ' . ( empty( $p ) ? 'disabled' : '' ) . '>' . esc_html__( 'Review CSV', 'certloom' ) . '</button><span>' . esc_html__( 'Certloom reviews the file in the background. No credentials are created during review.', 'certloom' ) . '</span></div>';
+		echo '<label><span>' . esc_html__( 'When customer details are missing', 'certloom' ) . '</span><select name="waiting_policy"><option value="stop">' . esc_html__( 'Stop and fix the CSV review first', 'certloom' ) . '</option><option value="customer">' . esc_html__( 'Create waiting requests for qualified customers', 'certloom' ) . '</option></select><small>' . esc_html__( 'Waiting requests require an existing connected account and exact Program participation where needed. Staff results and issuing configuration must already be complete. Qualification is confirmed separately after review.', 'certloom' ) . '</small></label>';
+		echo '<div class="certloom-manual-actions"><button class="button" type="submit" name="download_template" value="1" formnovalidate ' . ( empty( $p ) ? 'disabled' : '' ) . '>' . esc_html__( 'Download Program CSV', 'certloom' ) . '</button><button class="button button-primary button-hero" type="submit" ' . ( empty( $p ) ? 'disabled' : '' ) . '>' . esc_html__( 'Review CSV', 'certloom' ) . '</button><span>' . esc_html__( 'The CSV uses exact Recipient IDs and includes staff-entered results. Customer details, connected-source values and Program defaults keep their own source. Review creates no credentials.', 'certloom' ) . '</span></div>';
 		echo '</form></section>';
 	}
 
@@ -268,8 +286,9 @@ final class BulkIssuanceAdmin {
 			echo '<p><strong>' . esc_html__( 'Nothing was issued.', 'certloom' ) . '</strong> ' . esc_html__( 'Correct the blocking CSV rows and upload a new review.', 'certloom' ) . '</p>';
 			echo '<a class="button" href="' . esc_url( admin_url( 'admin.php?page=' . self::PAGE ) ) . '">' . esc_html__( 'Start new review', 'certloom' ) . '</a>';
 		} else {
-			echo '<p><strong>' . esc_html__( 'Bulk issuance complete.', 'certloom' ) . '</strong> ' . esc_html__( 'Credential Management now contains every successfully issued credential. You can continue with Email Delivery or the Recipient Portal when needed.', 'certloom' ) . '</p>';
-			echo '<a class="button button-primary" href="' . esc_url( admin_url( 'admin.php?page=certloom-credentials' ) ) . '">' . esc_html__( 'Open Credential Management', 'certloom' ) . '</a> ';
+			echo '<p><strong>' . esc_html__( 'Bulk processing complete.', 'certloom' ) . '</strong> ' . esc_html__( 'Credential Management contains successfully issued credentials. Waiting requests remain separate until customer details and any required approval are complete.', 'certloom' ) . '</p>';
+			if ( ! empty( $summary['requests_accepted'] ) ) { echo '<p><a class="button" href="' . esc_url( admin_url( 'admin.php?page=' . PendingRequestAdmin::PAGE ) ) . '">' . esc_html__( 'Open certificate requests', 'certloom' ) . '</a> ' . esc_html__( 'Customers can complete their required details from their website account. Completing a form does not change their qualification.', 'certloom' ) . '</p>'; }
+			echo '<a class="button button-primary" href="' . esc_url( admin_url( 'admin.php?page=' . DomainAdmin::CREDENTIALS_PAGE ) ) . '">' . esc_html__( 'Open Credential Management', 'certloom' ) . '</a> ';
 			echo '<a class="button" href="' . esc_url( admin_url( 'admin.php?page=' . self::PAGE ) ) . '">' . esc_html__( 'Issue another batch', 'certloom' ) . '</a>';
 		}
 
@@ -283,7 +302,9 @@ final class BulkIssuanceAdmin {
 		echo '<div class="notice notice-info inline"><p>' . esc_html__( 'When you continue, Certloom checks every row again before creating a credential. If a reviewed row has changed, that row stops safely instead of using outdated data.', 'certloom' ) . '</p></div>';
 		echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '"><input type="hidden" name="action" value="certloom_bulk_issuance_commit"><input type="hidden" name="preflight_job_key" value="' . esc_attr( (string) $job['job_key'] ) . '"><input type="hidden" name="review_fingerprint" value="' . esc_attr( $fp ) . '">';
 		wp_nonce_field( 'certloom_bulk_issuance_commit_' . $fp );
-		echo '<button class="button button-primary button-hero" type="submit">' . esc_html__( 'Issue reviewed batch', 'certloom' ) . '</button></form>';
+		$waiting = ! empty( $result['summary']['waiting'] );
+		if ( $waiting ) { echo '<p><label><input type="checkbox" name="qualified_waiting" value="1" required> ' . esc_html__( 'I confirm that every waiting recipient has already earned this certificate. Certloom will collect only their missing customer details and required approval before issuing.', 'certloom' ) . '</label></p>'; }
+		echo '<button class="button button-primary button-hero" type="submit">' . esc_html( $waiting ? __( 'Confirm reviewed rows', 'certloom' ) : __( 'Issue reviewed batch', 'certloom' ) ) . '</button></form>';
 	}
 
 	private function metrics( $type, array $summary ) {
@@ -291,14 +312,16 @@ final class BulkIssuanceAdmin {
 			$items = array(
 				__( 'Processed', 'certloom' ) => absint( $summary['processed'] ?? 0 ),
 				__( 'Ready', 'certloom' )     => absint( $summary['ready'] ?? 0 ),
+				__( 'Waiting for customer', 'certloom' ) => absint( $summary['waiting'] ?? 0 ),
 				__( 'Errors', 'certloom' )    => absint( $summary['errors'] ?? 0 ),
 			);
 		} else {
 			$items = array(
 				__( 'Processed', 'certloom' )   => absint( $summary['processed'] ?? 0 ),
 				__( 'Issued', 'certloom' )      => absint( $summary['succeeded'] ?? 0 ),
+				__( 'Requests accepted', 'certloom' ) => absint( $summary['requests_accepted'] ?? 0 ),
 				__( 'Failed', 'certloom' )      => absint( $summary['failed'] ?? 0 ),
-				__( 'Safe retries', 'certloom' ) => absint( $summary['idempotent_replays'] ?? 0 ),
+				__( 'Safe retries', 'certloom' ) => absint( $summary['idempotent_replays'] ?? 0 ) + absint( $summary['request_replays'] ?? 0 ),
 			);
 		}
 

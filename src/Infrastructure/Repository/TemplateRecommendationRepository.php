@@ -32,21 +32,13 @@ final class TemplateRecommendationRepository {
 		}
 		$profiles = $this->normalize( $profiles );
 		$key = self::OPTION_PREFIX . $template_id;
-		if ( empty( $profiles ) ) {
-			delete_option( $key );
-			return true;
-		}
-		$saved = update_option( $key, $profiles, false );
-		return $saved || $profiles === get_option( $key, array() )
-			? true
-			: new \WP_Error( 'certloom_template_recommendation_save_failed', __( 'Certloom could not save the recommended profiles for this design.', 'certloom' ) );
+		return ( new \Certloom\Infrastructure\Data\DurableOptionMutation() )->change( $key, static function () use ( $profiles ) { return $profiles ? maybe_serialize( $profiles ) : null; } );
 	}
 
-	/** @return true */
+	/** @return true|\WP_Error */
 	public function delete( $template_id ) {
 		$template_id = absint( $template_id );
-		if ( $template_id > 0 ) { delete_option( self::OPTION_PREFIX . $template_id ); }
-		return true;
+		return $template_id > 0 ? ( new \Certloom\Infrastructure\Data\DurableOptionMutation() )->change( self::OPTION_PREFIX . $template_id, static function () { return null; } ) : true;
 	}
 
 	/** @return array<int,string> */

@@ -41,11 +41,12 @@ final class DomainRestorePreflightService {
 		$handle = @fopen( $path, 'rb' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen -- Read-only bounded streaming restore preflight.
 		if ( false === $handle ) { return new \WP_Error( 'certloom_domain_restore_read_failed', __( 'Certloom could not reopen the validated backup for restore review.', 'certloom' ) ); }
 
-		$order = array( 'issuers', 'programs', 'recipients', 'signers', 'batches', 'batch_recipients', 'signer_assignments', 'templates', 'template_revisions', 'template_assignments', 'credential_series', 'credential_numbers', 'credential_versions', 'credential_events' );
+		$order = DomainBackupFormat::entity_types_for_version( DomainBackupFormat::VERSION );
+		$workflow_graph = new RecipientWorkflowGraphValidator();
 		$order_map = array_flip( $order );
 		$current_order = -1;
 		$ids = array_fill_keys( $order, array() );
-		$issuer_slugs = array(); $program_codes = array(); $program_issuers = array(); $recipient_wp_users = array(); $signer_slugs = array(); $batch_codes = array(); $batch_members = array(); $signer_assignments = array();
+		$issuer_slugs = array(); $program_codes = array(); $program_issuers = array(); $signer_slugs = array(); $batch_codes = array(); $batch_members = array(); $signer_assignments = array();
 		$template_keys = array(); $template_revision_keys = array(); $template_assignment_keys = array(); $template_revision_owner = array(); $template_current = array(); $template_published = array(); $template_revision_parent = array();
 		$public_ids = array(); $display_numbers = array(); $series_versions = array(); $source_keys = array();
 		$version_series = array(); $series_current = array(); $number_first_versions = array(); $version_previous = array();
@@ -65,12 +66,13 @@ final class DomainRestorePreflightService {
 			}
 			$item = json_decode( trim( $line ), true );
 			if ( ! is_array( $item ) ) { fclose( $handle ); return new \WP_Error( 'certloom_domain_backup_json_invalid', sprintf( /* translators: %d: line number. */ __( 'The Certloom domain backup contains invalid JSON on line %d.', 'certloom' ), $line_no ) ); }
-			$item_type = (string) ( $item['type'] ?? '' );
+			$item_type = $item['type'] ?? null;
 			if ( 1 === $line_no ) {
 				$normalized = $this->format->normalize_manifest( $item );
 				if ( is_wp_error( $normalized ) ) { fclose( $handle ); return $normalized; }
 				$format_version = absint( $item['format_version'] ?? 0 );
-				$config = $this->validate_configuration( (array) ( $item['configuration'] ?? array() ) );
+				if ( ! is_array( $item['configuration'] ?? null ) || ! is_string( $item['configuration_hash'] ?? null ) ) { fclose( $handle ); return new \WP_Error( 'certloom_domain_backup_configuration_hash_invalid', __( 'The Certloom domain backup configuration metadata is inconsistent.', 'certloom' ) ); }
+				$config = $this->validate_configuration( $item['configuration'] );
 				if ( is_wp_error( $config ) ) { fclose( $handle ); return $config; }
 				$config_json = wp_json_encode( $config, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
 				$config_hash = strtolower( (string) ( $item['configuration_hash'] ?? '' ) );
@@ -80,14 +82,14 @@ final class DomainRestorePreflightService {
 				continue;
 			}
 			if ( 'integrity' === $item_type ) {
-				if ( $records !== absint( $item['records'] ?? -1 ) || ! hash_equals( $hash, (string) ( $item['chain_sha256'] ?? '' ) ) ) { fclose( $handle ); return new \WP_Error( 'certloom_domain_backup_integrity_failed', __( 'The Certloom domain backup failed its integrity check during semantic restore review.', 'certloom' ) ); }
+				if ( ! $this->format->valid_integrity( $item, $records, $hash ) ) { fclose( $handle ); return new \WP_Error( 'certloom_domain_backup_integrity_failed', __( 'The Certloom domain backup failed its integrity check during semantic restore review.', 'certloom' ) ); }
 				$after_integrity = true;
 				continue;
 			}
-			if ( 'entity' !== $item_type || empty( $item['entity'] ) || ! is_array( $item['data'] ?? null ) ) { fclose( $handle ); return new \WP_Error( 'certloom_domain_backup_record_invalid', sprintf( /* translators: %d: line number. */ __( 'The Certloom domain backup contains an unsupported record on line %d.', 'certloom' ), $line_no ) ); }
+			if ( 'entity' !== $item_type || ! is_string( $item['entity'] ?? null ) || ! is_array( $item['data'] ?? null ) ) { fclose( $handle ); return new \WP_Error( 'certloom_domain_backup_record_invalid', sprintf( /* translators: %d: line number. */ __( 'The Certloom domain backup contains an unsupported record on line %d.', 'certloom' ), $line_no ) ); }
 			$records++;
 			if ( $records > max( 1, absint( $max_records ) ) ) { fclose( $handle ); return new \WP_Error( 'certloom_domain_backup_limit', __( 'The Certloom domain backup exceeds the configured record safety limit.', 'certloom' ) ); }
-			$type = sanitize_key( (string) ( $item['entity'] ?? '' ) );
+			$type = $item['entity'];
 			if ( isset( $stream_counts[ $type ] ) ) { $stream_counts[ $type ]++; }
 			$hash = $this->format->next_hash( $hash, $line, $format_version );
 			$row = $this->format->normalize_entity_row( $format_version, $type, is_array( $item['data'] ?? null ) ? $item['data'] : array() );
@@ -95,11 +97,19 @@ final class DomainRestorePreflightService {
 			if ( $order_map[ $type ] < $current_order ) { $this->error( $errors, $line_no, 'entity_order', 'Backup entities are not in the canonical dependency order.' ); continue; }
 			$current_order = $order_map[ $type ];
 			$scalar = $this->row_validator->validate( $type, $row );
-			if ( is_wp_error( $scalar ) ) { $this->error( $errors, $line_no, $scalar->get_error_code(), $scalar->get_error_message() ); continue; }
+			if ( is_wp_error( $scalar ) ) {
+				if ( 'certloom_domain_restore_account_links_unverified' === $scalar->get_error_code() ) { fclose( $handle ); return $scalar; }
+				$this->error( $errors, $line_no, $scalar->get_error_code(), $scalar->get_error_message() ); continue;
+			}
 			$id = absint( $row['id'] ?? 0 );
 			if ( $id < 1 ) { $this->error( $errors, $line_no, 'invalid_id', 'Restore entity ID must be a positive integer.' ); continue; }
 			if ( isset( $ids[ $type ][ $id ] ) ) { $this->error( $errors, $line_no, 'duplicate_id', 'Duplicate entity ID inside backup.' ); continue; }
 			$ids[ $type ][ $id ] = true; $counts[ $type ]++;
+			if ( in_array( $type, \Certloom\Domain\Recipient\RecipientWorkflowEntities::all(), true ) ) {
+				$relationships = $workflow_graph->validate( $type, $row );
+				if ( is_wp_error( $relationships ) ) { $this->error( $errors, $line_no, $relationships->get_error_code(), $relationships->get_error_message() ); }
+			}
+			$workflow_graph->observe( $type, $row );
 
 			switch ( $type ) {
 				case 'issuers':
@@ -115,7 +125,6 @@ final class DomainRestorePreflightService {
 					break;
 				case 'recipients':
 					if ( '' === trim( (string) ( $row['display_name'] ?? '' ) ) ) { $this->error( $errors, $line_no, 'recipient_invalid', 'Recipient display name is required.' ); }
-					$wp_user_id = absint( $row['wp_user_id'] ?? 0 ); if ( $wp_user_id ) { if ( isset( $recipient_wp_users[ $wp_user_id ] ) ) { $this->error( $errors, $line_no, 'recipient_wp_user_duplicate', 'Multiple recipients refer to the same WordPress user.' ); } else { $recipient_wp_users[ $wp_user_id ] = $id; } }
 					break;
 				case 'signers':
 					if ( '' === trim( (string) ( $row['display_name'] ?? '' ) ) ) { $this->error( $errors, $line_no, 'signer_invalid', 'Signer display name is required.' ); }
@@ -208,7 +217,8 @@ final class DomainRestorePreflightService {
 				return new \WP_Error( 'certloom_domain_backup_count_mismatch', __( 'The Certloom domain backup record counts do not match its manifest during restore review.', 'certloom' ) );
 			}
 		}
-		if ( absint( $integrity['records'] ?? -1 ) !== $records || empty( $integrity['chain_sha256'] ) || ! hash_equals( (string) $integrity['chain_sha256'], $hash ) ) {
+		// The reader returns a validated summary, not the archive's footer record.
+		if ( $records !== $integrity['records'] || ! hash_equals( $integrity['chain_sha256'], $hash ) ) {
 			return new \WP_Error( 'certloom_domain_restore_preflight_changed', __( 'The Certloom backup changed between integrity validation and semantic restore review. Run the restore review again.', 'certloom' ) );
 		}
 
@@ -247,6 +257,16 @@ final class DomainRestorePreflightService {
 		foreach ( $required as $key ) {
 			if ( ! isset( $config[ $key ] ) || ! is_array( $config[ $key ] ) || ! array_key_exists( 'exists', $config[ $key ] ) || ! array_key_exists( 'value', $config[ $key ] ) ) {
 				return new \WP_Error( 'certloom_domain_restore_configuration_invalid', __( 'The Certloom backup is missing required configuration metadata.', 'certloom' ) );
+			}
+		}
+		foreach ( array( 'certverify_fields', 'certverify_retired_fields' ) as $key ) {
+			if ( ! $config[ $key ]['exists'] ) { continue; }
+			if ( ! is_array( $config[ $key ]['value'] ) ) { return new \WP_Error( 'certloom_domain_restore_configuration_invalid', __( 'The backup field catalog is invalid.', 'certloom' ) ); }
+			foreach ( $config[ $key ]['value'] as $field ) {
+				if ( is_array( $field ) && array_key_exists( \Certloom\Application\Fields\FieldCollectionPolicy::KEY, $field ) ) {
+					$policy = ( new \Certloom\Application\Fields\FieldCollectionPolicy() )->for_definition( $field );
+					if ( is_wp_error( $policy ) ) { return $policy; }
+				}
 			}
 		}
 		return $config;

@@ -1,5 +1,7 @@
 <?php
 /** Regression tests for the Phase 1 premium admin dashboard contract. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define( 'ABSPATH', __DIR__ . '/fake-wp/' );
 
 function __( $text ) { return $text; }

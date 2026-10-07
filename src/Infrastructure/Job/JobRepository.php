@@ -17,6 +17,15 @@ use Certloom\Infrastructure\Database\SchemaManager;
 final class JobRepository implements JobRepositoryInterface {
 	/** @return string|\WP_Error */
 	public function create( array $data ) {
+		// Admit new work through the same InnoDB fence as credential commands.
+		// Existing recovery jobs can still claim/save their own progress; new
+		// issuance or delivery jobs cannot slip into a reviewed replacement.
+		return ( new \Certloom\Infrastructure\Database\Transaction() )->run( function () use ( $data ) {
+			return $this->create_row( $data );
+		} );
+	}
+
+	private function create_row( array $data ) {
 		global $wpdb;
 		try {
 			$job_key = bin2hex( random_bytes( 16 ) );
@@ -56,7 +65,7 @@ final class JobRepository implements JobRepositoryInterface {
 		}
 		$wpdb->last_error = '';
 		$inserted = $wpdb->insert( SchemaManager::table( 'jobs' ), $row );
-		return false === $inserted || '' !== (string) $wpdb->last_error
+		return 1 !== $inserted || '' !== (string) $wpdb->last_error
 			? new \WP_Error( 'certloom_job_create_failed', __( 'Certloom could not create the background job.', 'certloom' ) )
 			: $job_key;
 	}
@@ -164,118 +173,10 @@ final class JobRepository implements JobRepositoryInterface {
 			$recovery_count = absint( $row['recovery_count'] ?? 0 );
 			$wpdb->last_error = '';
 
-			/*
-			 * Credly publishing is also an external side effect. A worker may die after
-			 * Credly accepted a badge but before local success was persisted. Never
-			 * replay that request automatically: close from a persisted success record
-			 * when possible; otherwise persist an uncertain outcome for human review.
-			 */
-			if ( JobTypes::CREDLY_PUBLISH === $job_type ) {
-				$payload      = json_decode( (string) ( $row['payload_json'] ?? '' ), true );
-				$delivery_key = is_array( $payload ) ? (string) ( $payload['delivery_key'] ?? '' ) : '';
-				$deliveries   = new DestinationDeliveryRepository();
-				$delivery     = preg_match( '/^[a-f0-9]{32}$/', $delivery_key ) ? $deliveries->find_delivery( $delivery_key ) : null;
-				if ( is_wp_error( $delivery ) ) { return $delivery; }
-				if ( is_array( $delivery ) && DestinationDeliveryRepository::STATUS_SUCCEEDED === (string) ( $delivery['status'] ?? '' ) ) {
-					$result = self::encode_json( array( 'delivery_key' => $delivery_key, 'status' => 'succeeded', 'recovered_after_persisted_acceptance' => true ), 'certloom_job_result_invalid' );
-					if ( is_wp_error( $result ) ) { return $result; }
-					$updated = $wpdb->query( $wpdb->prepare( 'UPDATE %i SET status = %s, recovery_count = recovery_count + 1, result_json = %s, error_json = NULL, locked_by = NULL, locked_until = NULL, updated_at = %s, finished_at = %s WHERE job_key = %s AND status = %s AND (locked_until IS NULL OR locked_until < %s)', SchemaManager::table( 'jobs' ), JobStates::SUCCEEDED, $result, $now, $now, $job_key, JobStates::RUNNING, $now ) );
-					if ( '' !== (string) $wpdb->last_error ) { return new \WP_Error( 'certloom_job_stale_recovery_failed', __( 'Certloom could not close an interrupted Credly job after persisted publication acceptance.', 'certloom' ) ); }
-					$handled += 1 === (int) $updated ? 1 : 0;
-					continue;
-				}
-				if ( is_array( $delivery ) ) {
-					$uncertain = $deliveries->mark_failed( $delivery_key, 'publication_uncertain', array( 'recovery' => 'interrupted_worker' ), true );
-					if ( is_wp_error( $uncertain ) ) { return $uncertain; }
-				}
-				$error = self::encode_json( array( 'code' => 'certloom_credly_publish_uncertain', 'message' => __( 'Credly publishing was interrupted after the external request may have started. Certloom will not retry automatically; review Credly before trying again.', 'certloom' ) ), 'certloom_job_error_invalid' );
-				if ( is_wp_error( $error ) ) { return $error; }
-				$updated = $wpdb->query( $wpdb->prepare( 'UPDATE %i SET status = %s, recovery_count = recovery_count + 1, error_json = %s, locked_by = NULL, locked_until = NULL, updated_at = %s, finished_at = %s WHERE job_key = %s AND status = %s AND (locked_until IS NULL OR locked_until < %s)', SchemaManager::table( 'jobs' ), JobStates::FAILED, $error, $now, $now, $job_key, JobStates::RUNNING, $now ) );
-				if ( '' !== (string) $wpdb->last_error ) { return new \WP_Error( 'certloom_job_stale_recovery_failed', __( 'Certloom could not fail closed an interrupted Credly publishing job.', 'certloom' ) ); }
-				$handled += 1 === (int) $updated ? 1 : 0;
-				continue;
-			}
-
-			/*
-			 * Email is an external side effect: a worker can die after wp_mail()
-			 * accepted the message but before local success is persisted. Automatic
-			 * stale-worker replay could therefore send a duplicate. Fail closed as
-			 * delivery-uncertain and require an explicit administrator resend.
-			 */
-			if ( JobTypes::EMAIL_DELIVERY === $job_type ) {
-				$payload      = json_decode( (string) ( $row['payload_json'] ?? '' ), true );
-				$delivery_key = is_array( $payload ) ? (string) ( $payload['delivery_key'] ?? '' ) : '';
-				$deliveries   = new EmailDeliveryRepository();
-				$delivery     = preg_match( '/^[a-f0-9]{32}$/', $delivery_key ) ? $deliveries->find_delivery( $delivery_key ) : null;
-				if ( is_wp_error( $delivery ) ) { return $delivery; }
-
-				/*
-				 * A worker may have persisted transport acceptance and then died before
-				 * JobRunner saved the terminal job transition. In that exact case the
-				 * delivery record is already authoritative enough to close the job as
-				 * succeeded without ever calling wp_mail() again.
-				 */
-				if ( is_array( $delivery ) && 'sent' === (string) ( $delivery['status'] ?? '' ) ) {
-					$result = self::encode_json(
-						array(
-							'delivery_key'                         => $delivery_key,
-							'status'                               => 'sent',
-							'recovered_after_persisted_acceptance' => true,
-						),
-						'certloom_job_result_invalid'
-					);
-					if ( is_wp_error( $result ) ) { return $result; }
-					$updated = $wpdb->query(
-						$wpdb->prepare(
-							'UPDATE %i SET status = %s, recovery_count = recovery_count + 1, result_json = %s, error_json = NULL, locked_by = NULL, locked_until = NULL, updated_at = %s, finished_at = %s WHERE job_key = %s AND status = %s AND (locked_until IS NULL OR locked_until < %s)',
-							SchemaManager::table( 'jobs' ), JobStates::SUCCEEDED, $result, $now, $now, $job_key, JobStates::RUNNING, $now
-						)
-					);
-					if ( '' !== (string) $wpdb->last_error ) { return new \WP_Error( 'certloom_job_stale_recovery_failed', __( 'Certloom could not close an interrupted credential email job after persisted delivery acceptance.', 'certloom' ) ); }
-					$handled += 1 === (int) $updated ? 1 : 0;
-					continue;
-				}
-
-				/*
-				 * Any other expired email lease is ambiguous. Persist uncertainty first;
-				 * only then make the job terminal. This ordering ensures a repository
-				 * write failure can never leave a terminal job while the delivery still
-				 * advertises a replayable state.
-				 */
-				if ( is_array( $delivery ) ) {
-					$uncertain = $deliveries->mark_failed( $delivery_key, 'delivery_uncertain', array( 'recovery' => 'interrupted_worker' ), true );
-					if ( is_wp_error( $uncertain ) ) {
-						/* A concurrent worker may have persisted acceptance after our read. */
-						$latest = $deliveries->find_delivery( $delivery_key );
-						if ( is_wp_error( $latest ) ) { return $latest; }
-						if ( is_array( $latest ) && 'sent' === (string) ( $latest['status'] ?? '' ) ) {
-							$result = self::encode_json( array( 'delivery_key' => $delivery_key, 'status' => 'sent', 'recovered_after_persisted_acceptance' => true ), 'certloom_job_result_invalid' );
-							if ( is_wp_error( $result ) ) { return $result; }
-							$updated = $wpdb->query( $wpdb->prepare( 'UPDATE %i SET status = %s, recovery_count = recovery_count + 1, result_json = %s, error_json = NULL, locked_by = NULL, locked_until = NULL, updated_at = %s, finished_at = %s WHERE job_key = %s AND status = %s AND (locked_until IS NULL OR locked_until < %s)', SchemaManager::table( 'jobs' ), JobStates::SUCCEEDED, $result, $now, $now, $job_key, JobStates::RUNNING, $now ) );
-							if ( '' !== (string) $wpdb->last_error ) { return new \WP_Error( 'certloom_job_stale_recovery_failed', __( 'Certloom could not close an interrupted credential email job after persisted delivery acceptance.', 'certloom' ) ); }
-							$handled += 1 === (int) $updated ? 1 : 0;
-							continue;
-						}
-						return $uncertain;
-					}
-				}
-
-				$error = self::encode_json(
-					array(
-						'code'    => 'certloom_email_delivery_uncertain',
-						'message' => __( 'This credential email worker was interrupted after delivery may have begun. Certloom will not replay it automatically; review the delivery before sending again.', 'certloom' ),
-					),
-					'certloom_job_error_invalid'
-				);
-				if ( is_wp_error( $error ) ) { return $error; }
-				$updated = $wpdb->query(
-					$wpdb->prepare(
-						'UPDATE %i SET status = %s, recovery_count = recovery_count + 1, error_json = %s, locked_by = NULL, locked_until = NULL, updated_at = %s, finished_at = %s WHERE job_key = %s AND status = %s AND (locked_until IS NULL OR locked_until < %s)',
-						SchemaManager::table( 'jobs' ), JobStates::FAILED, $error, $now, $now, $job_key, JobStates::RUNNING, $now
-					)
-				);
-				if ( '' !== (string) $wpdb->last_error ) { return new \WP_Error( 'certloom_job_stale_recovery_failed', __( 'Certloom could not fail closed an interrupted credential email job.', 'certloom' ) ); }
-				$handled += 1 === (int) $updated ? 1 : 0;
+			if ( in_array( $job_type, array( JobTypes::EMAIL_DELIVERY, JobTypes::CREDLY_PUBLISH ), true ) ) {
+				$recovered = $this->recover_external_delivery( $job_key, $job_type, $now );
+				if ( is_wp_error( $recovered ) ) { return $recovered; }
+				$handled += $recovered;
 				continue;
 			}
 			if ( $recovery_count >= 4 ) {
@@ -323,6 +224,44 @@ final class JobRepository implements JobRepositoryInterface {
 			$handled += 1 === (int) $updated ? 1 : 0;
 		}
 		return $handled;
+	}
+
+	/** Recheck the expired lease under a lock; delivery and job close together. */
+	private function recover_external_delivery( $job_key, $job_type, $now ) {
+		return ( new \Certloom\Infrastructure\Database\Transaction() )->run( static function () use ( $job_key, $job_type, $now ) {
+			global $wpdb;
+			$wpdb->last_error = '';
+			$job = $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM %i WHERE job_key = %s FOR UPDATE', SchemaManager::table( 'jobs' ), $job_key ), ARRAY_A );
+			if ( '' !== (string) $wpdb->last_error ) { return new \WP_Error( 'certloom_job_stale_read_failed', __( 'Certloom could not confirm the interrupted delivery lease.', 'certloom' ) ); }
+			if ( ! is_array( $job ) || JobStates::RUNNING !== $job['status'] || $job_type !== $job['job_type'] || ( null !== $job['locked_until'] && $job['locked_until'] >= $now ) ) { return 0; }
+			$payload = json_decode( (string) $job['payload_json'], true );
+			$key = is_array( $payload ) ? (string) ( $payload['delivery_key'] ?? '' ) : '';
+			$is_email = JobTypes::EMAIL_DELIVERY === $job_type;
+			$type = $is_email ? 'email_deliveries' : 'destination_deliveries';
+			$delivery = null;
+			if ( 1 === preg_match( '/^[a-f0-9]{32}$/D', $key ) ) {
+				$wpdb->last_error = '';
+				$delivery = $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM %i WHERE delivery_key = %s FOR UPDATE', SchemaManager::table( $type ), $key ), ARRAY_A );
+				if ( '' !== (string) $wpdb->last_error ) { return new \WP_Error( 'certloom_job_stale_read_failed', __( 'Certloom could not confirm interrupted delivery evidence.', 'certloom' ) ); }
+			}
+			$accepted = is_array( $delivery ) && ( $is_email ? 'sent' : DestinationDeliveryRepository::STATUS_SUCCEEDED ) === $delivery['status'];
+			if ( ! $accepted && is_array( $delivery ) ) {
+				$evidence = array( 'recovery' => 'interrupted_worker' );
+				if ( is_string( $delivery['attempt_token'] ) && 1 === preg_match( '/^[a-f0-9]{32}$/D', $delivery['attempt_token'] ) ) { $evidence['attempt_token_sha256'] = hash( 'sha256', $delivery['attempt_token'] ); }
+				$repository = $is_email ? new EmailDeliveryRepository() : new DestinationDeliveryRepository();
+				$recorded = $repository->mark_failed( $key, $is_email ? 'delivery_uncertain' : 'publication_uncertain', $evidence, true );
+				if ( is_wp_error( $recorded ) ) { return $recorded; }
+			}
+			$result = $accepted ? self::encode_json( array( 'delivery_key' => $key, 'status' => $is_email ? 'sent' : 'succeeded', 'recovered_after_persisted_acceptance' => true ), 'certloom_job_result_invalid' ) : null;
+			$error = $accepted ? null : self::encode_json( array( 'code' => $is_email ? 'certloom_email_delivery_uncertain' : 'certloom_credly_publish_uncertain', 'message' => __( 'This external delivery worker was interrupted. Certloom will not replay it automatically; review the delivery before sending again.', 'certloom' ) ), 'certloom_job_error_invalid' );
+			if ( is_wp_error( $result ) ) { return $result; }
+			if ( is_wp_error( $error ) ) { return $error; }
+			$marked = ( new \Certloom\Infrastructure\Data\DomainGeneration() )->mark_before_mutation();
+			if ( is_wp_error( $marked ) ) { return $marked; }
+			$wpdb->last_error = '';
+			$updated = $wpdb->update( SchemaManager::table( 'jobs' ), array( 'status' => $accepted ? JobStates::SUCCEEDED : JobStates::FAILED, 'recovery_count' => (int) $job['recovery_count'] + 1, 'result_json' => $result, 'error_json' => $error, 'locked_by' => null, 'locked_until' => null, 'updated_at' => $now, 'finished_at' => $now ), array( 'job_key' => $job_key, 'status' => JobStates::RUNNING, 'locked_by' => $job['locked_by'], 'locked_until' => $job['locked_until'] ) );
+			return 1 === $updated && '' === (string) $wpdb->last_error ? 1 : new \WP_Error( 'certloom_job_stale_recovery_failed', __( 'Certloom could not close the interrupted delivery job safely.', 'certloom' ) );
+		} );
 	}
 
 	/** @return true|\WP_Error */
@@ -437,17 +376,20 @@ final class JobRepository implements JobRepositoryInterface {
 	 *
 	 * @return array{items:array<int,array<string,mixed>>,total:int,page:int,per_page:int}|\WP_Error
 	 */
-	public function list_page( $page = 1, $per_page = 50 ) {
+	public function list_page( $page = 1, $per_page = 50, array $types = array() ) {
 		global $wpdb;
+		if ( count( $types ) > count( \Certloom\Domain\Job\JobTypes::values() ) || array_diff( $types, \Certloom\Domain\Job\JobTypes::values() ) ) { return new \WP_Error( 'certloom_job_history_filter_invalid', __( 'Choose a supported background job type.', 'certloom' ) ); }
+		$types = array_values( array_unique( $types ) );
 		$page = max( 1, absint( $page ) );
 		$per_page = max( 1, min( 100, absint( $per_page ) ) );
 		$offset = ( $page - 1 ) * $per_page;
 		$table = SchemaManager::table( 'jobs' );
+		$where = $types ? ' WHERE job_type IN (' . implode( ',', array_fill( 0, count( $types ), '%s' ) ) . ')' : '';
 		$wpdb->last_error = '';
-		$total = $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM %i', $table ) );
+		$total = $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM %i' . $where, array_merge( array( $table ), $types ) ) );
 		if ( '' !== (string) $wpdb->last_error ) { return new \WP_Error( 'certloom_job_recent_read_failed', __( 'Certloom could not read background job history.', 'certloom' ) ); }
 		$wpdb->last_error = '';
-		$rows = $wpdb->get_results( $wpdb->prepare( 'SELECT * FROM %i ORDER BY id DESC LIMIT %d OFFSET %d', $table, $per_page, $offset ), ARRAY_A );
+		$rows = $wpdb->get_results( $wpdb->prepare( 'SELECT * FROM %i' . $where . ' ORDER BY id DESC LIMIT %d OFFSET %d', array_merge( array( $table ), $types, array( $per_page, $offset ) ) ), ARRAY_A );
 		if ( '' !== (string) $wpdb->last_error || ! is_array( $rows ) ) { return new \WP_Error( 'certloom_job_recent_read_failed', __( 'Certloom could not read background job history.', 'certloom' ) ); }
 		$out = array();
 		foreach ( $rows as $row ) { $decoded = self::decode( $row ); if ( is_wp_error( $decoded ) ) { return $decoded; } $out[] = $decoded; }

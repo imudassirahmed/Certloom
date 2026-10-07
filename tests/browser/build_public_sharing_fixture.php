@@ -1,5 +1,7 @@
 <?php
 /** Browser-only SOC-01 sharing fixture using the real ShareLinkBuilder and production CSS/JS. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define( 'ABSPATH', __DIR__ . '/webroot/' );
 require_once dirname( __DIR__, 2 ) . '/src/Application/Sharing/ShareLinkBuilder.php';
 use Certloom\Application\Sharing\ShareLinkBuilder;

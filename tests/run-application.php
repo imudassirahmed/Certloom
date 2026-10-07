@@ -1,5 +1,7 @@
 <?php
 /** Pure application-service tests using in-memory repository/transaction fakes. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define( 'ABSPATH', __DIR__ . '/fake-wp/' );
 
 if ( ! class_exists( 'WP_Error' ) ) {

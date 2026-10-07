@@ -1,5 +1,7 @@
 <?php
 /** CM-01 premium Credential Management UX + reviewed lifecycle gate. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define( 'ABSPATH', __DIR__ . '/' );
 if ( ! class_exists( 'WP_Error' ) ) { class WP_Error { private $c,$m,$d; public function __construct($c='',$m='',$d=null){$this->c=$c;$this->m=$m;$this->d=$d;} public function get_error_code(){return $this->c;} public function get_error_message(){return $this->m;} public function get_error_data(){return $this->d;} } }
 function is_wp_error($v){return $v instanceof WP_Error;} function __($v){return $v;} function absint($v){return abs((int)$v);} function sanitize_key($v){return strtolower(preg_replace('/[^a-z0-9_\-]/i','',(string)$v));} function sanitize_textarea_field($v){return trim(strip_tags((string)$v));} function wp_json_encode($v,$flags=0){return json_encode($v,$flags);} function wp_salt($scheme='auth'){return 'credential-management-test-salt-'.$scheme;}

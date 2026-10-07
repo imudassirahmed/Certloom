@@ -5,7 +5,7 @@ namespace Certloom\Infrastructure\Backup;
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
-/** Legacy-registry automatic backup scheduler and retention coordinator. */
+/** Explicit legacy or complete recovery schedule and retention coordinator. */
 final class ScheduledBackup {
 	const HOOK               = 'certloom_run_scheduled_backup';
 	const OPTION_SCHEDULE    = 'certloom_backup_schedule';
@@ -58,21 +58,25 @@ final class ScheduledBackup {
 			$storage = ( new LocalBackupStore() )->test_storage();
 			if ( is_wp_error( $storage ) ) { return $storage; }
 		}
+		if ( self::is_whole_schedule( $schedule ) ) {
+			$root = ( new WholeStateProvenanceRepository() )->ensure( (int) get_current_user_id() );
+			if ( is_wp_error( $root ) ) { return $root; }
+		}
 		$previous_schedule  = self::normalize_schedule( get_option( self::OPTION_SCHEDULE, 'off' ) );
 		$previous_retention = self::normalize_retention( get_option( self::OPTION_RETENTION, 14 ) );
-		$saved_retention = update_option( self::OPTION_RETENTION, $retention, false );
+		$saved_retention = ( true === ( new \Certloom\Infrastructure\Data\DurableOptionMutation() )->set( self::OPTION_RETENTION, $retention ) );
 		if ( ! $saved_retention && $retention !== (int) get_option( self::OPTION_RETENTION, 14 ) ) {
 			return new \WP_Error( 'certloom_backup_retention_save_failed', __( 'Certloom could not save the backup retention setting.', 'certloom' ) );
 		}
-		$saved_schedule = update_option( self::OPTION_SCHEDULE, $schedule, false );
+		$saved_schedule = ( true === ( new \Certloom\Infrastructure\Data\DurableOptionMutation() )->set( self::OPTION_SCHEDULE, $schedule ) );
 		if ( ! $saved_schedule && $schedule !== get_option( self::OPTION_SCHEDULE, 'off' ) ) {
-			update_option( self::OPTION_RETENTION, $previous_retention, false );
+			( true === ( new \Certloom\Infrastructure\Data\DurableOptionMutation() )->set( self::OPTION_RETENTION, $previous_retention ) );
 			return new \WP_Error( 'certloom_backup_schedule_save_failed', __( 'Certloom could not save the automatic backup schedule.', 'certloom' ) );
 		}
 		$reconciled = self::reconcile_schedule( true );
 		if ( is_wp_error( $reconciled ) ) {
-			update_option( self::OPTION_SCHEDULE, $previous_schedule, false );
-			update_option( self::OPTION_RETENTION, $previous_retention, false );
+			( true === ( new \Certloom\Infrastructure\Data\DurableOptionMutation() )->set( self::OPTION_SCHEDULE, $previous_schedule ) );
+			( true === ( new \Certloom\Infrastructure\Data\DurableOptionMutation() )->set( self::OPTION_RETENTION, $previous_retention ) );
 			self::reconcile_schedule( true );
 			return $reconciled;
 		}
@@ -116,6 +120,11 @@ final class ScheduledBackup {
 	}
 
 	public static function run_scheduled() {
+		if ( self::is_whole_schedule( self::normalize_schedule( get_option( self::OPTION_SCHEDULE, 'off' ) ) ) ) {
+			$runtime = \Certloom\Plugin::job_runtime();
+			if ( ! $runtime ) { return new \WP_Error( 'certloom_recovery_scheduler_unavailable', __( 'Certloom recovery jobs are unavailable. Check System Status before enabling recovery snapshots.', 'certloom' ) ); }
+			return ( new \Certloom\Application\Backup\WholeStateBackupCoordinator( $runtime->queue() ) )->enqueue( 'scheduled' );
+		}
 		return self::create_now( 'scheduled' );
 	}
 
@@ -135,7 +144,8 @@ final class ScheduledBackup {
 	private static function reconcile_schedule( $force = false ) {
 		$schedule = self::normalize_schedule( get_option( self::OPTION_SCHEDULE, 'off' ) );
 		$event    = function_exists( 'wp_get_scheduled_event' ) ? wp_get_scheduled_event( self::HOOK ) : null;
-		$wanted   = 'weekly' === $schedule ? 'certloom_weekly' : $schedule;
+		$frequency = str_replace( '_whole', '', $schedule );
+		$wanted   = 'weekly' === $frequency ? 'certloom_weekly' : $frequency;
 		if ( 'off' === $schedule ) {
 			$cleared = wp_clear_scheduled_hook( self::HOOK, array(), true );
 			return is_wp_error( $cleared ) ? $cleared : true;
@@ -155,7 +165,11 @@ final class ScheduledBackup {
 
 	private static function normalize_schedule( $value ) {
 		$value = sanitize_key( (string) $value );
-		return in_array( $value, array( 'off', 'daily', 'weekly' ), true ) ? $value : 'off';
+		return in_array( $value, array( 'off', 'daily', 'weekly', 'daily_whole', 'weekly_whole' ), true ) ? $value : 'off';
+	}
+
+	public static function is_whole_schedule( $schedule ) {
+		return in_array( $schedule, array( 'daily_whole', 'weekly_whole' ), true );
 	}
 
 	private static function normalize_retention( $value ) {
@@ -206,7 +220,7 @@ final class ScheduledBackup {
 			'purpose'  => sanitize_key( (string) $purpose ),
 			'ran_at'   => gmdate( 'c' ),
 			'ran_ts'   => time(),
-			'message'  => is_wp_error( $result ) ? sanitize_text_field( $result->get_error_message() ) : __( 'Backup completed and verified.', 'certloom' ),
+			'message'  => is_wp_error( $result ) ? sanitize_text_field( $result->get_error_message() ) : __( 'Legacy certificate backup completed and verified.', 'certloom' ),
 		);
 		if ( is_array( $result ) ) {
 			$payload['backup_id'] = sanitize_text_field( (string) ( $result['id'] ?? '' ) );

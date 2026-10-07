@@ -1,5 +1,7 @@
 <?php
 /** Current Phase 4 contextual-properties fixture over the Gamma-02R Studio shell. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 ob_start();
 require __DIR__ . '/build_ui_phase4_designer_v2_fixture.php';
 $html = ob_get_clean();

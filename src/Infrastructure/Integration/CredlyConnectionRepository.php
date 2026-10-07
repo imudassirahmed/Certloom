@@ -63,12 +63,11 @@ final class CredlyConnectionRepository {
 			'token_sha256' => hash( 'sha256', $authorization_token ),
 			'updated_at' => current_time( 'mysql', true ),
 		);
-		$saved = update_option( self::OPTION, $payload, false );
-		return $saved || $payload === get_option( self::OPTION, null ) ? true : new \WP_Error( 'certloom_credly_connection_save_failed', __( 'Certloom could not save the Credly connection securely.', 'certloom' ) );
+		return ( new \Certloom\Infrastructure\Data\DurableOptionMutation() )->set( self::OPTION, $payload );
 	}
 
-	/** @return true */
-	public function disconnect() { delete_option( self::OPTION ); return true; }
+	/** @return true|\WP_Error */
+	public function disconnect() { return ( new \Certloom\Infrastructure\Data\DurableOptionMutation() )->remove( self::OPTION ); }
 
 	/** @return string */
 	private function fingerprint_from_stored( array $stored ) {

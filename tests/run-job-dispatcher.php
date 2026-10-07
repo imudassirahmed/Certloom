@@ -1,5 +1,7 @@
 <?php
 /** Pure tests for WordPress-local job scheduling, watchdog recovery and continuation. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define( 'MINUTE_IN_SECONDS', 60 );
 if ( ! class_exists( 'WP_Error' ) ) {
 	class WP_Error {

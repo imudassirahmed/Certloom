@@ -1,5 +1,7 @@
 <?php
 /** Phase 4.8 Table/Data Table Designer UI contract. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $root=dirname(__DIR__); $js=file_get_contents($root.'/admin/assets/designer.js'); $css=file_get_contents($root.'/admin/assets/designer.css'); $admin=file_get_contents($root.'/src/Infrastructure/Admin/TemplateAdmin.php');
 $pass=0;$fail=0;function p48($ok,$label){global $pass,$fail;if($ok){$pass++;echo "PASS  $label\n";}else{$fail++;echo "FAIL  $label\n";}}
 p48(false!==strpos($js,'function defaultTableStyle()'),'Designer has one bounded Table style default authority');

@@ -1,5 +1,7 @@
 <?php
 /** Alpha.4.79 Program-first credential-title rationalization contract. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $root = dirname( __DIR__ );
 $service = file_get_contents( $root . '/src/Application/Issuance/ManualIssuanceService.php' );
 $resolver = file_get_contents( $root . '/src/Application/Issuance/EffectiveCredentialTitleResolver.php' );

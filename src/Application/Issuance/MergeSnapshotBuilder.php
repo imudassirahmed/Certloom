@@ -198,7 +198,7 @@ final class MergeSnapshotBuilder {
 				}
 			}
 			foreach ( (array) ( $definition['merge_requirements'] ?? array() ) as $requirement ) {
-				if ( 'dynamic_token' === $requirement || 'verification_url' === $requirement ) { continue; }
+				if ( in_array( $requirement, array( 'dynamic_token', 'inline_dynamic_tokens', 'verification_url' ), true ) ) { continue; }
 				$tokens[] = (string) $requirement;
 			}
 		}

@@ -1,5 +1,7 @@
 <?php
 /** Static safety guard: restore review can stage/analyze but can never promote live tables. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $root = dirname( __DIR__ );
 $preflight = file_get_contents( $root . '/src/Application/Restore/DomainRestorePreflightJobHandler.php' );
 $admin = file_get_contents( $root . '/src/Infrastructure/Admin/DomainDataToolsAdmin.php' );

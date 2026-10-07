@@ -1,5 +1,7 @@
 <?php
 /** Browser-only UX-CORE Email Delivery administration fixture. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $state = getenv( 'CERTLOOM_EMAIL_DELIVERY_STATE' );
 if ( ! in_array( $state, array( 'choose', 'compose', 'preview', 'history' ), true ) ) {
 	$state = 'compose';

@@ -14,6 +14,18 @@ if ( ! defined( 'ABSPATH' ) ) {
 final class LocalBackupStore {
 	const CATALOG_OPTION = 'certloom_local_backup_catalog';
 	const MAX_CATALOG    = 100;
+	/** Structure only: imported catalog entries never establish target file availability. */
+	public function validate_recovery_value( $value ) {
+		$rows = \Certloom\Application\Restore\WholeStateOptionRows::validate_list( $value, self::MAX_CATALOG, function ( $row ) { return $this->normalize_entry( $row ); }, array( 'id' ), null );
+		if ( is_wp_error( $rows ) ) { return $rows; }
+		foreach ( $rows as $row ) {
+			// Complete archives contain independently hashed components and use the
+			// verified file hash. Their native receipts have no legacy content hash.
+			$content_hash_valid = 1 === preg_match( '/^[a-f0-9]{64}$/D', $row['content_sha256'] ) || ( 'whole_state' === $row['scope'] && '' === $row['content_sha256'] );
+			if ( ! \Certloom\Application\Restore\WholeStateOptionRows::iso_date( $row['created_at'] ) || $row['created_ts'] < 1 || $row['bytes'] < 1 || ! $content_hash_valid ) { return new \WP_Error( 'certloom_whole_backup_catalog_invalid', __( 'The recovery copy catalog contains invalid evidence.', 'certloom' ) ); }
+		}
+		return $value;
+	}
 
 	/** @return array<int,array<string,mixed>> */
 	public function list_backups() {
@@ -30,6 +42,32 @@ final class LocalBackupStore {
 
 	/** @return array<string,mixed>|\WP_Error */
 	public function store( $source_path, array $metadata, $purpose = 'scheduled' ) {
+		return $this->store_verified( $source_path, $metadata, $purpose, 'legacy_registry' );
+	}
+
+	/** Whole-state scope requires actual archive integrity and the local source signature. */
+	public function store_whole( $source_path, array $metadata, $purpose = 'manual' ) {
+		$archive = ( new \Certloom\Application\Backup\WholeStateBackupReader() )->analyze( $source_path );
+		if ( is_wp_error( $archive ) ) { return $archive; }
+		$origin = ( new WholeStateProvenanceRepository() )->verify( $archive['manifest'] );
+		if ( is_wp_error( $origin ) ) { return $origin; }
+		if ( ( $metadata['file_sha256'] ?? null ) !== $archive['archive_sha256'] || ( $metadata['bytes'] ?? null ) !== $archive['archive_bytes'] ) { return new \WP_Error( 'certloom_whole_catalog_proof_invalid', __( 'The complete recovery archive does not match its capture receipt.', 'certloom' ) ); }
+		$metadata['export_id'] = $archive['manifest']['source']['export_id'];
+		$metadata['format_version'] = \Certloom\Application\Backup\WholeStateBackupFormat::VERSION;
+		$metadata['plugin_version'] = $archive['manifest']['plugin_version'];
+		$metadata['generated_at'] = $archive['manifest']['created_at'];
+		$current = $this->current_catalog(); if ( is_wp_error( $current ) ) { return $current; }
+		foreach ( $current as $row ) {
+			$entry = $this->normalize_entry( $row );
+			if ( 'whole_state' === $entry['scope'] && $entry['export_id'] === $metadata['export_id'] ) {
+				if ( $entry['file_sha256'] !== $metadata['file_sha256'] || $entry['purpose'] !== $purpose ) { return new \WP_Error( 'certloom_whole_catalog_collision', __( 'This capture identity already has a different recovery receipt.', 'certloom' ) ); }
+				$verified = $this->resolve_entry( $entry ); return is_wp_error( $verified ) ? $verified : $entry;
+			}
+		}
+		return $this->store_verified( $source_path, $metadata, $purpose, 'whole_state' );
+	}
+
+	private function store_verified( $source_path, array $metadata, $purpose, $scope ) {
 		$source_path = (string) $source_path;
 		$purpose     = sanitize_key( (string) $purpose );
 		if ( '' === $source_path || ! is_file( $source_path ) || ! is_readable( $source_path ) ) {
@@ -61,14 +99,21 @@ final class LocalBackupStore {
 		} catch ( \Throwable $error ) {
 			return new \WP_Error( 'certloom_backup_identity_failed', __( 'Certloom could not create a secure backup identifier.', 'certloom' ) );
 		}
-		$filename = $id . '-' . $purpose . '-' . $random . '.cvbackup';
+		// A whole capture's signed export identity owns one deterministic copy.
+		// A crash before catalog commit can verify and adopt these exact bytes on retry.
+		if ( 'whole_state' === $scope ) { $id = $metadata['export_id']; $random = substr( $expected_hash, 0, 48 ); }
+		$filename = $id . '-' . $purpose . '-' . $random . ( 'whole_state' === $scope ? '.cvrecovery' : '.cvbackup' );
 		$path     = trailingslashit( $dir ) . $filename;
+		$adopt = 'whole_state' === $scope && file_exists( $path );
+		if ( $adopt && ( is_link( $path ) || ! is_file( $path ) || filesize( $path ) !== $expected_size || hash_file( 'sha256', $path ) !== $expected_hash ) ) { return new \WP_Error( 'certloom_backup_store_collision', __( 'Certloom refused to replace different bytes at this recovery capture destination.', 'certloom' ) ); }
+		if ( ! $adopt ) {
 		$in       = @fopen( $source_path, 'rb' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen -- Controlled local backup stream.
 		$out      = @fopen( $path, 'xb' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen -- Exclusive creation prevents replacement races.
 		if ( false === $in || false === $out ) {
+			$created = is_resource( $out );
 			if ( is_resource( $in ) ) { fclose( $in ); }
 			if ( is_resource( $out ) ) { fclose( $out ); }
-			@unlink( $path );
+			if ( $created ) { @unlink( $path ); }
 			return new \WP_Error( 'certloom_backup_store_open_failed', __( 'Certloom could not open its private backup storage safely.', 'certloom' ) );
 		}
 		$copied  = stream_copy_to_stream( $in, $out );
@@ -86,6 +131,7 @@ final class LocalBackupStore {
 			@unlink( $path );
 			return new \WP_Error( 'certloom_backup_store_integrity_failed', __( 'Certloom removed a private backup copy that failed its post-write integrity check.', 'certloom' ) );
 		}
+		}
 
 		$created_ts = time();
 		$entry      = array(
@@ -102,14 +148,25 @@ final class LocalBackupStore {
 			'format_version'   => absint( $metadata['format_version'] ?? 0 ),
 			'plugin_version'   => sanitize_text_field( (string) ( $metadata['plugin_version'] ?? '' ) ),
 			'schema_version'   => sanitize_text_field( (string) ( $metadata['schema_version'] ?? '' ) ),
-			'source_authority' => 'current_registry',
+			'source_authority' => 'whole_state' === $scope ? 'whole_installation' : 'current_registry',
+			'scope'            => $scope,
+			'export_id'        => 'whole_state' === $scope ? $metadata['export_id'] : null,
 			'integrity'        => 'verified',
 		);
-		array_unshift( $catalog, $entry );
-		if ( ! $this->save_catalog( $catalog ) ) {
+		$existing = null;
+		$saved = ( new \Certloom\Infrastructure\Data\DurableOptionMutation() )->change( self::CATALOG_OPTION, function ( $raw ) use ( $entry, &$existing ) {
+			$current = $this->decode_catalog( $raw ); if ( is_wp_error( $current ) ) { return $current; }
+			if ( 'whole_state' === $entry['scope'] ) {
+				foreach ( $current as $row ) { $clean = $this->normalize_entry( $row ); if ( $clean && 'whole_state' === $clean['scope'] && $clean['export_id'] === $entry['export_id'] ) { if ( $clean['file_sha256'] !== $entry['file_sha256'] || $clean['purpose'] !== $entry['purpose'] ) { return new \WP_Error( 'certloom_whole_catalog_collision', __( 'This capture identity already has a different recovery receipt.', 'certloom' ) ); } $existing = $clean; return $raw; } }
+			}
+			if ( count( $current ) >= self::MAX_CATALOG ) { return new \WP_Error( 'certloom_backup_catalog_full', __( 'The private backup catalog is full. Remove an older manual backup before creating another.', 'certloom' ) ); }
+			array_unshift( $current, $entry ); return (string) maybe_serialize( $current );
+		} );
+		if ( true !== $saved ) {
 			@unlink( $path );
 			return new \WP_Error( 'certloom_backup_catalog_save_failed', __( 'Certloom created the backup bytes but could not save their private catalog entry, so the untracked copy was removed.', 'certloom' ) );
 		}
+		if ( $existing ) { if ( $existing['filename'] !== $filename && ! @unlink( $path ) ) { return new \WP_Error( 'certloom_backup_duplicate_cleanup_failed', __( 'The recovery capture is already stored, but its duplicate private copy could not be removed.', 'certloom' ) ); } $verified = $this->resolve( $existing['id'] ); return is_wp_error( $verified ) ? $verified : $existing; }
 		return $entry;
 	}
 
@@ -121,6 +178,12 @@ final class LocalBackupStore {
 		}
 		foreach ( $this->list_backups() as $entry ) {
 			if ( ! hash_equals( $id, (string) $entry['id'] ) ) { continue; }
+			return $this->resolve_entry( $entry );
+		}
+		return new \WP_Error( 'certloom_backup_not_found', __( 'That private Certloom backup is not in the local backup catalog.', 'certloom' ) );
+	}
+
+	private function resolve_entry( array $entry ) {
 			$path = $this->path_for_entry( $entry );
 			if ( is_wp_error( $path ) ) { return $path; }
 			if ( ! is_file( $path ) || ! is_readable( $path ) || is_link( $path ) ) {
@@ -133,8 +196,6 @@ final class LocalBackupStore {
 			}
 			$entry['path'] = $path;
 			return $entry;
-		}
-		return new \WP_Error( 'certloom_backup_not_found', __( 'That private Certloom backup is not in the local backup catalog.', 'certloom' ) );
 	}
 
 	/** @return true|\WP_Error */
@@ -147,13 +208,7 @@ final class LocalBackupStore {
 		$target = null;
 		foreach ( $catalog as $entry ) { if ( hash_equals( $id, (string) $entry['id'] ) ) { $target = $entry; break; } }
 		if ( ! $target ) { return new \WP_Error( 'certloom_backup_not_found', __( 'That private Certloom backup is not in the local backup catalog.', 'certloom' ) ); }
-		$path = $this->path_for_entry( $target, true );
-		if ( is_wp_error( $path ) ) { return $path; }
-		if ( ( file_exists( $path ) || is_link( $path ) ) && ! @unlink( $path ) ) {
-			return new \WP_Error( 'certloom_backup_delete_failed', __( 'Certloom could not remove the selected private backup file.', 'certloom' ) );
-		}
-		$catalog = array_values( array_filter( $catalog, function ( $entry ) use ( $id ) { return ! hash_equals( (string) $id, (string) $entry['id'] ); } ) );
-		if ( ! $this->save_catalog( $catalog ) ) { return new \WP_Error( 'certloom_backup_catalog_save_failed', __( 'The backup file was removed, but Certloom could not update its local backup catalog.', 'certloom' ) ); }
+		$removed = $this->remove_entries( array( $target ), false ); if ( is_wp_error( $removed ) ) { return $removed; }
 		if ( class_exists( RestoreTest::class ) ) { RestoreTest::forget( $id ); }
 		return true;
 	}
@@ -171,17 +226,7 @@ final class LocalBackupStore {
 			if ( $scheduled_seen <= $retain ) { $keep[] = $entry; } else { $remove[] = $entry; }
 		}
 		if ( empty( $remove ) ) { return 0; }
-		$deleted = 0;
-		foreach ( $remove as $entry ) {
-			$path = $this->path_for_entry( $entry, true );
-			if ( is_wp_error( $path ) ) { return $path; }
-			if ( ( file_exists( $path ) || is_link( $path ) ) && ! @unlink( $path ) ) {
-				return new \WP_Error( 'certloom_backup_prune_failed', __( 'Certloom stopped automatic retention cleanup because an owned scheduled backup could not be removed safely.', 'certloom' ) );
-			}
-			if ( class_exists( RestoreTest::class ) ) { RestoreTest::forget( (string) $entry['id'] ); }
-			$deleted++;
-		}
-		return $this->save_catalog( $keep ) ? $deleted : new \WP_Error( 'certloom_backup_catalog_save_failed', __( 'Certloom removed expired scheduled backup files but could not save the updated retention catalog.', 'certloom' ) );
+		return $this->remove_entries( $remove, true );
 	}
 
 	/** Keep only the newest N automatic safety snapshots; manual/scheduled backups remain explicit. @return int|\WP_Error */
@@ -197,17 +242,7 @@ final class LocalBackupStore {
 			if ( $safety_seen <= $retain ) { $keep[] = $entry; } else { $remove[] = $entry; }
 		}
 		if ( empty( $remove ) ) { return 0; }
-		$deleted = 0;
-		foreach ( $remove as $entry ) {
-			$path = $this->path_for_entry( $entry, true );
-			if ( is_wp_error( $path ) ) { return $path; }
-			if ( ( file_exists( $path ) || is_link( $path ) ) && ! @unlink( $path ) ) {
-				return new \WP_Error( 'certloom_backup_safety_prune_failed', __( 'Certloom stopped safety-snapshot retention because an owned backup could not be removed safely.', 'certloom' ) );
-			}
-			if ( class_exists( RestoreTest::class ) ) { RestoreTest::forget( (string) $entry['id'] ); }
-			$deleted++;
-		}
-		return $this->save_catalog( $keep ) ? $deleted : new \WP_Error( 'certloom_backup_catalog_save_failed', __( 'Certloom removed expired safety snapshots but could not save the updated backup catalog.', 'certloom' ) );
+		return $this->remove_entries( $remove, true );
 	}
 
 	/** @return string|\WP_Error */
@@ -299,7 +334,10 @@ final class LocalBackupStore {
 		$filename = sanitize_file_name( (string) ( $entry['filename'] ?? '' ) );
 		$purpose  = sanitize_key( (string) ( $entry['purpose'] ?? '' ) );
 		$hash     = strtolower( trim( (string) ( $entry['file_sha256'] ?? '' ) ) );
-		if ( 1 !== preg_match( '/^[a-f0-9]{32}$/', $id ) || 1 !== preg_match( '/^[a-f0-9]{32}-(scheduled|manual|safety)-[a-f0-9]{48}\.cvbackup$/', $filename ) || ! in_array( $purpose, array( 'scheduled', 'manual', 'safety' ), true ) || 1 !== preg_match( '/^[a-f0-9]{64}$/', $hash ) ) {
+		$scope = $entry['scope'] ?? 'legacy_registry';
+		$extension = 'whole_state' === $scope ? 'cvrecovery' : 'cvbackup';
+		$export_id = $entry['export_id'] ?? null;
+		if ( ! in_array( $scope, array( 'legacy_registry', 'whole_state' ), true ) || ( 'whole_state' === $scope && ( ! is_string( $export_id ) || 1 !== preg_match( '/^[a-f0-9]{32}$/D', $export_id ) ) ) || 1 !== preg_match( '/^[a-f0-9]{32}$/', $id ) || 1 !== preg_match( '/^' . $id . '-' . $purpose . '-[a-f0-9]{48}\.' . $extension . '$/D', $filename ) || ! in_array( $purpose, array( 'scheduled', 'manual', 'safety' ), true ) || 1 !== preg_match( '/^[a-f0-9]{64}$/', $hash ) ) {
 			return false;
 		}
 		return array(
@@ -316,7 +354,9 @@ final class LocalBackupStore {
 			'format_version'   => absint( $entry['format_version'] ?? 0 ),
 			'plugin_version'   => sanitize_text_field( (string) ( $entry['plugin_version'] ?? '' ) ),
 			'schema_version'   => sanitize_text_field( (string) ( $entry['schema_version'] ?? '' ) ),
-			'source_authority' => 'current_registry',
+			'source_authority' => 'whole_state' === $scope ? 'whole_installation' : 'current_registry',
+			'scope'            => $scope,
+			'export_id'        => 'whole_state' === $scope ? $export_id : null,
 			'integrity'        => 'verified',
 		);
 	}
@@ -333,10 +373,44 @@ final class LocalBackupStore {
 		return $path;
 	}
 
-	private function save_catalog( array $catalog ) {
-		$catalog = array_values( array_slice( $catalog, 0, self::MAX_CATALOG ) );
-		$saved = update_option( self::CATALOG_OPTION, $catalog, false );
-		return $saved || $catalog === get_option( self::CATALOG_OPTION, array() );
+	/** Remove selected identities from a current locked catalog; concurrent additions survive. */
+	private function remove_entries( array $selected, $verify_bytes ) {
+		$deleted = 0;
+		$saved = ( new \Certloom\Infrastructure\Data\DurableOptionMutation() )->change( self::CATALOG_OPTION, function ( $raw ) use ( $selected, $verify_bytes, &$deleted ) {
+			$current = $this->decode_catalog( $raw ); if ( is_wp_error( $current ) ) { return $current; }
+			$remove = array();
+			foreach ( $selected as $expected ) {
+				$matched = null;
+				foreach ( $current as $row ) { $entry = $this->normalize_entry( $row ); if ( $entry['id'] === $expected['id'] ) { $matched = $entry; break; } }
+				if ( ! $matched || $matched !== $expected ) { return new \WP_Error( 'certloom_backup_catalog_changed', __( 'The backup catalog changed. Refresh before removing selected copies.', 'certloom' ) ); }
+				$path = $this->path_for_entry( $matched ); if ( is_wp_error( $path ) ) { return $path; }
+				if ( file_exists( $path ) && $verify_bytes ) { $verified = $this->resolve_entry( $matched ); if ( is_wp_error( $verified ) ) { return $verified; } }
+				$remove[$matched['id']] = $path;
+			}
+			foreach ( $remove as $id => $path ) { if ( file_exists( $path ) && ! @unlink( $path ) ) { return new \WP_Error( 'certloom_backup_delete_failed', __( 'Certloom could not remove a selected private backup file.', 'certloom' ) ); } ++$deleted; }
+			return (string) maybe_serialize( array_values( array_filter( $current, static function ( $row ) use ( $remove ) { return ! isset( $remove[$row['id']] ); } ) ) );
+		} );
+		if ( true !== $saved ) { return is_wp_error( $saved ) ? $saved : new \WP_Error( 'certloom_backup_catalog_save_failed', __( 'Certloom could not update the private backup catalog. Refresh to review the selected copies.', 'certloom' ) ); }
+		if ( class_exists( RestoreTest::class ) ) { foreach ( $selected as $entry ) { RestoreTest::forget( $entry['id'] ); } }
+		return $deleted;
+	}
+
+	private function decode_catalog( $raw ) {
+		if ( null === $raw ) { return array(); }
+		$record = ( new \Certloom\Application\Backup\WholeStateOptionRecord() )->from_storage( $raw );
+		if ( is_wp_error( $record ) ) { return $record; }
+		$decoded = ( new \Certloom\Application\Backup\WholeStateOptionValue() )->decode( $record );
+		if ( is_wp_error( $decoded ) || ! is_array( $decoded['value'] ) || count( $decoded['value'] ) > self::MAX_CATALOG || ( $decoded['value'] && array_keys( $decoded['value'] ) !== range( 0, count( $decoded['value'] ) - 1 ) ) ) { return new \WP_Error( 'certloom_backup_catalog_invalid', __( 'The private backup catalog needs review before another copy can be stored.', 'certloom' ) ); }
+		$ids = array(); $names = array(); $exports = array();
+		foreach ( $decoded['value'] as $row ) { $entry = $this->normalize_entry( $row ); if ( ! $entry || isset( $ids[$entry['id']] ) || isset( $names[$entry['filename']] ) || ( $entry['export_id'] && isset( $exports[$entry['export_id']] ) ) ) { return new \WP_Error( 'certloom_backup_catalog_invalid', __( 'The private backup catalog contains an unsupported or duplicate entry. No existing entry was replaced.', 'certloom' ) ); } $ids[$entry['id']] = true; $names[$entry['filename']] = true; if ( $entry['export_id'] ) { $exports[$entry['export_id']] = true; } }
+		return $decoded['value'];
+	}
+
+	private function current_catalog() {
+		global $wpdb; $wpdb->last_error = '';
+		$row = $wpdb->get_row( $wpdb->prepare( 'SELECT CASE WHEN OCTET_LENGTH(option_value)<=2097152 THEN option_value ELSE NULL END AS storage FROM %i WHERE option_name=%s', $wpdb->options, self::CATALOG_OPTION ), ARRAY_A );
+		if ( '' !== (string) $wpdb->last_error || ( null !== $row && ( ! is_array( $row ) || ! is_string( $row['storage'] ?? null ) ) ) ) { return new \WP_Error( 'certloom_backup_catalog_read_failed', __( 'Certloom could not read its current private backup catalog.', 'certloom' ) ); }
+		return $this->decode_catalog( null === $row ? null : $row['storage'] );
 	}
 
 	/** @return string|\WP_Error */

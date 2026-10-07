@@ -1,5 +1,7 @@
 <?php
 /** Pure tests for legacy 1.5 row -> new Credential Series/Version mapping. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 require_once __DIR__ . '/bootstrap-autoload.php';
 use Certloom\Application\Migration\LegacyCertificateMapper;
 use Certloom\Application\Migration\LegacyMigrationPreflightService;

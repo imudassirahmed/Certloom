@@ -1,5 +1,7 @@
 <?php
 /** Regression tests for the privacy-safe gated Credential Series acceptance proof contract. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define( 'ABSPATH', __DIR__ . '/fake-wp/' );
 define( 'DB_NAME', 'certloom_test_db' );
 define( 'DB_HOST', 'db.test.local' );
@@ -69,7 +71,7 @@ $GLOBALS['dap_options'][DomainAcceptanceProof::RESULT_OPTION]=$valid;
 $report=DomainAcceptanceProof::get_text_report();
 dap_assert(false===strpos($report,'/var/')&&false===strpos($report,'https://')&&false===strpos($report,'wp_certloom'),'Acceptance report must not expose paths, URLs or table names.');
 $diagnostic_method=new ReflectionMethod(DomainAcceptanceProof::class,'safe_schema_diagnostic');
-$diagnostic_method->setAccessible(true);
+if ( PHP_VERSION_ID < 80100 ) { $diagnostic_method->setAccessible(true); }
 $diagnostic=$diagnostic_method->invoke(null,new WP_Error('certloom_domain_table_setup_failed','raw SQL must not escape',array('stage'=>'dbdelta','object'=>'credential_series','field'=>'public_id','raw'=>'wp_secret_table')));
 dap_assert('certloom_domain_table_setup_failed; stage=dbdelta; object=credential_series; field=public_id'===$diagnostic,'Schema diagnostics must expose only stable safe codes/logical identifiers.');
 dap_assert(false===strpos($diagnostic,'raw SQL')&&false===strpos($diagnostic,'wp_secret_table'),'Schema diagnostics must not expose raw database errors or physical table names.');

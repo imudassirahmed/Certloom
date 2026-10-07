@@ -1,5 +1,7 @@
 <?php
 /** Current PDF-04 readiness / three-format golden-bound authority regression. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 require_once __DIR__ . '/bootstrap-autoload.php';
 
 use Certloom\Application\Rendering\ArtifactReceipt;
@@ -19,10 +21,10 @@ use Certloom\Application\Rendering\DeterministicPdfNormalizer;
 
 $checks=0; function rrcheck($c,$m){global $checks;$checks++;if(!$c){throw new RuntimeException($m);}}
 rrcheck(4===ArtifactReceipt::VERSION,'ArtifactReceipt must remain v4 after shared-plan binding.');
-$rendering=file_get_contents(dirname(__DIR__).'/docs/rendering-contract.md');$architecture=file_get_contents(dirname(__DIR__).'/docs/architecture.md');
+$rendering=file_get_contents(dirname(__DIR__).'/resources/renderer/README.txt');
 rrcheck(false!==strpos($rendering,'ArtifactReceipt v4'),'Rendering contract must document ArtifactReceipt v4.');
 rrcheck(false===strpos($rendering,'ArtifactReceipt v2')&&false===strpos($rendering,'Artifact receipt v2'),'Stale receipt-v2 wording must stay absent.');
-rrcheck(false!==strpos($architecture,'ArtifactReceipt v4'),'Architecture must document current receipt v4.');
+rrcheck(false!==strpos($rendering,'human artifact review'),'Renderer authority instructions must retain human review after automated acceptance.');
 rrcheck(interface_exists('Certloom\\Application\\Contract\\LocalFontResolverInterface'),'Exact local font resolver must autoload.');
 rrcheck(class_exists(FontAssetInspector::class)&&class_exists(ContentAddressedFontResolver::class)&&class_exists(RenderPlanBuilder::class),'Font and shared-plan readiness classes must autoload.');
 rrcheck(class_exists(MpdfPdfRenderer::class)&&class_exists(GdRasterRenderer::class),'Concrete mPDF/GD PDF-04 candidate adapters must autoload.');
@@ -39,8 +41,8 @@ $plan_manifest=file_get_contents(__DIR__.'/fixtures/rendering/render-plan-manife
 rrcheck('99a1e13fc48bf877699f22a76645be3e31f3762c8436ab6c57b6bb8a2e9da98a'===hash('sha256',$plan_manifest),'Seven-fixture shared Render Plan manifest must remain frozen.');
 $golden_manifest=file_get_contents(__DIR__.'/fixtures/rendering/reference/manifest.json');
 rrcheck('fb5a3db32dbf24b1f7554bfab6f12a3a274f314226f5bb6501733f51adc4cb6f'===hash('sha256',$golden_manifest),'PDF/PNG/JPEG golden fixture manifest must remain frozen.');
-rrcheck(false!==strpos($rendering,'certloom-render-plan')&&false!==strpos($architecture,'certloom-render-plan'),'Docs must retain shared render-plan boundary.');
-rrcheck(false!==strpos($rendering,'certloom-renderer-acceptance` v9'),'Rendering contract must document acceptance v9.');
+rrcheck(false!==strpos($rendering,'certloom-render-plan'),'Docs must retain shared render-plan boundary.');
+rrcheck(false!==strpos($rendering,'certloom-renderer-acceptance v9'),'Rendering contract must document acceptance v9.');
 rrcheck(false!==strpos($rendering,'JPEG')&&false!==strpos($rendering,'golden'),'Rendering contract must document JPEG and frozen-golden comparison.');
 rrcheck(false!==strpos($rendering,'RendererVerifierEnvironment` v2')||false!==strpos($rendering,'RendererVerifierEnvironment v2'),'Rendering contract must document verifier-environment v2 entrypoint provenance.');
 $coordinator=file_get_contents(dirname(__DIR__).'/src/Infrastructure/Rendering/ArtifactRenderCoordinator.php');
@@ -63,7 +65,7 @@ rrcheck(is_string($authorized_lib)&&false!==strpos($authorized_lib,'CertloomAuth
 rrcheck(is_file(__DIR__.'/renderer-candidate/validate-authorized-release.php')&&is_file(__DIR__.'/renderer-candidate/validate-bundled-authority.php'),'Canonical external and bundled authority validation CLIs must be source-controlled.');
 rrcheck(is_string($release_builder)&&false!==strpos($release_builder,'CERTLOOM_RENDERER_AUTHORITY_DIR')&&false!==strpos($release_builder,'validate-authorized-release.php'),'Deterministic release builder must consume reviewed external authority only through the strict validator.');
 rrcheck(is_string($release_builder)&&false!==strpos($release_builder,'validate-bundled-authority.php'),'Accepted source rebuilds must revalidate bundled authority before packaging.');
-rrcheck(false!==strpos($rendering,'Authorized renderer release packaging (1.6.40)'),'Living rendering contract must document the canonical authorized packaging boundary.');
+rrcheck(false!==strpos($rendering,'Authorized renderer release packaging'),'Living rendering contract must document the canonical authorized packaging boundary.');
 rrcheck(false===is_file(dirname(__DIR__).'/resources/renderer/accepted.json'),'Current source must remain renderer-authority closed until a real PDF-04 pass is reviewed and packaged.');
 
 echo "PASS  Renderer readiness is three-format, golden-bound, exact-font and fail-closed\n";

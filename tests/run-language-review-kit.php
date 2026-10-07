@@ -1,5 +1,9 @@
 <?php
 /** I18N-03B deterministic human-review intake kit regression. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
+require_once __DIR__ . '/support/python-process.php';
+require_once __DIR__ . '/support/packaging-tools.php';
 $root = dirname( __DIR__ );
 $checks = 0;
 function lrk_check( $condition, $message ) {
@@ -10,13 +14,11 @@ function lrk_check( $condition, $message ) {
         exit( 1 );
     }
 }
-function lrk_exec( $command ) {
-    $out = array(); $rc = 0;
-    exec( $command . ' 2>&1', $out, $rc );
-    return array( $rc, implode( "\n", $out ) );
+function lrk_exec( array $arguments, array $environment = array() ) {
+    return certloom_test_python( $arguments, $environment );
 }
 function lrk_rm( $path ) {
-    if ( file_exists( $path ) || is_link( $path ) ) { exec( 'rm -rf ' . escapeshellarg( $path ) ); }
+    certloom_test_remove_fixture_tree( $path, $path );
 }
 $tool = $root . '/tests/i18n/make_review_kit.py';
 $manifest_path = $root . '/languages/certloom-language-packs.json';
@@ -39,10 +41,10 @@ mkdir( $base, 0700, true );
 $epoch = '1787356800';
 mkdir( $base . '/run-a', 0700 );
 mkdir( $base . '/run-b', 0700 );
-$cmd_a = 'SOURCE_DATE_EPOCH=' . $epoch . ' python3 ' . escapeshellarg( $tool ) . ' ' . escapeshellarg( $root ) . ' es_ES --output ' . escapeshellarg( $base . '/run-a/es' );
-$cmd_b = 'SOURCE_DATE_EPOCH=' . $epoch . ' python3 ' . escapeshellarg( $tool ) . ' ' . escapeshellarg( $root ) . ' es_ES --output ' . escapeshellarg( $base . '/run-b/es' );
-list( $rc_a, $out_a ) = lrk_exec( $cmd_a );
-list( $rc_b, $out_b ) = lrk_exec( $cmd_b );
+$cmd_a = array( $tool, $root, 'es_ES', '--output', $base . '/run-a/es' );
+$cmd_b = array( $tool, $root, 'es_ES', '--output', $base . '/run-b/es' );
+list( $rc_a, $out_a ) = lrk_exec( $cmd_a, array( 'SOURCE_DATE_EPOCH' => $epoch ) );
+list( $rc_b, $out_b ) = lrk_exec( $cmd_b, array( 'SOURCE_DATE_EPOCH' => $epoch ) );
 lrk_check( 0 === $rc_a && 0 === $rc_b, 'Spanish review kit builds twice: ' . $out_a . ' ' . $out_b );
 $report_a = json_decode( $out_a, true );
 $report_b = json_decode( $out_b, true );
@@ -71,15 +73,15 @@ lrk_check( false !== strpos( $tsv, 'block-js' ), 'TSV identifies block-editor Ja
 lrk_check( false !== strpos( file_get_contents( $kit . '/REVIEW-CHECKLIST.md' ), 'must not imply accreditation, compliance, renderer authority or disclosure' ), 'review checklist protects Certloom authority semantics' );
 
 mkdir( $base . '/ar-run', 0700 );
-list( $ar_rc, $ar_out ) = lrk_exec( 'SOURCE_DATE_EPOCH=' . $epoch . ' python3 ' . escapeshellarg( $tool ) . ' ' . escapeshellarg( $root ) . ' ar --output ' . escapeshellarg( $base . '/ar-run/ar-kit' ) );
+list( $ar_rc, $ar_out ) = lrk_exec( array( $tool, $root, 'ar', '--output', $base . '/ar-run/ar-kit' ), array( 'SOURCE_DATE_EPOCH' => $epoch ) );
 lrk_check( 0 === $ar_rc, 'Arabic review kit builds: ' . $ar_out );
 $ar_manifest = json_decode( file_get_contents( $base . '/ar-run/ar-kit/review-manifest.json' ), true );
 lrk_check( 'rtl' === ( $ar_manifest['direction'] ?? '' ), 'Arabic review kit preserves RTL policy' );
 lrk_check( false !== strpos( file_get_contents( $base . '/ar-run/ar-kit/REVIEW-CHECKLIST.md' ), 'hidden bidi embedding/override/isolate controls' ), 'RTL review checklist forbids hidden bidi forcing' );
 
-list( $unknown_rc, $unknown_out ) = lrk_exec( 'python3 ' . escapeshellarg( $tool ) . ' ' . escapeshellarg( $root ) . ' xx_XX --output ' . escapeshellarg( $base . '/unknown' ) );
+list( $unknown_rc, $unknown_out ) = lrk_exec( array( $tool, $root, 'xx_XX', '--output', $base . '/unknown' ) );
 lrk_check( 0 !== $unknown_rc && false !== strpos( $unknown_out, 'not an approved Certloom language-pack target' ), 'unknown locale fails closed' );
-list( $inside_rc, $inside_out ) = lrk_exec( 'python3 ' . escapeshellarg( $tool ) . ' ' . escapeshellarg( $root ) . ' es_ES --output ' . escapeshellarg( $root . '/tests/i18n/.bad-review-kit' ) );
+list( $inside_rc, $inside_out ) = lrk_exec( array( $tool, $root, 'es_ES', '--output', $root . '/tests/i18n/.bad-review-kit' ) );
 lrk_check( 0 !== $inside_rc && false !== strpos( $inside_out, 'outside the Certloom plugin tree' ), 'in-tree review kit fails closed' );
 lrk_check( ! file_exists( $root . '/tests/i18n/.bad-review-kit' ), 'failed in-tree generation leaves source clean' );
 
@@ -91,23 +93,23 @@ copy( $pot_path, $isolated . '/languages/certloom.pot' );
 $manifest = json_decode( file_get_contents( $manifest_path ), true );
 $manifest['source_pot_sha256'] = str_repeat( '0', 64 );
 file_put_contents( $isolated . '/languages/certloom-language-packs.json', json_encode( $manifest, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES ) . "\n" );
-list( $stale_rc, $stale_out ) = lrk_exec( 'python3 ' . escapeshellarg( $isolated . '/tests/i18n/make_review_kit.py' ) . ' ' . escapeshellarg( $isolated ) . ' es_ES --output ' . escapeshellarg( $base . '/stale' ) );
+list( $stale_rc, $stale_out ) = lrk_exec( array( $isolated . '/tests/i18n/make_review_kit.py', $isolated, 'es_ES', '--output', $base . '/stale' ) );
 lrk_check( 0 !== $stale_rc && false !== strpos( $stale_out, 'source_pot_sha256 does not match languages/certloom.pot' ), 'stale manifest/POT identity fails closed' );
 
 
 mkdir( $base . '/existing-zip-parent', 0700 );
 file_put_contents( $base . '/existing-zip-parent/certloom-es_ES-review-kit.zip', 'do-not-overwrite' );
-list( $zip_exists_rc, $zip_exists_out ) = lrk_exec( 'python3 ' . escapeshellarg( $tool ) . ' ' . escapeshellarg( $root ) . ' es_ES --output ' . escapeshellarg( $base . '/existing-zip-parent/es' ) );
+list( $zip_exists_rc, $zip_exists_out ) = lrk_exec( array( $tool, $root, 'es_ES', '--output', $base . '/existing-zip-parent/es' ) );
 lrk_check( 0 !== $zip_exists_rc && false !== strpos( $zip_exists_out, 'ZIP target already exists' ), 'existing review ZIP target fails closed before generation' );
 lrk_check( ! file_exists( $base . '/existing-zip-parent/es' ), 'existing review ZIP failure leaves no partial review directory' );
 
-list( $epoch_rc, $epoch_out ) = lrk_exec( 'SOURCE_DATE_EPOCH=not-an-integer python3 ' . escapeshellarg( $tool ) . ' ' . escapeshellarg( $root ) . ' es_ES --output ' . escapeshellarg( $base . '/bad-epoch' ) );
+list( $epoch_rc, $epoch_out ) = lrk_exec( array( $tool, $root, 'es_ES', '--output', $base . '/bad-epoch' ), array( 'SOURCE_DATE_EPOCH' => 'not-an-integer' ) );
 lrk_check( 0 !== $epoch_rc && false !== strpos( $epoch_out, 'SOURCE_DATE_EPOCH must be an integer' ), 'invalid deterministic epoch fails closed' );
 lrk_check( ! file_exists( $base . '/bad-epoch' ), 'invalid epoch fails before writing a partial review directory' );
 
 mkdir( $base . '/nonempty', 0700 );
 file_put_contents( $base . '/nonempty/keep.txt', 'keep' );
-list( $nonempty_rc, $nonempty_out ) = lrk_exec( 'python3 ' . escapeshellarg( $tool ) . ' ' . escapeshellarg( $root ) . ' es_ES --output ' . escapeshellarg( $base . '/nonempty' ) );
+list( $nonempty_rc, $nonempty_out ) = lrk_exec( array( $tool, $root, 'es_ES', '--output', $base . '/nonempty' ) );
 lrk_check( 0 !== $nonempty_rc && false !== strpos( $nonempty_out, 'must be empty' ), 'non-empty output directory fails closed instead of deleting operator files' );
 
 lrk_rm( $base );

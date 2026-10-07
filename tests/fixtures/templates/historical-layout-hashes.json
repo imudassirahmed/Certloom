@@ -1,0 +1,152 @@
+{
+    "classic-a4-landscape": {
+        "1": "163509ccdba3fe4ab754479dbb28ff3bb46029c2729d4c08699dd270eeb4ebf8",
+        "2": "163509ccdba3fe4ab754479dbb28ff3bb46029c2729d4c08699dd270eeb4ebf8"
+    },
+    "classic-a4-portrait": {
+        "1": "6132a1233d1eef867a58dddf16124a2a562ab09809ed8a3afd8a084f7c582ded",
+        "2": "6132a1233d1eef867a58dddf16124a2a562ab09809ed8a3afd8a084f7c582ded"
+    },
+    "classic-letter-landscape": {
+        "1": "9b554bedcb36849482bef0bc159b32bcca31e7ff8e58d1eb37297641669fa6f2",
+        "2": "9b554bedcb36849482bef0bc159b32bcca31e7ff8e58d1eb37297641669fa6f2"
+    },
+    "classic-letter-portrait": {
+        "1": "e3f6f42351d37e5f4f8bd3ab74954ac21efa960c30fc790d0f4bb8a8b34ad415",
+        "2": "e3f6f42351d37e5f4f8bd3ab74954ac21efa960c30fc790d0f4bb8a8b34ad415"
+    },
+    "modern-a4-landscape": {
+        "1": "656317ff9f0c03fc19ad6568f88d2fcbc68b56c56a2943b42ddaa2f137e8c808",
+        "2": "34b2ce0415c3a470450212fab96ac7129ca38b41de4aca97db9f1bfbf9c5ae01"
+    },
+    "modern-a4-portrait": {
+        "1": "49e0bdf2932d7c4cc95b5cfd4769d1690d5f8629b3613b70e1e301c825108c1d",
+        "2": "49e0bdf2932d7c4cc95b5cfd4769d1690d5f8629b3613b70e1e301c825108c1d"
+    },
+    "modern-letter-landscape": {
+        "1": "9745834bd51dfac0f57a911bcec0f1ccae1425c0e3ec222a8e5fb417050a68d6",
+        "2": "5df3a5dce8f70ab4a63d80f9b8fcb744f48f2108d5c1677d0f5bef6eef973556"
+    },
+    "modern-letter-portrait": {
+        "1": "80d9f57512f567cd1efaba32aaa677ad8f9f849a7b1b0b995c5f0f6d7d7ae850",
+        "2": "80d9f57512f567cd1efaba32aaa677ad8f9f849a7b1b0b995c5f0f6d7d7ae850"
+    },
+    "corporate-a4-landscape": {
+        "1": "bf5a472dce75bdee7f48ebaf7c46ed091c442e7b0e546f671e898a08fce70899",
+        "2": "bf5a472dce75bdee7f48ebaf7c46ed091c442e7b0e546f671e898a08fce70899"
+    },
+    "corporate-a4-portrait": {
+        "1": "bcb9fed5c3402e79328f80353a947cfdd6fe533e6da4b19c14da000042e6fe5f",
+        "2": "bcb9fed5c3402e79328f80353a947cfdd6fe533e6da4b19c14da000042e6fe5f"
+    },
+    "corporate-letter-landscape": {
+        "1": "7a42076128f1fe866ae00393a4674df8e698dc4cc6dc023687c0e346c0ddeebd",
+        "2": "7a42076128f1fe866ae00393a4674df8e698dc4cc6dc023687c0e346c0ddeebd"
+    },
+    "corporate-letter-portrait": {
+        "1": "8b1a6ef1c18959afe9cc88ba8d9c8b8f0b1e1eb986472fd5cf4f4d47a2b48658",
+        "2": "8b1a6ef1c18959afe9cc88ba8d9c8b8f0b1e1eb986472fd5cf4f4d47a2b48658"
+    },
+    "academic-a4-landscape": {
+        "1": "e0c924851a41811f0a9811ff73f671eb81b16fd16d5fedce98c4e827ac50a121",
+        "2": "f21bc6590bc3c45de6fd3c85434d05713d1e1a304617b0794305003b165a5c25"
+    },
+    "academic-a4-portrait": {
+        "1": "750e9e187f8f7ddb7e890285916d70035f5b1caeec1d698a047230c387c486d5",
+        "2": "e53bfa859a77a7356f4bb39d51a52ea594cdcd662d5d8806a70c7e731ac23190"
+    },
+    "academic-letter-landscape": {
+        "1": "1a9ce0fda29b37756ed8db0439bc0da75dda9b0363325e91bb3f5c8b3e6c6fd9",
+        "2": "3125d3fdf2be277beeda3777dc851c08b503d0cb3a205e0df4b64be06ec39a89"
+    },
+    "academic-letter-portrait": {
+        "1": "1636744d592b27f80760ce628225ccf276fb6472814ec721bed6627c5409fa1d",
+        "2": "70ad0c6f865a2060d4e472c7f445476175936f440aab2ae6f92a09d568ba3cf5"
+    },
+    "elegant-a4-landscape": {
+        "1": "352cccb16e17492979479209e3eb9a0a41912ac1a0c97e24751a3fae77d8fa6b",
+        "2": "352cccb16e17492979479209e3eb9a0a41912ac1a0c97e24751a3fae77d8fa6b"
+    },
+    "elegant-a4-portrait": {
+        "1": "def3b9d7a194cec6842d66e58fcccbe76cc89ce7d19318291604d7d15f0fcc27",
+        "2": "def3b9d7a194cec6842d66e58fcccbe76cc89ce7d19318291604d7d15f0fcc27"
+    },
+    "elegant-letter-landscape": {
+        "1": "35400b6e0f45d423f752ad5caf9853a897f8460d8ce5da4719059195b5c3b6a1",
+        "2": "35400b6e0f45d423f752ad5caf9853a897f8460d8ce5da4719059195b5c3b6a1"
+    },
+    "elegant-letter-portrait": {
+        "1": "abb2c00e66ac5370a205dd62800f22f2977e9a559fed74f3d9543bcc48ffb750",
+        "2": "abb2c00e66ac5370a205dd62800f22f2977e9a559fed74f3d9543bcc48ffb750"
+    },
+    "minimal-a4-landscape": {
+        "1": "10ffd63efaee5ca08b59f4ab5d92aee6aa56ac3586327bf5393301968c357247",
+        "2": "10ffd63efaee5ca08b59f4ab5d92aee6aa56ac3586327bf5393301968c357247"
+    },
+    "minimal-a4-portrait": {
+        "1": "1f54ed59f14cfa08eacbbf87b2a6eafc86f8379603f1c6a080a7e8dc16bbbddf",
+        "2": "1f54ed59f14cfa08eacbbf87b2a6eafc86f8379603f1c6a080a7e8dc16bbbddf"
+    },
+    "minimal-letter-landscape": {
+        "1": "25620dea7555842ccf1b215ff88606f2e1837045726262bf84f823411b3bd375",
+        "2": "25620dea7555842ccf1b215ff88606f2e1837045726262bf84f823411b3bd375"
+    },
+    "minimal-letter-portrait": {
+        "1": "b640f00354b1e2a1a0a74e09959b1e5716318adf583c9b3fbfa3b0ed43ca1921",
+        "2": "b640f00354b1e2a1a0a74e09959b1e5716318adf583c9b3fbfa3b0ed43ca1921"
+    },
+    "curated-heritage": {
+        "1": "ea80960ef13612b7a3cc8c19b72b4395df97f164a1429d7d1dd0c2ba0f440e46"
+    },
+    "curated-executive": {
+        "1": "862831aea25bcc9c1cf44935d77eb849520a1b4e5bf91dab4c73f99919f995ad"
+    },
+    "curated-summit": {
+        "1": "a87b3fb7be26326472998abfc1b695c8d3f49b389edfca7b76d5c571fa905e3f"
+    },
+    "curated-folio": {
+        "1": "13a86863e545c09c7b8286e2ecc292f656198b8b30f0c83f756fcadf9fb6ae77"
+    },
+    "curated-civic": {
+        "1": "4dafcbdf998a83c1c5a49f14003393860305020fd2716ce9071ac6f07e1daa79"
+    },
+    "curated-ledger": {
+        "1": "25faa343b61d12d03d29e60fd83cb280dced8267813577c6d7a78eeae06dcb67"
+    },
+    "curated-ribbon": {
+        "1": "d097613bb082de296883600c7686ac90d7fbadd251efd7a9a82baf0b11ef97e9"
+    },
+    "curated-crest": {
+        "1": "700b3b2b821276c488de043bf2d827e9e5621f452407b760a54dec27c5700f30"
+    },
+    "curated-atelier": {
+        "1": "cda09884905af5713078500291dd159cd7d753fbbda3d75b5c9e7d43eeff6a97"
+    },
+    "curated-gallery": {
+        "1": "58df701cb12e900bf61edbb99faf59b2d288606a857da4c1167577ff6a90e8e0"
+    },
+    "curated-horizon": {
+        "1": "90879a87b1e14ec41579e00c8a4672acc81d62d4cb9718f180eba1f921d3342e"
+    },
+    "curated-keystone": {
+        "1": "a951e36f842a1212709cd9c2d1e8eb25668b7cbd1d349736222e497d62f45bf4"
+    },
+    "curated-parchment": {
+        "1": "dc4dc3ade340bc3b9bafdbb84f037c048591877fc2f4f47e386f33d17402a2ee"
+    },
+    "curated-signal": {
+        "1": "b098d40bd5bf148c66074a0a259ab620ff72228ddcf1121aa1d0c8b058f12133"
+    },
+    "curated-milestone": {
+        "1": "5aea4a54ecfdb5b9de1def20f04887902ff11a39f5794a59a15dc3dc3c49cf9d"
+    },
+    "curated-conference": {
+        "1": "ba142983c269779c73f8ffa81716e695d87cb6f24ed2db6e6f1e75b6abb16321"
+    },
+    "curated-license": {
+        "1": "f33ed6e1de42d14a2000b2a2b8a724102fbfd0fda0bbea32ffab6c123e0d132f"
+    },
+    "curated-assurance": {
+        "1": "72e52d67f848158e0efc3fbbd2f419ee380d4386f5f8cb3a045dd1aaf7254d68"
+    }
+}

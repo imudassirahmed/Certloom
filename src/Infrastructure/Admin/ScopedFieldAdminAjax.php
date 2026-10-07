@@ -2,6 +2,7 @@
 namespace Certloom\Infrastructure\Admin;
 
 use Certloom\Application\Fields\ScopedFieldContract;
+use Certloom\Application\Issuance\BulkIssuanceCsvSchema;
 use Certloom\Infrastructure\Integration\LearnDashAdapter;
 use Certloom\Infrastructure\Integration\TutorLmsAdapter;
 use Certloom\Infrastructure\Repository\BatchRepository;
@@ -10,6 +11,7 @@ use Certloom\Infrastructure\Repository\ProgramRepository;
 use Certloom\Infrastructure\Repository\RecipientRepository;
 use Certloom\Infrastructure\Repository\SignerRepository;
 use Certloom\Infrastructure\Repository\TemplateRepository;
+use Certloom\Infrastructure\Repository\ScopedFieldGlobalRepository;
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
@@ -62,7 +64,13 @@ final class ScopedFieldAdminAjax {
 		}
 
 		$catalog = class_exists( '\\Ecapla_CertVerify_Fields' ) ? \Ecapla_CertVerify_Fields::get_field_map() : array();
-		$resolved = ( new ScopedFieldContract() )->resolve(
+		$global = ( new ScopedFieldGlobalRepository() )->get( $catalog );
+		if ( is_wp_error( $global ) ) { wp_send_json_error( array( 'message' => $global->get_error_message() ), 400 ); }
+		$issuer = ! empty( $program['issuer_id'] ) ? ( new IssuerRepository() )->find( $program['issuer_id'] ) : null;
+		if ( is_wp_error( $issuer ) || ( ! empty( $program['issuer_id'] ) && ! is_array( $issuer ) ) ) { wp_send_json_error( array( 'message' => __( 'The Program’s Issuer is unavailable. Review its issuing configuration.', 'certloom' ) ), 400 ); }
+		$resolved = ( new ScopedFieldContract() )->resolve_hierarchy(
+			$global,
+			is_array( $issuer ) && is_array( $issuer['field_contract'] ?? null ) ? $issuer['field_contract'] : null,
 			is_array( $program['field_contract'] ?? null ) ? $program['field_contract'] : ScopedFieldContract::empty_program( false ),
 			is_array( $batch ) && is_array( $batch['field_contract'] ?? null ) ? $batch['field_contract'] : null,
 			$catalog
@@ -82,14 +90,18 @@ final class ScopedFieldAdminAjax {
 				'value_source'    => sanitize_key( (string) ( $field['value_source'] ?? 'credential_custom' ) ),
 				'sensitivity'     => sanitize_key( (string) ( $field['sensitivity'] ?? 'personal' ) ),
 				'public_exposure' => sanitize_key( (string) ( $field['public_exposure'] ?? 'private' ) ),
+				'collection_policy' => $field['collection_policy'] ?? null,
 			);
 		}
+		$csv_schema = ( new BulkIssuanceCsvSchema() )->describe( $resolved, $catalog );
+		if ( is_wp_error( $csv_schema ) ) { wp_send_json_error( array( 'message' => $csv_schema->get_error_message() ), 400 ); }
 
 		wp_send_json_success(
 			array(
 				'configured'       => ! empty( $resolved['_meta']['configured'] ),
 				'batch_configured' => ! empty( $resolved['_meta']['batch_configured'] ),
 				'fields'           => $fields,
+				'bulk_csv_schema'  => $csv_schema,
 			)
 		);
 	}
@@ -158,7 +170,10 @@ final class ScopedFieldAdminAjax {
 		$program_id = isset( $_POST['program_id'] ) ? absint( $_POST['program_id'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Verified above.
 		$program_status = isset( $_POST['program_status'] ) ? sanitize_key( wp_unslash( $_POST['program_status'] ) ) : 'active'; // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Verified above.
 		$choices = $this->choices( $kind, $query, $program_id, $program_status );
-		if ( is_wp_error( $choices ) ) { wp_send_json_error( array( 'message' => $choices->get_error_message() ), (int) ( $choices->get_error_data( 'status' ) ?: 400 ) ); }
+		if ( is_wp_error( $choices ) ) {
+			$data = $choices->get_error_data(); $status = is_array( $data ) ? absint( $data['status'] ?? 400 ) : 400;
+			wp_send_json_error( array( 'message' => $choices->get_error_message() ), $status >= 400 && $status <= 599 ? $status : 400 );
+		}
 		wp_send_json_success( array( 'choices' => $choices, 'limit' => 20 ) );
 	}
 
@@ -245,6 +260,8 @@ final class ScopedFieldAdminAjax {
 			$choices = $this->course_choices( TutorLmsAdapter::is_available() ? TutorLmsAdapter::course_post_type() : '', $query );
 		} elseif ( 'learndash_course' === $kind ) {
 			$choices = $this->course_choices( LearnDashAdapter::is_available() ? LearnDashAdapter::course_post_type() : '', $query );
+		} elseif ( 'woocommerce_product' === $kind ) {
+			$choices = ( new WooCommerceProductChoices() )->search( $query );
 		} else {
 			return new \WP_Error( 'certloom_lookup_kind_invalid', __( 'Choose a valid Certloom lookup type.', 'certloom' ), array( 'status' => 400 ) );
 		}

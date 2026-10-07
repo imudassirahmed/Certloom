@@ -2,6 +2,7 @@
 namespace Certloom\Infrastructure\Repository;
 
 use Certloom\Infrastructure\Data\DomainGeneration;
+use Certloom\Infrastructure\Database\Transaction;
 use Certloom\Application\Data\SafeJson;
 use Certloom\Application\Privacy\IdentityDigest;
 use Certloom\Infrastructure\Database\SchemaManager;
@@ -16,56 +17,78 @@ final class RecipientRepository {
 
 	/** @param array<string,mixed> $data Recipient fields. @return int|\WP_Error */
 	public function create( array $data ) {
-		global $wpdb;
-		$validated = $this->normalize_patch( $data, true );
-		if ( is_wp_error( $validated ) ) { return $validated; }
+		return ( new Transaction() )->run( function () use ( $data ) {
+			global $wpdb;
+			$validated = $this->normalize_patch( $data, true );
+			if ( is_wp_error( $validated ) ) { return $validated; }
 
-		$now = current_time( 'mysql', true );
-		$row = array_merge( $validated, array( 'created_at' => $now, 'updated_at' => $now ) );
-		$generation = ( new DomainGeneration() )->mark_before_mutation();
-		if ( is_wp_error( $generation ) ) { return $generation; }
-		$wpdb->last_error = '';
-		$inserted = $wpdb->insert( SchemaManager::table( 'recipients' ), $row );
-		if ( false === $inserted || '' !== (string) $wpdb->last_error ) {
-			if ( false !== stripos( (string) $wpdb->last_error, 'wp_user_id' ) || false !== stripos( (string) $wpdb->last_error, 'duplicate' ) ) {
-				return new \WP_Error( 'certloom_recipient_wp_user_duplicate', __( 'That WordPress user is already linked to another Certloom recipient.', 'certloom' ) );
+			$now = current_time( 'mysql', true );
+			$row = array_merge( $validated, array( 'created_at' => $now, 'updated_at' => $now ) );
+			$generation = ( new DomainGeneration() )->mark_before_mutation();
+			if ( is_wp_error( $generation ) ) { return $generation; }
+			$wpdb->last_error = '';
+			$inserted = $wpdb->insert( SchemaManager::table( 'recipients' ), $row );
+			if ( false === $inserted || '' !== (string) $wpdb->last_error ) {
+				if ( false !== stripos( (string) $wpdb->last_error, 'wp_user_id' ) || false !== stripos( (string) $wpdb->last_error, 'duplicate' ) ) {
+					return new \WP_Error( 'certloom_recipient_wp_user_duplicate', __( 'That WordPress user is already linked to another Certloom recipient.', 'certloom' ) );
+				}
+				return new \WP_Error( 'certloom_recipient_create_failed', __( 'Certloom could not create the recipient.', 'certloom' ) );
 			}
-			return new \WP_Error( 'certloom_recipient_create_failed', __( 'Certloom could not create the recipient.', 'certloom' ) );
-		}
-		return (int) $wpdb->insert_id;
+			return (int) $wpdb->insert_id;
+		} );
 	}
 
 	/** Updates only explicitly supplied recipient fields. @param int $id @param array<string,mixed> $data @return true|\WP_Error */
 	public function update( $id, array $data ) {
-		global $wpdb;
-		$id = absint( $id );
-		if ( ! $id ) {
-			return new \WP_Error( 'certloom_recipient_id_required', __( 'A valid recipient is required.', 'certloom' ) );
-		}
-		if ( array_key_exists( 'email', $data ) ) {
-			$identity = $this->identity_hashes_for_update( $id );
-			if ( is_wp_error( $identity ) ) { return $identity; }
-			$data['privacy_identity_hashes'] = ( new IdentityDigest() )->merge_email( $identity, $data['email'] ?? null );
-			if ( ! ( new IdentityDigest() )->is_valid_history( $data['privacy_identity_hashes'] ) ) { return new \WP_Error( 'certloom_recipient_privacy_identity_limit', __( 'Recipient privacy identity history reached its safe bounded limit. No email change was saved.', 'certloom' ) ); }
-		}
-		$row = $this->normalize_patch( $data, false );
-		if ( is_wp_error( $row ) ) { return $row; }
-		if ( array_intersect( array_keys( $data ), array( 'display_name', 'first_name', 'middle_name', 'last_name', 'email', 'wp_user_id', 'external_id', 'custom_fields' ) ) ) {
-			$row['privacy_anonymized_at'] = null;
-		}
-		if ( empty( $row ) ) { return true; }
-		$row['updated_at'] = current_time( 'mysql', true );
-		$generation = ( new DomainGeneration() )->mark_before_mutation();
-		if ( is_wp_error( $generation ) ) { return $generation; }
-		$wpdb->last_error = '';
-		$updated = $wpdb->update( SchemaManager::table( 'recipients' ), $row, array( 'id' => $id ) );
-		if ( false === $updated || '' !== (string) $wpdb->last_error ) {
-			if ( false !== stripos( (string) $wpdb->last_error, 'wp_user_id' ) || false !== stripos( (string) $wpdb->last_error, 'duplicate' ) ) {
-				return new \WP_Error( 'certloom_recipient_wp_user_duplicate', __( 'That WordPress user is already linked to another Certloom recipient.', 'certloom' ) );
+		$changed_id = 0;
+		$result = ( new Transaction() )->run( function () use ( $id, $data, &$changed_id ) {
+			global $wpdb;
+			$id = absint( $id );
+			if ( ! $id ) {
+				return new \WP_Error( 'certloom_recipient_id_required', __( 'A valid recipient is required.', 'certloom' ) );
 			}
-			return new \WP_Error( 'certloom_recipient_update_failed', __( 'Certloom could not update the recipient.', 'certloom' ) );
-		}
-		return true;
+			$wpdb->last_error = '';
+			$current = $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM %i WHERE id=%d FOR UPDATE', SchemaManager::table( 'recipients' ), $id ), ARRAY_A );
+			if ( '' !== (string) $wpdb->last_error || ! is_array( $current ) ) {
+				return new \WP_Error( 'certloom_recipient_update_read_failed', __( 'Certloom could not confirm the current recipient before saving changes.', 'certloom' ) );
+			}
+			if ( array_key_exists( 'email', $data ) ) {
+				$identity = $this->identity_hashes_from_row( $current );
+				if ( is_wp_error( $identity ) ) { return $identity; }
+				$data['privacy_identity_hashes'] = ( new IdentityDigest() )->merge_email( $identity, $data['email'] ?? null );
+				if ( ! ( new IdentityDigest() )->is_valid_history( $data['privacy_identity_hashes'] ) ) { return new \WP_Error( 'certloom_recipient_privacy_identity_limit', __( 'Recipient privacy identity history reached its safe bounded limit. No email change was saved.', 'certloom' ) ); }
+			}
+			$row = $this->normalize_patch( $data, false );
+			if ( is_wp_error( $row ) ) { return $row; }
+			if ( array_intersect( array_keys( $data ), array( 'display_name', 'first_name', 'middle_name', 'last_name', 'email', 'wp_user_id', 'external_id', 'custom_fields' ) ) ) {
+				$row['privacy_anonymized_at'] = null;
+			}
+			foreach ( $row as $column => $value ) {
+				if ( array_key_exists( $column, $current ) && ( null === $value ? null === $current[$column] : null !== $current[$column] && (string) $value === (string) $current[$column] ) ) { unset( $row[$column] ); }
+			}
+			// Account reads can refresh identical provider facts. A confirmed no-op
+			// must not change the review generation or enqueue readiness work.
+			if ( empty( $row ) ) { return true; }
+			$row['updated_at'] = current_time( 'mysql', true );
+			$generation = ( new DomainGeneration() )->mark_before_mutation();
+			if ( is_wp_error( $generation ) ) { return $generation; }
+			$wpdb->last_error = '';
+			$updated = $wpdb->update( SchemaManager::table( 'recipients' ), $row, array( 'id' => $id ) );
+			if ( false === $updated || '' !== (string) $wpdb->last_error ) {
+				if ( false !== stripos( (string) $wpdb->last_error, 'wp_user_id' ) || false !== stripos( (string) $wpdb->last_error, 'duplicate' ) ) {
+					return new \WP_Error( 'certloom_recipient_wp_user_duplicate', __( 'That WordPress user is already linked to another Certloom recipient.', 'certloom' ) );
+				}
+				return new \WP_Error( 'certloom_recipient_update_failed', __( 'Certloom could not update the recipient.', 'certloom' ) );
+			}
+			if ( $updated > 0 ) {
+				$due = ( new IssuanceRequestRepository() )->mark_due_for_recipient( $id );
+				if ( is_wp_error( $due ) ) { return $due; }
+				$changed_id = $id;
+			}
+			return true;
+		} );
+		if ( ! is_wp_error( $result ) && $changed_id ) { do_action( 'certloom_recipient_fields_changed', $changed_id ); }
+		return $result;
 	}
 
 	/** @return array{items:array<int,array<string,mixed>>,total:int}|\WP_Error */
@@ -164,12 +187,22 @@ final class RecipientRepository {
 
 	/** @return array<string,mixed>|null|\WP_Error */
 	public function find( $id ) {
+		if ( \Certloom\Infrastructure\Recipient\RecipientCommandReadScope::active() ) { return $this->find_for_update( $id ); }
 		global $wpdb;
 		$wpdb->last_error = '';
 		$row = $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM %i WHERE id = %d', SchemaManager::table( 'recipients' ), absint( $id ) ), ARRAY_A );
 		if ( '' !== (string) $wpdb->last_error ) {
 			return new \WP_Error( 'certloom_recipient_read_failed', __( 'Certloom could not read the recipient.', 'certloom' ) );
 		}
+		return is_array( $row ) ? $this->decode( $row ) : null;
+	}
+
+	/** Caller owns a checked transaction; all account edits serialize on this identity. */
+	public function find_for_update( $id ) {
+		global $wpdb;
+		$wpdb->last_error = '';
+		$row = $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM %i WHERE id = %d FOR UPDATE', SchemaManager::table( 'recipients' ), absint( $id ) ), ARRAY_A );
+		if ( '' !== (string) $wpdb->last_error ) { return new \WP_Error( 'certloom_recipient_lock_failed', __( 'Certloom could not lock the recipient safely.', 'certloom' ) ); }
 		return is_array( $row ) ? $this->decode( $row ) : null;
 	}
 
@@ -191,7 +224,7 @@ final class RecipientRepository {
 		$wpdb->last_error = '';
 		$row = $wpdb->get_row(
 			$wpdb->prepare(
-				'SELECT * FROM %i WHERE wp_user_id = %d LIMIT 1',
+				'SELECT * FROM %i WHERE wp_user_id = %d LIMIT 1' . ( \Certloom\Infrastructure\Recipient\RecipientCommandReadScope::active() ? ' FOR UPDATE' : '' ),
 				SchemaManager::table( 'recipients' ),
 				$wp_user_id
 			),
@@ -200,7 +233,10 @@ final class RecipientRepository {
 		if ( '' !== (string) $wpdb->last_error ) {
 			return new \WP_Error( 'certloom_recipient_user_read_failed', __( 'Certloom could not resolve the recipient linked to this WordPress account.', 'certloom' ) );
 		}
-		return is_array( $row ) ? $this->decode( $row ) : null;
+		if ( ! is_array( $row ) ) { return null; }
+		$decoded = $this->decode( $row ); if ( is_wp_error( $decoded ) ) { return $decoded; }
+		$ownership = ( new \Certloom\Infrastructure\Recipient\RestoredAccountOwnership() )->assert_current( $decoded, \Certloom\Infrastructure\Recipient\RecipientCommandReadScope::active() );
+		return is_wp_error( $ownership ) ? $ownership : $decoded;
 	}
 
 	/**
@@ -262,6 +298,10 @@ final class RecipientRepository {
 			$row['wp_user_id'] = ! empty( $data['wp_user_id'] ) ? absint( $data['wp_user_id'] ) : null;
 		}
 		if ( array_key_exists( 'custom_fields', $data ) ) {
+			if ( is_array( $data['custom_fields'] ) && array_key_exists( \Certloom\Application\Recipient\RecipientAccountLink::KEY, $data['custom_fields'] ) ) {
+				$account = ( new \Certloom\Application\Recipient\RecipientAccountLink() )->normalize( $data['custom_fields'][ \Certloom\Application\Recipient\RecipientAccountLink::KEY ] );
+				if ( is_wp_error( $account ) ) { return $account; }
+			}
 			$encoded = ( new SafeJson() )->encode_array( $data['custom_fields'], 'certloom_recipient_custom_fields_invalid', __( 'Recipient custom fields could not be encoded safely.', 'certloom' ) );
 			if ( is_wp_error( $encoded ) ) { return $encoded; }
 			$row['custom_fields'] = $encoded;
@@ -280,17 +320,17 @@ final class RecipientRepository {
 		if ( ! ( new IdentityDigest() )->is_valid_history( $row['privacy_identity_hashes'] ) ) { return new \WP_Error( 'certloom_recipient_privacy_identity_corrupt', __( 'Stored recipient privacy identity history is invalid or exceeds its safe bounded limit.', 'certloom' ) ); }
 		$row['custom_fields'] = ( new SafeJson() )->decode_array( $row['custom_fields'] ?? null, 'certloom_recipient_custom_fields_corrupt', __( 'Stored recipient custom fields are invalid JSON.', 'certloom' ) );
 		if ( is_wp_error( $row['custom_fields'] ) ) { return $row['custom_fields']; }
+		if ( array_key_exists( \Certloom\Application\Recipient\RecipientAccountLink::KEY, $row['custom_fields'] ) ) {
+			$account = ( new \Certloom\Application\Recipient\RecipientAccountLink() )->normalize( $row['custom_fields'][ \Certloom\Application\Recipient\RecipientAccountLink::KEY ] );
+			if ( is_wp_error( $account ) ) { return $account; }
+		}
 		return $row;
 	}
 
 	/** @return array<int,string>|\WP_Error */
-	private function identity_hashes_for_update( $id ) {
-		global $wpdb;
-		$wpdb->last_error = '';
-		$row = $wpdb->get_row( $wpdb->prepare( 'SELECT email, privacy_identity_hashes FROM %i WHERE id = %d', SchemaManager::table( 'recipients' ), absint( $id ) ), ARRAY_A );
-		if ( '' !== (string) $wpdb->last_error || ! is_array( $row ) ) {
-			return new \WP_Error( 'certloom_recipient_identity_read_failed', __( 'Certloom could not preserve the recipient privacy identity history safely.', 'certloom' ) );
-		}
+	private function identity_hashes_from_row( array $row ) {
+		// Use the current row already locked by update(), never a second ordinary
+		// read that could see an older enclosing InnoDB transaction snapshot.
 		$decoded = ( new SafeJson() )->decode_array( $row['privacy_identity_hashes'] ?? null, 'certloom_recipient_privacy_identity_corrupt', __( 'Stored recipient privacy identity data is invalid JSON.', 'certloom' ) );
 		if ( is_wp_error( $decoded ) ) { return $decoded; }
 		if ( ! ( new IdentityDigest() )->is_valid_history( $decoded ) ) { return new \WP_Error( 'certloom_recipient_privacy_identity_corrupt', __( 'Stored recipient privacy identity history is invalid or exceeds its safe bounded limit.', 'certloom' ) ); }

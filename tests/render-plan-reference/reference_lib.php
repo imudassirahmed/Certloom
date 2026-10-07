@@ -1,5 +1,7 @@
 <?php
 /** Development-only deterministic render-plan reference builder. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 require_once dirname( __DIR__ ) . '/bootstrap-autoload.php';
 
 use Certloom\Application\Contract\LocalAssetResolverInterface;

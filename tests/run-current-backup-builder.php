@@ -1,5 +1,7 @@
 <?php
 /** BAK-02A canonical current-authority backup-builder behavioral regression. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define( 'ABSPATH', __DIR__ . '/fake-wp/' );
 define( 'MB_IN_BYTES', 1024 * 1024 );
 define( 'MINUTE_IN_SECONDS', 60 );
@@ -8,9 +10,15 @@ define( 'ECAPLA_CERTVERIFY_SCHEMA_VERSION', '1.4.7' );
 class WP_Error { private $c,$m; public function __construct($c='',$m=''){ $this->c=$c;$this->m=$m; } public function get_error_code(){return $this->c;} public function get_error_message(){return $this->m;} }
 function is_wp_error($v){return $v instanceof WP_Error;} function __($v,$d=null){return $v;} function absint($v){return abs((int)$v);} function sanitize_key($v){return strtolower(preg_replace('/[^a-z0-9_\-]/','',(string)$v));} function sanitize_text_field($v){return trim(strip_tags((string)$v));} function sanitize_file_name($v){return preg_replace('/[^A-Za-z0-9._-]/','-',basename((string)$v));} function wp_json_encode($v){return json_encode($v,JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE);} function maybe_serialize($v){return serialize($v);} function wp_tempnam($name=''){return tempnam(sys_get_temp_dir(),'certloom-bak-');} function wp_generate_password($l=12){return str_repeat('x',$l);} function wp_die($m){throw new RuntimeException((string)$m);} function esc_html($v){return $v;}
 $GLOBALS['builder_options']=array('certverify_data_generation'=>'gen-1','fields_opt'=>array('a'),'retired_opt'=>array(),'settings_opt'=>array('certificate_number_strategy'=>'manual'),'number_state'=>null);
-function get_option($k,$d=false){return array_key_exists($k,$GLOBALS['builder_options'])?$GLOBALS['builder_options'][$k]:$d;}
+function get_option($k,$d=false){return $GLOBALS['builder_cache'][$k] ?? (array_key_exists($k,$GLOBALS['builder_options'])?$GLOBALS['builder_options'][$k]:$d);}
+function update_option($k,$v,$a=null){if(!empty($GLOBALS['builder_false_save']))return true;$GLOBALS['builder_options'][$k]=$v;return true;}
+function wp_cache_delete() { return true; }
+require __DIR__ . '/support/option-database.php';
+require __DIR__ . '/bootstrap-autoload.php';
+require dirname(__DIR__) . '/src/Infrastructure/Data/DatabaseOptions.php';
+$GLOBALS['wpdb'] = new CertloomOptionDatabase( $GLOBALS['builder_options'] );
 class Ecapla_CertVerify_Fields { const OPTION_KEY='fields_opt'; const RETIRED_OPTION_KEY='retired_opt'; public static function get_fields(){return array(array('key'=>'course','label'=>'Course','type'=>'text'));} public static function get_retired_fields(){return array();} }
-class Ecapla_CertVerify_Settings { const OPTION_KEY='settings_opt'; public static function get_all(){return array('certificate_number_strategy'=>'manual');} }
+class Ecapla_CertVerify_Settings { const OPTION_KEY='settings_opt'; public static function get_all(){if(!empty($GLOBALS['builder_change_during_configuration'])){$GLOBALS['builder_options'][self::OPTION_KEY]['concurrent_config_change']=true;}return array('certificate_number_strategy'=>'manual');} }
 class Ecapla_CertVerify_Numbering { const STATE_OPTION='number_state'; public static function normalize_policy($s){return array('certificate_number_strategy'=>'manual');} public static function export_state(){return null;} }
 class Ecapla_CertVerify_Database {
  public static $snapshot_calls=0; public static $mutate_snapshot=false;
@@ -37,6 +45,26 @@ Ecapla_CertVerify_Database::$snapshot_calls=0; Ecapla_CertVerify_Database::$muta
 $changed=Ecapla_CertVerify_Backup::create_export_file();
 bcheck(is_wp_error($changed) && 'ecapla_certverify_backup_changed_during_generation'===$changed->get_error_code(),'builder fails closed when registry state changes during generation');
 $src=file_get_contents(dirname(__DIR__).'/includes/class-ecapla-certverify-backup.php');
+Ecapla_CertVerify_Database::$mutate_snapshot=false;
+$GLOBALS['builder_cache']['certverify_data_generation']='stale-cache';
+bcheck('gen-1'===Ecapla_CertVerify_Backup::current_generation(),'legacy generation reads actual database storage despite a warmed option cache');
+$GLOBALS['wpdb']->read_error=true;
+$failed=Ecapla_CertVerify_Backup::create_export_file();
+bcheck(is_wp_error($failed)&&'certloom_database_options_read_failed'===$failed->get_error_code(),'legacy backup cannot treat a failed configuration read as unchanged data');
+$GLOBALS['wpdb']->read_error=false;
+$GLOBALS['builder_options']['certverify_data_generation']='';
+bcheck(is_wp_error(Ecapla_CertVerify_Backup::read_current_generation()),'present corrupt legacy generation is distinct from a missing marker');
+unset($GLOBALS['builder_options']['certverify_data_generation']);
+bcheck('0'===Ecapla_CertVerify_Backup::read_current_generation(),'missing legacy generation remains an explicit initial baseline');
+$GLOBALS['builder_options']['certverify_data_generation']='gen-1';
+$GLOBALS['builder_false_save']=true;
+bcheck(false===Ecapla_CertVerify_Backup::mark_mutation(),'a successful option API return without a database write cannot confirm the marker');
+$GLOBALS['builder_false_save']=false;
+bcheck(true===Ecapla_CertVerify_Backup::mark_mutation(),'a real saved legacy marker is confirmed directly');
+$GLOBALS['builder_change_during_configuration']=true;
+$changed_config=Ecapla_CertVerify_Backup::create_export_file();
+bcheck(is_wp_error($changed_config)&&'ecapla_certverify_backup_changed_during_generation'===$changed_config->get_error_code(),'baseline brackets configuration collection before manifest creation');
+$GLOBALS['builder_change_during_configuration']=false;
 bcheck(false!==strpos($src,'public static function create_export_file()'),'reusable builder remains explicit public contract for manual/scheduled paths');
 bcheck(false!==strpos($src,'$backup = self::create_export_file();'),'manual stream exporter delegates to canonical builder');
 bcheck(false===strpos($src,"'source_authority' => 'normalized_domain'"),'current-authority builder never claims gated normalized-domain authority');

@@ -5,6 +5,7 @@ define( 'ABSPATH', __DIR__ . '/fake-wp/' );
 define( 'ARRAY_A', 'ARRAY_A' );
 define( 'DAY_IN_SECONDS', 86400 );
 define( 'MINUTE_IN_SECONDS', 60 );
+require_once __DIR__ . '/support/option-database.php';
 
 if ( ! class_exists( 'WP_Error' ) ) {
 	class WP_Error {
@@ -20,6 +21,7 @@ function __($t){ return $t; }
 function absint($v){ return abs((int)$v); }
 function sanitize_key($v){ return strtolower(preg_replace('/[^a-z0-9_\-]/','',(string)$v)); }
 function current_time($type,$gmt=false){ return '2026-08-22 00:00:00'; }
+function wp_json_encode($value,$flags=0){ return json_encode($value,$flags); }
 function wp_cache_delete(){ return true; }
 
 $GLOBALS['restore_tamper_once_key']='';
@@ -55,7 +57,9 @@ final class RestoreWpdb {
 		return 1;
 	}
 	public function get_var($prepared){
-		$this->last_error='';if(is_string($prepared))return 0;$q=$prepared['query'];$a=$prepared['args'];
+		$this->last_error='';if(is_string($prepared))return 'SELECT @@SESSION.innodb_lock_wait_timeout'===$prepared ? 50 : 0;$q=$prepared['query'];$a=$prepared['args'];
+		if(strpos($q,'SELECT ENGINE')===0)return 'InnoDB';
+		if(strpos($q,'SELECT option_value')===0&&($a[1]??'')==='certloom_domain_write_fence')return '1';
 		if(strpos($q,'SELECT GET_LOCK')===0)return $this->mutex_busy ? '0' : '1';
 		if(strpos($q,'SELECT RELEASE_LOCK')===0)return '1';
 		if(strpos($q,'SELECT option_value')===0)return $GLOBALS['restore_options'][$a[1]]??null;
@@ -65,6 +69,8 @@ final class RestoreWpdb {
 		return null;
 	}
 	public function get_row($prepared,$format){ $table=(string)$prepared['args'][0];$id=(int)$prepared['args'][1];return $this->tables[$table][$id]??null; }
+	public $fail_option_reads = false;
+	public function get_results($prepared,$format){ $this->last_error = $this->fail_option_reads ? 'option read failed' : ''; return $this->fail_option_reads ? null : certloom_test_option_rows($prepared,$GLOBALS['restore_options']); }
 	public function insert($table,$row){ $id=(int)$row['id'];if(isset($this->tables[$table][$id])){$this->last_error='duplicate';return false;}$this->tables[$table][$id]=$row;$this->insert_id=$id;return 1; }
 }
 $GLOBALS['wpdb']=new RestoreWpdb();
@@ -82,7 +88,7 @@ function rw_row($entity,$id=1){
 	foreach($base as $k=>$v){ if(strpos($k,'created_at')!==false||strpos($k,'updated_at')!==false)$base[$k]='2026-08-22 00:00:00'; }
 	return $base;
 }
-function rw_stage_name($owner,$entity,$kind='stage'){global $wpdb;$codes=array('issuers'=>'i','programs'=>'p','recipients'=>'r','signers'=>'g','batches'=>'b','batch_recipients'=>'m','signer_assignments'=>'a','templates'=>'t','template_revisions'=>'u','template_assignments'=>'y','credential_series'=>'s','credential_numbers'=>'n','credential_versions'=>'v','credential_events'=>'e');$prefix='rollback'===$kind?'certloom_rb_':('merge'===$kind?'certloom_rm_':'certloom_rs_');return $wpdb->prefix.$prefix.substr($owner,0,12).'_'.$codes[$entity];}
+function rw_stage_name($owner,$entity,$kind='stage'){global $wpdb;$codes=array('issuers'=>'i','programs'=>'p','recipients'=>'r','signers'=>'g','batches'=>'b','batch_recipients'=>'m','signer_assignments'=>'a','templates'=>'t','template_revisions'=>'u','template_assignments'=>'y','credential_series'=>'s','credential_numbers'=>'n','credential_versions'=>'v','credential_events'=>'e','program_registrations'=>'pr','field_submissions'=>'fs','issuance_requests'=>'ir','issuance_request_events'=>'ie');$prefix='rollback'===$kind?'certloom_rb_':('merge'===$kind?'certloom_rm_':'certloom_rs_');return $wpdb->prefix.$prefix.substr($owner,0,12).'_'.$codes[$entity];}
 
 // Seed every live table and commit a complete replacement.
 foreach(DomainBackupRepository::entity_types() as $entity){$live=SchemaManager::table($entity);$GLOBALS['wpdb']->tables[$live]=array(99=>array('id'=>'99','marker'=>'old-'.$entity));}
@@ -210,4 +216,20 @@ rw_same($entity_count,$ws->completion_receipt($owner9)['records'],'job replay su
 rw_same(false,array_key_exists(DomainRestoreWorkspace::JOURNAL_OPTION,$GLOBALS['restore_options']),'receipt replay clears journal');
 echo "PASS  job replay cannot report success until committed cleanup finishes\n";
 
-echo "\n10 tests, 0 failures\n";
+$saved_options = $GLOBALS['restore_options'];
+$saved_tables = $GLOBALS['wpdb']->tables;
+$GLOBALS['wpdb']->fail_option_reads = true;
+rw_same( 'certloom_database_options_read_failed', $ws->completion_receipt( $owner9 )->get_error_code(), 'failed receipt read is not permission to restage' );
+rw_same( 'certloom_database_options_read_failed', $ws->recover_interrupted_commit()->get_error_code(), 'failed journal read is not absent journal' );
+$GLOBALS['wpdb']->fail_option_reads = false;
+rw_same( $saved_options, $GLOBALS['restore_options'], 'read failures preserve durable recovery options' );
+rw_same( $saved_tables, $GLOBALS['wpdb']->tables, 'read failures preserve the database graph' );
+echo "PASS  failed receipt and journal reads cannot authorize replay or recovery DDL\n";
+$GLOBALS['restore_options'][ DomainRestoreWorkspace::RECEIPTS_OPTION ] = 'corrupt';
+rw_same( 'certloom_domain_restore_state_corrupt', $ws->completion_receipt( $owner9 )->get_error_code(), 'corrupt receipt store is not missing' );
+$GLOBALS['restore_options'] = $saved_options;
+$GLOBALS['restore_options'][ DomainRestoreWorkspace::RECEIPTS_OPTION ][ $owner9 ] = null;
+rw_same( 'certloom_domain_restore_receipt_corrupt', $ws->completion_receipt( $owner9 )->get_error_code(), 'corrupt owner receipt is not missing' );
+$GLOBALS['restore_options'] = $saved_options;
+echo "PASS  corrupt completion stores and owner receipts cannot be treated as absent\n";
+echo "\n12 tests, 0 failures\n";

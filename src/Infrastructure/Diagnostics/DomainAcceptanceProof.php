@@ -457,7 +457,8 @@ final class DomainAcceptanceProof {
 		if ( '' !== (string) $wpdb->last_error || 1 !== (int) $number_count ) {
 			return self::operation_error( $result, 'constraints', __( 'Credential constraints', 'certloom' ), new \WP_Error( 'certloom_domain_acceptance_number_registry', __( 'The global certificate-number registry did not retain exactly one owner after the duplicate attempt.', 'certloom' ) ) );
 		}
-		$generation_before_bad = ( new DomainGeneration() )->current();
+		$generation_before_bad = ( new DomainGeneration() )->read_current();
+		if ( is_wp_error( $generation_before_bad ) ) { return self::operation_error( $result, 'constraints', __( 'Credential constraints', 'certloom' ), $generation_before_bad ); }
 		$bad_number = 'CAP-' . strtoupper( $token ) . '-BAD';
 		$bad_resource = fopen( 'php://temp', 'r' );
 		$bad = $credential_repo->create_version( $series_two, array( 'display_number' => $bad_number, 'snapshot' => array( 'resource' => $bad_resource ) ) );
@@ -467,7 +468,10 @@ final class DomainAcceptanceProof {
 		}
 		$wpdb->last_error = '';
 		$bad_reserved = $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM %i WHERE display_number = %s', SchemaManager::table( 'credential_numbers' ), $bad_number ) );
-		if ( '' !== (string) $wpdb->last_error || 0 !== (int) $bad_reserved || ! hash_equals( $generation_before_bad, ( new DomainGeneration() )->current() ) ) {
+		$reservation_read_failed = '' !== (string) $wpdb->last_error;
+		$generation_after_bad = ( new DomainGeneration() )->read_current();
+		if ( is_wp_error( $generation_after_bad ) ) { return self::operation_error( $result, 'constraints', __( 'Credential constraints', 'certloom' ), $generation_after_bad ); }
+		if ( $reservation_read_failed || 0 !== (int) $bad_reserved || ! hash_equals( $generation_before_bad, $generation_after_bad ) ) {
 			return self::operation_error( $result, 'constraints', __( 'Credential constraints', 'certloom' ), new \WP_Error( 'certloom_domain_acceptance_snapshot_side_effect', __( 'The rejected immutable snapshot changed generation state or stranded a certificate-number reservation.', 'certloom' ) ) );
 		}
 		self::add_check( $result, 'constraints', 'pass', __( 'Credential constraints', 'certloom' ), __( 'The real database/repository path enforced one global display-number owner and rejected invalid immutable snapshots without side effects.', 'certloom' ) );

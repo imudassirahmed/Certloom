@@ -344,7 +344,7 @@ abstract class Ecapla_CertVerify_Elementor_Template_Widget extends \Elementor\Wi
 			'credit_align'     => $defaults['credit_align'],
 		);
 
-		echo Ecapla_CertVerify_Render::template_widget( $this->get_template_slug(), $atts ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		echo Ecapla_CertVerify_Render::scoped_markup_html( Ecapla_CertVerify_Render::template_widget( $this->get_template_slug(), $atts ), 'certloom-elementor-' . str_replace( '-', '', wp_generate_uuid4() ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 	}
 
 	private function value_or_default( $settings, $key, $default ) {

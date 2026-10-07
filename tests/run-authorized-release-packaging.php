@@ -1,7 +1,10 @@
 <?php
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 require_once __DIR__ . '/bootstrap-autoload.php';
 require_once __DIR__ . '/renderer-candidate/finalize-lib.php';
 require_once __DIR__ . '/renderer-candidate/authorized-release-lib.php';
+require_once __DIR__ . '/support/packaging-tools.php';
 
 use Certloom\Application\Rendering\RendererAcceptanceContract;
 use Certloom\Application\Rendering\RendererReleaseManifest;
@@ -14,18 +17,14 @@ $checks = 0;
 function arp_check( $condition, $message ) { global $checks; $checks++; if ( ! $condition ) { throw new RuntimeException( $message ); } }
 function arp_write( $path, $value ) { file_put_contents( $path, json_encode( $value, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ) . "\n" ); }
 function arp_version() { $bytes = file_get_contents( dirname( __DIR__ ) . '/certloom.php' ); preg_match( '/^\s*\*\s*Version:\s*([^\s]+)/m', $bytes, $m ); return trim( $m[1] ); }
-function arp_exec( $command, array $env = array() ) {
-    $prefix = '';
-    foreach ( $env as $key => $value ) { $prefix .= $key . '=' . escapeshellarg( $value ) . ' '; }
-    $output = array(); $rc = 0; exec( $prefix . $command . ' 2>&1', $output, $rc );
-    return array( $rc, implode( "\n", $output ) );
-}
-function arp_rm( $path ) { if ( file_exists( $path ) || is_link( $path ) ) { exec( 'rm -rf ' . escapeshellarg( $path ) ); } }
+function arp_exec( array $arguments, array $env = array() ) { return certloom_test_packaging_bash( $arguments, $env ); }
+function arp_rm( $path ) { certloom_test_remove_fixture_tree( $path, $path ); }
 
 $root = dirname( __DIR__ );
 $version = arp_version();
 $base = sys_get_temp_dir() . '/certloom-authorized-release-' . bin2hex( random_bytes( 5 ) );
 mkdir( $base, 0700, true );
+try {
 
 $environment = array(
     'schema'=>RendererVerifierEnvironment::SCHEMA,'version'=>RendererVerifierEnvironment::VERSION,'plugin_version'=>$version,
@@ -73,14 +72,13 @@ arp_check( $validated['runtime_payload'] === ( new RuntimePayloadFingerprint() )
 arp_check( hash_equals( $validated['release_manifest_sha256'], $finalized['release_manifest_sha256'] ), 'Authorized-release validator must preserve the finalizer release-manifest identity.' );
 arp_check( $validated['accepted_json_bytes'] === file_get_contents( $base.'/authority/accepted.json' ), 'Finalizer accepted.json must already be canonical packaging bytes.' );
 
-list( $build_rc, $build_output ) = arp_exec( 'bash ' . escapeshellarg( $root.'/tests/build-release.sh' ) . ' ' . escapeshellarg( $base.'/build' ), array( 'CERTLOOM_RENDERER_AUTHORITY_DIR'=>$base.'/authority' ) );
+list( $build_rc, $build_output ) = arp_exec( array( $root.'/tests/build-release.sh', $base.'/build' ), array( 'CERTLOOM_RENDERER_AUTHORITY_DIR'=>$base.'/authority' ) );
 arp_check( 0 === $build_rc, 'Authorized deterministic release build must succeed: ' . $build_output );
 arp_check( false !== strpos( $build_output, 'renderer_authority=validated' ), 'Authorized release builder must report validated renderer authority.' );
 
-mkdir( $base.'/release',0700 ); mkdir( $base.'/source',0700 );
-exec( 'unzip -q ' . escapeshellarg( $base.'/build/certloom-'.$version.'.zip' ) . ' -d ' . escapeshellarg( $base.'/release' ), $o1, $u1 );
-exec( 'unzip -q ' . escapeshellarg( $base.'/build/certloom-'.$version.'-source.zip' ) . ' -d ' . escapeshellarg( $base.'/source' ), $o2, $u2 );
-arp_check( 0===$u1 && 0===$u2, 'Authorized source/installable archives must extract cleanly.' );
+certloom_test_zip_extract( $base.'/build/certloom-'.$version.'.zip', $base.'/release' );
+certloom_test_zip_extract( $base.'/build/certloom-'.$version.'-source.zip', $base.'/source' );
+arp_check( is_dir( $base.'/release' ) && is_dir( $base.'/source' ), 'Authorized source/installable archives must extract cleanly.' );
 $release_manifest_path=$base.'/release/certloom/resources/renderer/accepted.json';
 $source_manifest_path=$base.'/source/certloom/resources/renderer/accepted.json';
 arp_check( is_file($release_manifest_path) && is_file($source_manifest_path), 'Authorized accepted.json must be staged into both source and installable archives.' );
@@ -90,27 +88,26 @@ arp_check( $release_payload===$validated['runtime_payload'], 'Packaged runtime p
 $gate=new RendererAuthorityGate(null,$base.'/release/certloom',$version);
 arp_check( true===$gate->manifest_status()['accepted'], 'Packaged accepted.json must validate against the exact packaged production payload.' );
 
-list($rebuild_rc,$rebuild_output)=arp_exec('bash '.escapeshellarg($base.'/source/certloom/tests/build-release.sh').' '.escapeshellarg($base.'/rebuild'));
+list($rebuild_rc,$rebuild_output)=arp_exec(array($base.'/source/certloom/tests/build-release.sh',$base.'/rebuild'));
 arp_check(0===$rebuild_rc && false!==strpos($rebuild_output,'renderer_authority=validated'),'An accepted source archive must rebuild without external evidence while revalidating its bundled authority.');
 arp_check(hash_file('sha256',$base.'/build/certloom-'.$version.'.zip')===hash_file('sha256',$base.'/rebuild/certloom-'.$version.'.zip'),'Rebuilding the accepted source archive must reproduce the exact installable ZIP.');
 arp_check(hash_file('sha256',$base.'/build/certloom-'.$version.'-source.zip')===hash_file('sha256',$base.'/rebuild/certloom-'.$version.'-source.zip'),'Rebuilding the accepted source archive must reproduce the exact source ZIP.');
 
-$bad=$base.'/bad-authority'; exec('cp -a '.escapeshellarg($base.'/authority').' '.escapeshellarg($bad));
+$bad=$base.'/bad-authority'; certloom_test_copy_authority_fixture($base.'/authority',$bad);
 $bad_manifest=json_decode(file_get_contents($bad.'/accepted.json'),true); $bad_manifest['runtime_payload']['sha256']=str_repeat('0',64); arp_write($bad.'/accepted.json',$bad_manifest);
 $bad_index=json_decode(file_get_contents($bad.'/authority-index.json'),true); $bad_index['release_manifest_sha256']=(new RendererReleaseManifest())->hash($bad_manifest); arp_write($bad.'/authority-index.json',$bad_index);
 $rejected=false; try{$validator->validate_authority_directory($bad);}catch(Throwable $e){$rejected=true;}
 arp_check($rejected,'Authorized-release validator must reject authority targeted at different production bytes even if its release-manifest hash is internally updated.');
 file_put_contents($base.'/authority/extra.json',"{}\n"); $rejected=false; try{$validator->validate_authority_directory($base.'/authority');}catch(Throwable $e){$rejected=true;} unlink($base.'/authority/extra.json');
 arp_check($rejected,'Authorized-release validator must reject unexpected authority-directory files.');
-$inside=$root.'/tests/.certloom-authority-packaging-probe'; arp_rm($inside); exec('cp -a '.escapeshellarg($base.'/authority').' '.escapeshellarg($inside));
-list($inside_rc,$inside_output)=arp_exec('bash '.escapeshellarg($root.'/tests/build-release.sh').' '.escapeshellarg($base.'/inside-build'),array('CERTLOOM_RENDERER_AUTHORITY_DIR'=>$inside));
-arp_rm($inside);
+$inside=$root.'/tests/.certloom-authority-packaging-probe'; certloom_test_copy_authority_fixture($base.'/authority',$inside);
+try { list($inside_rc,$inside_output)=arp_exec(array($root.'/tests/build-release.sh',$base.'/inside-build'),array('CERTLOOM_RENDERER_AUTHORITY_DIR'=>$inside)); } finally { arp_rm($inside); }
 arp_check(0!==$inside_rc && false!==strpos($inside_output,'outside the Certloom source tree'),'Authorized release builder must reject authority evidence sourced from inside the Certloom tree.');
 
-list($closed_rc,$closed_output)=arp_exec('bash '.escapeshellarg($root.'/tests/build-release.sh').' '.escapeshellarg($base.'/closed-build'));
+list($closed_rc,$closed_output)=arp_exec(array($root.'/tests/build-release.sh',$base.'/closed-build'));
 arp_check(0===$closed_rc && false!==strpos($closed_output,'renderer_authority=absent'),'Normal closed release builds must remain renderer-authority absent.');
-mkdir($base.'/closed',0700); exec('unzip -q '.escapeshellarg($base.'/closed-build/certloom-'.$version.'.zip').' -d '.escapeshellarg($base.'/closed'));
+certloom_test_zip_extract($base.'/closed-build/certloom-'.$version.'.zip',$base.'/closed');
 arp_check(!is_file($base.'/closed/certloom/resources/renderer/accepted.json'),'Closed release path must not synthesize renderer authority.');
 
-arp_rm($base);
 echo "PASS  Authorized release packaging consumes finalized authority deterministically and preserves exact payload binding\n\n{$checks} checks, 0 failures\n";
+} finally { arp_rm($base); }

@@ -1,5 +1,7 @@
 <?php
 /** Alpha.4.79 regression: inherited Program title survives REST Review → Issue. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $root = dirname( __DIR__ );
 $admin = file_get_contents( $root . '/src/Infrastructure/Admin/ManualIssuanceAdmin.php' );
 $rest = file_get_contents( $root . '/src/Infrastructure/Admin/IssueCredentialRest.php' );

@@ -1,5 +1,7 @@
 <?php
 /** UX-CORE-05 — Credential provenance, record editing and audit-workspace contract. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $root = dirname( __DIR__ );
 $pass = 0;
 $fail = 0;
@@ -24,7 +26,7 @@ ux5( false !== strpos( $dashboard, "__( 'Manage', 'certloom' )" ) && false !== s
 ux5( false !== strpos( $domain, 'certloom-credential-hero-actions' ) && false !== strpos( $domain, "'Edit Legacy record', 'certloom'" ), 'Legacy detail uses the shared separated hero-action group and explicit Legacy wording' );
 ux5( false !== strpos( ux5src( $root, 'admin/views/edit-certificate.php' ), "This is a Legacy credential issued before the current Program and Batch model." ) && false === strpos( ux5src( $root, 'admin/views/edit-certificate.php' ), "This is a historical credential issued before the current Program and Batch model." ), 'Legacy compatibility editor uses the approved Legacy provenance wording instead of Historical provenance' );
 ux5( false !== strpos( ux5src( $root, 'admin/views/list-certificates.php' ), "'Legacy credentials', 'certloom'" ) && false === strpos( ux5src( $root, 'admin/views/list-certificates.php' ), "'Historical credentials', 'certloom'" ), 'Compatibility registry fallback uses Legacy provenance wording consistently' );
-ux5( false !== strpos( $domain, "__( 'Edit credential record', 'certloom' )" ) && false !== strpos( $domain, 'credential_record_editor(' ), 'Current Simple Credential opens a dedicated record editor' );
+ux5( false !== strpos( $domain, 'certloom-credential-record-nav' ) && false !== strpos( $domain, 'credential_record_editor(' ), 'Current Simple Credential opens a dedicated record editor' );
 ux5( false !== strpos( $domain, "if ( \$simple ) {\n\t\t\t\$this->credential_record_editor" ) && false !== strpos( $domain, "\t\t\treturn;\n\t\t}" ), 'Simple record editor returns before the Advanced tab workspace is rendered' );
 ux5( false !== strpos( $domain, "__( 'Issued record', 'certloom' )" ) && false !== strpos( $domain, "__( 'Recipient', 'certloom' )" ) && false !== strpos( $domain, "__( 'Program & Batch', 'certloom' )" ) && false !== strpos( $domain, "__( 'Status & delivery', 'certloom' )" ) && false !== strpos( $domain, "__( 'Verification', 'certloom' )" ) && false !== strpos( $domain, "__( 'History & audit', 'certloom' )" ), 'Record editor exposes one coherent six-section workspace instead of a separate Actions tab' );
 ux5( false !== strpos( $domain, 'certloom-locked-record-badge' ) && false !== strpos( $domain, 'readonly aria-readonly="true"' ), 'Issued facts are visibly immutable and readonly' );

@@ -1,5 +1,7 @@
 <?php
 /** Browser-only I18N-02 Program locale/variant fixture using production admin CSS/JS. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $css=file_get_contents(dirname(__DIR__,2).'/assets/css/certloom-tokens.css') . "\n" . file_get_contents(dirname(__DIR__,2).'/admin/assets/admin.css');$js=file_get_contents(dirname(__DIR__,2).'/admin/assets/admin.js');
 function locale_options($selected='',$blank=false){$out=$blank?'<option value="">Choose language</option>':'';foreach(array('en_US'=>'English (United States)','ar'=>'العربية — Arabic','fr_FR'=>'Français — French','de_DE'=>'Deutsch — German','ur'=>'اردو — Urdu') as $value=>$label){$out.='<option value="'.htmlspecialchars($value).'"'.($selected===$value?' selected':'').'>'.htmlspecialchars($label).'</option>';}return $out;}
 ?><!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>

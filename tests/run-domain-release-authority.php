@@ -1,4 +1,6 @@
 <?php
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 require_once __DIR__ . '/bootstrap-autoload.php';
 
 use Certloom\Application\Migration\DomainAcceptanceImporter;
@@ -61,7 +63,7 @@ darg_check(strpos($tutor_source,'DomainFeatureGate::write_paths_ready()')!==fals
 $fingerprint_source=file_get_contents(dirname(__DIR__).'/src/Application/Rendering/RuntimePayloadFingerprint.php');
 darg_check(strpos($fingerprint_source,"'resources/domain/accepted.json'")!==false,'runtime production fingerprint excludes only immutable DBAUTH authority metadata to avoid self-reference.');
 $build_source=file_get_contents(__DIR__.'/build-release.sh');
-darg_check(strpos($build_source,'CERTLOOM_DOMAIN_AUTHORITY_DIR')!==false&&strpos($build_source,'validate-authorized-release.php')!==false&&strpos($build_source,'domain_authority=validated')!==false,'deterministic builder has an explicit validated DBAUTH packaging path.');
+darg_check(strpos($build_source,'CERTLOOM_DOMAIN_AUTHORITY_DIR')!==false&&strpos($build_source,'validate-authorized-release.php')!==false&&strpos($build_source,'package-stream.py')!==false&&strpos(file_get_contents(__DIR__.'/package-stream.py'),"'validated' if 'resources/domain/accepted.json' in production")!==false,'deterministic builder validates DBAUTH before its streaming packager reports authority.');
 darg_check(is_file(dirname(__DIR__).'/resources/domain/README.txt'),'production source documents immutable DBAUTH authority semantics.');
 
 @unlink($tmp.'/resources/domain/accepted.json');@unlink($tmp.'/src/runtime.php');@unlink($tmp.'/certloom.php');@rmdir($tmp.'/src');@rmdir($tmp.'/resources/domain');@rmdir($tmp.'/resources');@rmdir($tmp);

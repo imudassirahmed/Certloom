@@ -1,5 +1,7 @@
 <?php
 /** Behavioral regression for exact WordPress/PHP/database environment evidence. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define( 'ABSPATH', __DIR__ . '/fake-wp/' );
 define( 'DB_NAME', 'certloom_test_db' );
 define( 'DB_HOST', 'db.test.local' );

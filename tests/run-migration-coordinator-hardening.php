@@ -1,5 +1,7 @@
 <?php
 /** Static regression guards for official populated migration hardening. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $root = dirname( __DIR__ );
 $state = file_get_contents( $root . '/src/Application/Migration/LegacyMigrationState.php' );
 $coordinator = file_get_contents( $root . '/src/Infrastructure/Migration/LegacyMigrationCoordinator.php' );

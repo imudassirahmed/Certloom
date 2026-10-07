@@ -9,6 +9,7 @@
 	var loading = root.querySelector('[data-issue-loading]');
 	var form = root.querySelector('[data-issue-form]');
 	var message = root.querySelector('[data-issue-message]');
+	var fieldError = null;
 	var stepPanels = Array.prototype.slice.call(root.querySelectorAll('[data-issue-step]'));
 	var stepButtons = Array.prototype.slice.call(root.querySelectorAll('[data-issue-step-button]'));
 	var prevButton = root.querySelector('[data-step-prev]');
@@ -102,7 +103,42 @@
 		if (copy) { message.scrollIntoView({behavior:'smooth', block:'nearest'}); }
 	}
 
-	function clearMessage() { showMessage('', ''); }
+	function clearMessage() { clearFieldError(); showMessage('', ''); }
+
+	function clearFieldError() {
+		if (!fieldError) { return; }
+		var input = fieldError.input;
+		var descriptions = (input.getAttribute('aria-describedby') || '').split(/\s+/).filter(function (id) { return id && id !== fieldError.note.id; });
+		if (descriptions.length) { input.setAttribute('aria-describedby', descriptions.join(' ')); } else { input.removeAttribute('aria-describedby'); }
+		if (null === fieldError.previousInvalid) { input.removeAttribute('aria-invalid'); } else { input.setAttribute('aria-invalid', fieldError.previousInvalid); }
+		if (fieldError.label) { input.removeAttribute('aria-labelledby'); if (fieldError.temporaryLabelId) { fieldError.label.removeAttribute('id'); } }
+		fieldError.note.remove();
+		fieldError = null;
+	}
+
+	function showFieldError(copy, input) {
+		clearMessage();
+		if (!input) { showMessage(copy, 'error'); return; }
+		var note = document.createElement('p');
+		note.id = 'certloom-issue-field-error';
+		note.className = 'certloom-issue-field-error';
+		note.setAttribute('role', 'alert');
+		note.textContent = copy;
+		fieldError = {input:input, note:note, previousInvalid:input.getAttribute('aria-invalid')};
+		var label = input.closest('label');
+		var caption = label ? label.querySelector('span') : null;
+		if (caption && !input.hasAttribute('aria-labelledby') && !input.hasAttribute('aria-label')) {
+			fieldError.label = caption;
+			fieldError.temporaryLabelId = !caption.id;
+			if (!caption.id) { caption.id = 'certloom-issue-error-label'; }
+			input.setAttribute('aria-labelledby', caption.id);
+		}
+		input.setAttribute('aria-invalid', 'true');
+		input.setAttribute('aria-describedby', ((input.getAttribute('aria-describedby') || '') + ' ' + note.id).trim());
+		var control = input.closest('.certloom-async-picker-control');
+		(control || input).insertAdjacentElement('afterend', note);
+		input.focus();
+	}
 
 	function syncPressed(selector, active) {
 		Array.prototype.forEach.call(root.querySelectorAll(selector), function (button) {
@@ -152,6 +188,7 @@
 
 	function onDataChanged(options) {
 		options = options || {};
+		clearFieldError();
 		invalidateReview();
 		updateSummary();
 		if (!options.skipPreview) { schedulePreview(); }
@@ -235,8 +272,11 @@
 		if (!results) { return; }
 		results.innerHTML = '';
 		if (!rows.length) { results.hidden = true; if (search) { search.setAttribute('aria-expanded', 'false'); } return; }
-		rows.forEach(function (raw) {
-			var choice = normalizeChoice(kind, raw);
+		var choices = rows.map(function (raw) { return normalizeChoice(kind, raw); });
+		var labelCounts = Object.create(null);
+		if ('recipient' === kind) { choices.forEach(function (choice) { labelCounts[choice.label] = (labelCounts[choice.label] || 0) + 1; }); }
+		choices.forEach(function (choice) {
+			if ('recipient' === kind && labelCounts[choice.label] > 1) { choice.reference = text('recipientReference', 'Recipient #%s').replace('%s', String(choice.id)); choice.label += ' · ' + choice.reference; }
 			var button = document.createElement('button');
 			button.type = 'button';
 			button.setAttribute('role', 'option');
@@ -252,15 +292,15 @@
 	function searchPicker(kind, query, immediate) {
 		var box = picker(kind);
 		if (!box) { return; }
+		if (state.searchTimers[kind]) { clearTimeout(state.searchTimers[kind]); state.searchTimers[kind] = null; }
+		if (state.searchControllers[kind]) { state.searchControllers[kind].abort(); }
 		if ('batch' === kind && !state.issuance.program_id) {
 			renderPickerResults(kind, []);
 			var batchStatus = box.querySelector('[data-picker-status]');
 			if (batchStatus) { batchStatus.textContent = text('chooseProgramFirst', 'Choose a ' + programTerm + ' before selecting a ' + batchTerm + '.'); }
 			return;
 		}
-		if (state.searchTimers[kind]) { clearTimeout(state.searchTimers[kind]); }
 		var run = function () {
-			if (state.searchControllers[kind]) { state.searchControllers[kind].abort(); }
 			var controller = new AbortController();
 			state.searchControllers[kind] = controller;
 			var status = box.querySelector('[data-picker-status]');
@@ -270,9 +310,10 @@
 			url.searchParams.set('query', query || '');
 			if ('batch' === kind) { url.searchParams.set('program_id', String(state.issuance.program_id || 0)); }
 			rest(url.toString(), {signal: controller.signal}).then(function (data) {
+				if (controller.signal.aborted || state.searchControllers[kind] !== controller) { return; }
 				renderPickerResults(kind, data && Array.isArray(data.choices) ? data.choices : []);
 			}).catch(function (error) {
-				if ('AbortError' === error.name) { return; }
+				if (controller.signal.aborted || state.searchControllers[kind] !== controller || 'AbortError' === error.name) { return; }
 				if (status) { status.textContent = error.message || text('loadFailed', 'Could not load choices.'); }
 			});
 		};
@@ -299,6 +340,7 @@
 					searchPicker(kind, search.value, true);
 				});
 				search.addEventListener('input', function () {
+					clearFieldError();
 					if (state.selected[kind] && search.value !== state.selected[kind].label) { clearPicker(kind); }
 					searchPicker(kind, search.value, false);
 				});
@@ -351,7 +393,14 @@
 	function reconcileFieldContract(contract, recipientValues) {
 		contract = contract && Array.isArray(contract.fields) ? contract : {fields:[]};
 		var nextKeys = {};
-		contract.fields.forEach(function (field) { var key = String(field && field.key || ''); if (key) { nextKeys[key] = true; } });
+		contract.fields.forEach(function (field) {
+			var key = String(field && field.key || ''); if (!key) { return; } nextKeys[key] = true;
+			var policy = field.collection_policy;
+			if (policy && ('achievement' !== policy.lifetime || 'staff' !== policy.writer)) {
+				delete state.issuance.custom_merge_fields[key];
+				if ('grade' === key) { state.issuance.grade = ''; }
+			}
+		});
 		Object.keys(state.reusableFieldKeys || {}).forEach(function (key) {
 			if (nextKeys[key]) { return; }
 			if ('grade' === key) { state.issuance.grade = ''; }
@@ -591,6 +640,10 @@
 		fields.forEach(function (field) {
 			var key = String(field.key || ''); if (!key) { return; }
 			var source = String(field.value_source || 'credential_custom'); var required = !!field.required; var origin = scopeLabel(field.origin);
+			var policy = field.collection_policy;
+			if (policy && ('achievement' !== policy.lifetime || 'staff' !== policy.writer)) {
+				html += '<div class="certloom-issue-scoped-entry" data-scoped-field="' + escapeHtml(key) + '"><div class="certloom-issue-recipient-value"><strong>' + escapeHtml(field.label || key) + (required ? ' <em>' + escapeHtml(text('required', 'Required')) + '</em>' : '') + '</strong><small>' + escapeHtml(text('managedFieldSource', 'Complete this value in customer account details, its Program default or the connected source. An issuance-only value cannot replace it.')) + '</small></div>' + verificationToggleHtml(field, key) + '</div>'; rendered++; return;
+			}
 			if ('recipient' === source) {
 				var recipientValue = recipientFieldValue(key); var missing = required && !recipientValue.trim();
 				html += '<div class="certloom-issue-scoped-entry" data-scoped-field="' + escapeHtml(key) + '"' + (missing ? ' data-missing-recipient-required="true"' : '') + '><div class="certloom-issue-recipient-value' + (missing ? ' is-missing' : '') + '"><strong>' + escapeHtml(field.label || key) + (required ? ' <em>Required</em>' : '') + '</strong><span>' + escapeHtml(recipientValue || '—') + '</span><small>From Recipient profile · Configured by ' + escapeHtml(origin) + ' · Frozen at issue</small>';
@@ -788,6 +841,7 @@
 	function fitPreview() {
 		var stage = root.querySelector('[data-preview-stage]'); var doc = root.querySelector('[data-preview-document]'); if (!stage || !doc) { return; }
 		requestAnimationFrame(function () {
+			if (window.CertloomTextFit) { window.CertloomTextFit.refresh(doc); }
 			var width = doc.scrollWidth || doc.getBoundingClientRect().width; var height = doc.scrollHeight || doc.getBoundingClientRect().height;
 			if (!width || !height) { return; }
 			var scale = Math.min((stage.clientWidth - 24) / width, (stage.clientHeight - 24) / height, 1);
@@ -857,35 +911,43 @@
 		(state.bootstrap.email_designs || []).forEach(function (design) { if (!design || !design.id) { return; } var option = document.createElement('option'); option.value = design.id; option.textContent = design.name || design.id; select.appendChild(option); });
 	}
 
+	function manualEmailSummary() {
+		if ('review' !== state.email.mode) { return text('manualEmailLater', 'Prepare later'); }
+		var summary = text('manualEmailReviewNext', 'Review next');
+		var select = root.querySelector('[data-email-template]');
+		var option = select && select.options ? select.options[select.selectedIndex] : null;
+		return option ? summary + ' · ' + option.textContent : summary;
+	}
+
 	function validateStep(index) {
 		clearMessage();
 		if (0 === index) {
-			if ('existing' === state.issuance.recipient_mode && !state.issuance.recipient_id) { showMessage('Choose an existing Recipient before continuing.', 'error'); focusPicker('recipient'); return false; }
-			if ('new' === state.issuance.recipient_mode && !String(state.issuance.new_recipient.display_name || '').trim()) { showMessage('Enter the new Recipient display name before continuing.', 'error'); focusField('new_recipient.display_name'); return false; }
+			if ('existing' === state.issuance.recipient_mode && !state.issuance.recipient_id) { focusPicker('recipient', 'Choose an existing Recipient before continuing.'); return false; }
+			if ('new' === state.issuance.recipient_mode && !String(state.issuance.new_recipient.display_name || '').trim()) { focusField('new_recipient.display_name', 'Enter the new Recipient display name before continuing.'); return false; }
 			if ('new' === state.issuance.recipient_mode) {
 				var emailInput = root.querySelector('[data-field="new_recipient.email"]');
-				if (emailInput && emailInput.value && !emailInput.validity.valid) { showMessage('Enter a valid recipient email address or leave it blank.', 'error'); emailInput.focus(); return false; }
+				if (emailInput && emailInput.value && !emailInput.validity.valid) { showFieldError('Enter a valid recipient email address or leave it blank.', emailInput); return false; }
 			}
 		}
-		if (1 === index && 'program' === state.issuance.credential_basis && !state.issuance.program_id) { showMessage('Choose a ' + programTerm + ', or switch to Independent credential.', 'error'); focusPicker('program'); return false; }
+		if (1 === index && 'program' === state.issuance.credential_basis && !state.issuance.program_id) { focusPicker('program', 'Choose a ' + programTerm + ', or switch to Independent credential.'); return false; }
 		if (2 === index) {
-			if (!String(state.issuance.credential_title || '').trim()) { showMessage('Enter the credential title.', 'error'); focusField('credential_title'); return false; }
-			if (!state.issuance.valid_from) { showMessage('Choose the credential effective date.', 'error'); focusField('valid_from'); return false; }
-			if ('date' === state.issuance.expiry_mode && !state.issuance.expires_at) { showMessage('Choose the credential expiry date.', 'error'); focusField('expires_at'); return false; }
-			if ('date' === state.issuance.expiry_mode && state.issuance.expires_at < state.issuance.valid_from) { showMessage('The expiry date cannot be earlier than the credential effective date.', 'error'); focusField('expires_at'); return false; }
-			if (state.bootstrap && state.bootstrap.numbering && !state.bootstrap.numbering.automatic && !String(state.issuance.display_number || '').trim()) { showMessage('Enter the certificate number required by the current numbering policy.', 'error'); focusField('display_number'); return false; }
+			if (!String(state.issuance.credential_title || '').trim()) { focusField('credential_title', 'Enter the credential title.'); return false; }
+			if (!state.issuance.valid_from) { focusField('valid_from', 'Choose the credential effective date.'); return false; }
+			if ('date' === state.issuance.expiry_mode && !state.issuance.expires_at) { focusField('expires_at', 'Choose the credential expiry date.'); return false; }
+			if ('date' === state.issuance.expiry_mode && state.issuance.expires_at < state.issuance.valid_from) { focusField('expires_at', 'The expiry date cannot be earlier than the credential effective date.'); return false; }
+			if (state.bootstrap && state.bootstrap.numbering && !state.bootstrap.numbering.automatic && !String(state.issuance.display_number || '').trim()) { focusField('display_number', 'Enter the certificate number required by the current numbering policy.'); return false; }
 			var missingRecipient = root.querySelector('[data-missing-recipient-required]'); if (missingRecipient) { showMessage('Complete the required Recipient profile value before continuing.', 'error'); missingRecipient.scrollIntoView({behavior:'smooth', block:'center'}); return false; }
-			var missingRequired = root.querySelector('[data-scoped-input][required]:invalid'); if (missingRequired) { showMessage('Complete the required credential data before continuing.', 'error'); missingRequired.focus(); return false; }
+			var missingRequired = root.querySelector('[data-scoped-input][required]:invalid'); if (missingRequired) { showFieldError('Complete the required credential data before continuing.', missingRequired); return false; }
 		}
 		if (3 === index) {
 			if ('image' === state.issuance.presentation_mode && !state.issuance.certificate_image_id) { showMessage('Choose a PNG or JPEG certificate image.', 'error'); return false; }
-			if ('design' === state.issuance.presentation_mode && 'assigned' === state.issuance.design_source && !state.issuance.template_id) { showMessage('Choose a published certificate design.', 'error'); focusPicker('template'); return false; }
+			if ('design' === state.issuance.presentation_mode && 'assigned' === state.issuance.design_source && !state.issuance.template_id) { focusPicker('template', 'Choose a published certificate design.'); return false; }
 			if ('design' === state.issuance.presentation_mode && state.preview && state.preview.data_readiness && state.preview.data_readiness.missing_count) { showMessage('The selected certificate design still needs credential data. Complete the highlighted requirements in Credential details.', 'error'); goToStep(2); return false; }
 		}
 		return true;
 	}
-	function focusPicker(kind) { var box = picker(kind); var search = box ? box.querySelector('[data-picker-search]') : null; if (search) { search.focus(); } }
-	function focusField(path) { var input = root.querySelector('[data-field="' + path + '"]'); if (input) { input.focus(); } }
+	function focusPicker(kind, copy) { var box = picker(kind); showFieldError(copy, box ? box.querySelector('[data-picker-search]') : null); }
+	function focusField(path, copy) { showFieldError(copy, root.querySelector('[data-field="' + path + '"]')); }
 
 	function goToStep(index, shouldScroll) {
 		index = Math.max(0, Math.min(reviewStep, parseInt(index, 10) || 0));
@@ -911,24 +973,32 @@
 	}
 
 	function buildReview() {
-		if (!validateAllBeforeReview()) { return; }
+		if (state.busy || !validateAllBeforeReview()) { return; }
+		var requestedSignature = signature();
 		setBusy(true); showMessage(text('reviewing', 'Building server review…'), 'info');
 		var stateBox = root.querySelector('[data-review-state]'); if (stateBox) { stateBox.hidden = true; }
 		rest(cfg.reviewUrl, {method:'POST', body:{issuance:state.issuance,email:state.email}}).then(function (data) {
-			state.reviewFingerprint = String(data.review_fingerprint || ''); state.reviewPayload = data.review || {}; state.reviewSignature = signature(); renderReview(); clearMessage();
+			if (signature() !== requestedSignature) {
+				invalidateReview(); showMessage(text('reviewChanged', 'Something changed after Review. Review again before issuing.'), 'info'); return;
+			}
+			state.reviewFingerprint = String(data.review_fingerprint || ''); state.reviewPayload = data.review || {}; state.reviewSignature = requestedSignature; renderReview(); clearMessage();
 		}).catch(function (error) {
+			if (signature() !== requestedSignature) { invalidateReview(); showMessage(text('reviewChanged', 'Something changed after Review. Review again before issuing.'), 'info'); return; }
 			if (stateBox) { stateBox.hidden = false; }
 			showRequestError(error);
 			if ('certloom_manual_issue_design_data_missing' === error.code && error.data && Array.isArray(error.data.fields)) { renderDesignRequired(error.data.fields); }
 		}).finally(function () { setBusy(false); });
 	}
-	function validateAllBeforeReview() { for (var i=0;i<reviewStep;i++) { if (!validateStep(i)) { goToStep(i); return false; } } return true; }
+	function validateAllBeforeReview() { for (var i=0;i<reviewStep;i++) { if (!validateStep(i)) { goToStep(i, !fieldError); if (fieldError) { fieldError.input.focus(); } return false; } } return true; }
 	function renderReview() {
 		var review = state.reviewPayload || {}; var content = root.querySelector('[data-review-content]'); var tech = root.querySelector('[data-review-technical]'); var techBody = root.querySelector('[data-review-technical-body]'); var actions = root.querySelector('[data-review-actions]'); var stateBox = root.querySelector('[data-review-state]');
 		if (stateBox) { stateBox.hidden = true; }
 		if (content) {
+			var recipientLabel = review.recipient && review.recipient.name;
+			var selectedRecipient = state.selected.recipient;
+			if ('existing' === state.issuance.recipient_mode && selectedRecipient && selectedRecipient.reference && review.recipient && parseInt(review.recipient.id, 10) === selectedRecipient.id) { recipientLabel += ' · ' + selectedRecipient.reference; }
 			var rows = [
-				['Recipient', review.recipient && review.recipient.name],
+				['Recipient', recipientLabel],
 				[programTerm, review.program && review.program.title ? review.program.title : 'Independent credential'],
 				[batchTerm, review.batch && review.batch.name ? review.batch.name : '—'],
 				['Credential title', review.credential_title],
@@ -938,7 +1008,7 @@
 				['Certificate', review.presentation_mode === 'design' ? ((review.template && review.template.name) || 'Inherited design') : (review.presentation_mode === 'image' ? 'Uploaded image' : 'Details only')],
 				[issuerTerm, review.issuer && review.issuer.name ? review.issuer.name : '—'],
 				[signerTerm, review.signer && review.signer.name ? review.signer.name : '—'],
-				['Manual email', 'review' === state.email.mode ? ('Review next · ' + (state.email.template_id || 'automatic')) : 'Skip manual review']
+				[text('manualEmail', 'Manual email'), manualEmailSummary()]
 			];
 			var publicFields = Array.isArray(review.verification_fields) ? review.verification_fields.filter(function (field) { return field && String(field.value || '').trim(); }) : [];
 			var publicHtml = '<section class="certloom-review-public-fields"><h3>' + escapeHtml(text('publicVerificationValues', 'Additional public verification fields')) + '</h3>' + (publicFields.length ? '<dl>' + publicFields.map(function (field) { return '<div><dt>' + escapeHtml(field.label || field.key || '') + '</dt><dd>' + escapeHtml(field.value || '') + '</dd></div>'; }).join('') + '</dl>' : '<p>None</p>') + '</section>';
@@ -967,7 +1037,14 @@
 		if (content) { content.hidden = true; } if (tech) { tech.hidden = true; } if (actions) { actions.hidden = true; }
 		if (!box) { return; }
 		var continuations = data.continuations || {};
-		box.innerHTML = '<div class="certloom-issue-success"><span class="dashicons dashicons-yes-alt" aria-hidden="true"></span><div><span class="certloom-eyebrow">Issued</span><h3>Credential issued successfully</h3><p>' + escapeHtml(receipt.display_number || receipt.public_id || ('Version #' + receipt.version_id)) + '</p></div></div><div class="certloom-review-grid"><div><small>Certificate number</small><strong>' + escapeHtml(receipt.display_number || '—') + '</strong></div><div><small>Public credential ID</small><strong>' + escapeHtml(receipt.public_id || '—') + '</strong></div><div><small>Version</small><strong>#' + escapeHtml(receipt.version_id || '—') + '</strong></div><div><small>Issued</small><strong>' + escapeHtml(receipt.issued_at || '—') + '</strong></div></div><div class="certloom-issue-receipt-actions">' + ('review' === state.email.mode && continuations.email_url ? '<a class="button button-primary" target="_blank" rel="noopener noreferrer" href="' + escapeHtml(continuations.email_url) + '">Review email</a>' : '') + (receipt.verification_url ? '<a class="button" href="' + escapeHtml(receipt.verification_url) + '" target="_blank" rel="noopener noreferrer">View credential</a>' : '') + (continuations.issue_another_url ? '<a class="button" target="_blank" rel="noopener noreferrer" href="' + escapeHtml(continuations.issue_another_url) + '">Issue another credential</a>' : '') + (continuations.credentials_url ? '<a class="button" target="_blank" rel="noopener noreferrer" href="' + escapeHtml(continuations.credentials_url) + '">Back to Credentials</a>' : '') + '</div><p class="certloom-issue-download-note">Online verification is available now. Downloadable PDF/PNG/JPEG certificate files are not available yet.</p><details class="certloom-issue-technical certloom-issue-receipt-technical"><summary>Technical details</summary><p>Certificate-file downloads remain unavailable until the certificate renderer is approved for this release.</p></details>';
+		var downloads = receipt.downloads || {}; var downloadButtons = '';
+		(downloads.links || []).forEach(function (link) {
+			if (!link || ['pdf', 'png', 'jpeg'].indexOf(link.format) < 0) { return; }
+			try { if (new URL(link.url, window.location.href).origin !== window.location.origin) { return; } } catch (error) { return; }
+			var label = (cfg.i18n.downloadFormat || 'Download %s').replace('%s', link.format.toUpperCase());
+			downloadButtons += '<a class="button" href="' + escapeHtml(link.url) + '">' + escapeHtml(label) + '</a>';
+		});
+		box.innerHTML = '<div class="certloom-issue-success"><span class="dashicons dashicons-yes-alt" aria-hidden="true"></span><div><span class="certloom-eyebrow">Issued</span><h3>Credential issued successfully</h3><p>' + escapeHtml(receipt.display_number || receipt.public_id || ('Version #' + receipt.version_id)) + '</p></div></div><div class="certloom-review-grid"><div><small>Certificate number</small><strong>' + escapeHtml(receipt.display_number || '—') + '</strong></div><div><small>Public credential ID</small><strong>' + escapeHtml(receipt.public_id || '—') + '</strong></div><div><small>Version</small><strong>#' + escapeHtml(receipt.version_id || '—') + '</strong></div><div><small>Issued</small><strong>' + escapeHtml(receipt.issued_at || '—') + '</strong></div></div><div class="certloom-issue-receipt-actions">' + ('review' === state.email.mode && continuations.email_url ? '<a class="button button-primary" target="_blank" rel="noopener noreferrer" href="' + escapeHtml(continuations.email_url) + '">Review email</a>' : '') + (receipt.verification_url ? '<a class="button" href="' + escapeHtml(receipt.verification_url) + '" target="_blank" rel="noopener noreferrer">View credential</a>' : '') + (continuations.issue_another_url ? '<a class="button" target="_blank" rel="noopener noreferrer" href="' + escapeHtml(continuations.issue_another_url) + '">Issue another credential</a>' : '') + (continuations.credentials_url ? '<a class="button" target="_blank" rel="noopener noreferrer" href="' + escapeHtml(continuations.credentials_url) + '">Back to Credentials</a>' : '') + downloadButtons + '</div>' + (downloads.message ? '<p class="certloom-issue-download-note">' + escapeHtml(downloads.message) + '</p>' : '');
 		box.hidden = false;
 		if (prevButton) { prevButton.hidden = true; } if (nextButton) { nextButton.hidden = true; }
 		window.requestAnimationFrame(function () {
@@ -989,7 +1066,7 @@
 		if (batch) { batch.textContent = state.selected.batch ? state.selected.batch.label : '—'; }
 		if (title) { title.textContent = state.issuance.credential_title || '—'; }
 		if (certificate) { certificate.textContent = 'design' === state.issuance.presentation_mode ? ('assigned' === state.issuance.design_source ? (state.selected.template ? state.selected.template.label : 'Assigned design') : 'Inherited Certloom design') : ('image' === state.issuance.presentation_mode ? 'Uploaded image' : 'Details only'); }
-		if (email) { email.textContent = 'review' === state.email.mode ? ('Review next · ' + (state.email.template_id || 'automatic')) : 'Skip manual review'; }
+		if (email) { email.textContent = manualEmailSummary(); }
 	}
 
 	function initQuickCreate() {

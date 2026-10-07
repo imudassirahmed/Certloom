@@ -1,5 +1,7 @@
 <?php
 /** Phase 4.74 CSS debt ratchet. Prevent renewed raw-color/specificity drift. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define( 'ABSPATH', __DIR__ . '/' );
 $root = dirname( __DIR__ );
 $files = array_merge( glob( $root . '/admin/assets/*.css' ) ?: array(), glob( $root . '/public/assets/*.css' ) ?: array(), glob( $root . '/assets/css/*.css' ) ?: array() );

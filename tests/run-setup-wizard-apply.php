@@ -1,5 +1,7 @@
 <?php
 namespace Certloom\Infrastructure\Backup {
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
+
     class LocalBackupStore {
         public function test_storage() {
             $GLOBALS['wiz_apply_storage_checks']++;

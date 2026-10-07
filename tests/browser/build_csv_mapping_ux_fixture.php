@@ -1,5 +1,7 @@
 <?php
 /** Browser fixture for UX-C01B truthful grouped CSV mapping. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define( 'ABSPATH', __DIR__ . '/' );
 define( 'ECAPLA_CERTVERIFY_PATH', dirname( __DIR__, 2 ) . '/' );
 function __( $s, $d = null ) { return $s; }

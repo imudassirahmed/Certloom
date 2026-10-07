@@ -1,5 +1,7 @@
 <?php
 /** Phase 4.4 Insert palette + synthetic sample-data source contract. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define( 'ABSPATH', __DIR__ . '/' );
 require_once __DIR__ . '/bootstrap-autoload.php';
 use Certloom\Application\Templates\TemplatePreviewSamples;

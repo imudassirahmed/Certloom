@@ -1,5 +1,7 @@
 <?php
 /** Phase 1E structural acceptance for Batches, Issuers, Signers, history and restore ownership. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $root = dirname( __DIR__ );
 $files = array(
 	'schema'      => 'src/Infrastructure/Database/SchemaManager.php',
@@ -40,7 +42,7 @@ function p1e_check( $condition, $message ) {
 }
 function p1e_has( $source, $needle, $message ) { p1e_check( false !== strpos( $source, $needle ), $message ); }
 
-p1e_has( $src['schema'], "const SCHEMA_VERSION         = '19'", 'Expanded normalized domain must use schema contract v18.' );
+p1e_has( $src['schema'], "const SCHEMA_VERSION         = '20'", 'Expanded normalized domain uses schema contract v20, including recipient workflow stores.' );
 foreach ( array( 'signers', 'batches', 'batch_recipients', 'signer_assignments' ) as $table ) {
 	p1e_has( $src['schema'], "'$table'", 'Schema table map missing ' . $table . '.' );
 }
@@ -111,7 +113,7 @@ p1e_has( $src['domain_admin'], 'Immutable Version lineage', 'Credential detail m
 p1e_has( $src['domain_admin'], 'Append-only activity history', 'Credential detail must present append-only activity history.' );
 p1e_has( $src['domain_admin'], "__( 'Batch', 'certloom' )", 'Normalized credential detail must surface Batch relationship.' );
 
-p1e_has( $src['backup_fmt'], 'const VERSION = 4', 'Template-aware domain backup must use format v4.' );
+p1e_has( $src['backup_fmt'], 'const VERSION = 5', 'Recipient-workflow-aware domain backup uses format v5 while preserving earlier readers.' );
 p1e_has( $src['backup_fmt'], 'const STRUCTURE_VERSION = 2', 'Valid 1.6.4/1.6.5 v2 backups must remain supported.' );
 p1e_has( $src['backup_fmt'], 'const LEGACY_VERSION = 1', 'Valid pre-1.6.4 domain backups must remain supported.' );
 p1e_has( $src['backup_fmt'], "HASH_SEED_V1 = 'certloom-domain-backup-v1'", 'Legacy backup hash chain must preserve v1 seed.' );
@@ -137,7 +139,7 @@ p1e_has( $src['preflight'], 'signer_assignment_scope_missing', 'Restore must val
 p1e_has( $src['preflight'], 'series_batch_missing', 'Restore must validate Credential Series→Batch relationship.' );
 p1e_has( $src['merge'], "case 'signers'", 'Merge restore must deterministically map Signers.' );
 p1e_has( $src['merge'], "case 'batches'", 'Merge restore must deterministically map Batches.' );
-p1e_has( $src['merge'], "array( 'batch_id', 'recipient_id', 'signer_id', 'scope_type', 'scope_id', 'role_type' )", 'Merge identity/composite columns must include new relationships.' );
+p1e_has( $src['merge'], "array( 'batch_id', 'recipient_id', 'signer_id', 'scope_type', 'scope_id', 'role_type',", 'Merge identity/composite columns retain Batch and Signer relationships alongside workflow identities.' );
 
 p1e_has( $src['proof'], 'const RESULT_VERSION = 7', 'Older acceptance proof receipts must not approve current exact-payload-bound acceptance evidence.' );
 foreach ( array( "'signers'", "'batches'", "'batch_recipients'", "'signer_assignments'" ) as $entity ) {

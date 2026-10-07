@@ -1,5 +1,7 @@
 <?php
 /** Phase 4.5 canvas interaction source contract. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $root = dirname( __DIR__ );
 $admin = file_get_contents( $root . '/src/Infrastructure/Admin/TemplateAdmin.php' );
 $js = file_get_contents( $root . '/admin/assets/designer.js' );

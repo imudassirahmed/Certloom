@@ -1,5 +1,7 @@
 <?php
 /** Phase 3 guided Dashboard tour source/state contract. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define( 'ABSPATH', __DIR__ . '/' );
 $GLOBALS['certloom_test_user_meta'] = array();
 $GLOBALS['certloom_test_now'] = '2026-09-09 06:30:00';

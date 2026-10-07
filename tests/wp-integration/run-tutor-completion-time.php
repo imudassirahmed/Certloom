@@ -1,5 +1,7 @@
 <?php
 /** WP-CLI eval-file: disposable local/development site, real WP comment query. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 if ( ! defined( 'WP_CLI' ) || ! WP_CLI || ! in_array( wp_get_environment_type(), array( 'local', 'development' ), true ) ) { exit( 1 ); }
 global $wpdb;
 $post_id = wp_insert_post( array( 'post_type' => 'post', 'post_status' => 'draft', 'post_title' => 'Certloom completion timestamp regression' ), true );

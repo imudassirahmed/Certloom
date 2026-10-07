@@ -1,5 +1,7 @@
 <?php
 /** Phase 4 final-renderer gate: the production ceremony must cover Schema 4. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 require_once __DIR__ . '/bootstrap-autoload.php';
 require_once __DIR__ . '/render-plan-reference/reference_lib.php';
 

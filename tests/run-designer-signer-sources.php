@@ -1,5 +1,7 @@
 <?php
 /** DSN-08 Phase 4.7 signer snapshot + dynamic signature-source architecture gate. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define( 'ABSPATH', __DIR__ . '/' );
 if ( ! class_exists( 'WP_Error' ) ) { class WP_Error { private $c,$m,$d; public function __construct($c='',$m='',$d=null){$this->c=$c;$this->m=$m;$this->d=$d;} public function get_error_code(){return $this->c;} public function get_error_message(){return $this->m;} public function get_error_data(){return $this->d;} } }
 function is_wp_error($v){return $v instanceof WP_Error;} function __($v){return $v;} function absint($v){return abs((int)$v);} function sanitize_key($v){return strtolower(preg_replace('/[^a-z0-9_\-]/','',(string)$v));} function esc_attr($v){return htmlspecialchars((string)$v,ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8');} function esc_html($v){return htmlspecialchars((string)$v,ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8');} function esc_attr__($v){return esc_attr($v);} function esc_html__($v){return esc_html($v);} function wp_json_encode($v,$flags=0){return json_encode($v,$flags);} function get_bloginfo($k=''){return 'Certloom Test Site';}
@@ -77,7 +79,7 @@ dsn8s(false!==strpos($js,"'signature' === palette.type && schemaVersion >= 4")&&
 dsn8s(false!==strpos($js,'delete proposed.source')&&false!==strpos($js,'mediaButtons'),'fixed WordPress signature remains an explicit reversible alternative');
 dsn8s(false!==strpos($js,'signatureSourceButtons')&&false!==strpos($js,'immutable credential Signer snapshot'),'Properties exposes signer-source behavior with truthful immutability copy');
 dsn8s(false!==strpos($admin,'data-certloom-designer-issuer-media-source="logo"')&&false!==strpos($admin,'data-certloom-designer-issuer-media-source="seal"')&&false!==strpos($admin,'Use credential Issuer logo')&&false!==strpos($admin,'Use credential Issuer seal'),'Properties exposes immutable credential Issuer logo/seal authoring controls');
-dsn8s(false!==strpos($service,'const SNAPSHOT_VERSION = 4')&&false!==strpos($service,"'signer' => \$this->signer_snapshot"),'credential immutable snapshot v4 retains signer identity and resolution evidence while adding repeating-data evidence');
+dsn8s(false!==strpos($service,'const SNAPSHOT_VERSION = 5')&&false!==strpos($service,"'signer' => \$this->signer_snapshot"),'credential immutable snapshot v5 retains signer identity, resolution and repeating-data evidence');
 dsn8s(false!==strpos($service,'signer_fingerprint')&&false!==strpos($service,"'signer_resolution'"),'review fingerprint includes signer state so changed signer evidence invalidates stale review');
 dsn8s(false!==strpos($repo,'signer_updated_at')&&false!==strpos($repo,"CASE a.scope_type WHEN 'batch' THEN 1 WHEN 'program' THEN 2 WHEN 'issuer' THEN 3 ELSE 4 END"),'signer repository exposes profile timestamp and deterministic Batch→Program→Issuer→global hierarchy');
 dsn8s(!file_exists($root.'/resources/renderer/accepted.json')&&!file_exists($root.'/resources/domain/accepted.json'),'signer tranche manufactures no renderer/domain production authority manifests');

@@ -7,6 +7,8 @@
  * report/environment/index, imports the evidence through Certloom's production
  * contracts, then derives the exact release-bound accepted.json candidate.
  */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 require_once dirname( __DIR__ ) . '/bootstrap-autoload.php';
 
 use Certloom\Application\Rendering\CanonicalJson;

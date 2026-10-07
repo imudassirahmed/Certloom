@@ -1,5 +1,7 @@
 <?php
 /** Structural acceptance for 1.6.5 relationship correction + privacy contract. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $root=dirname(__DIR__);
 $files=array(
  'correction'=>'src/Application/CredentialRelationshipCorrectionService.php',
@@ -8,7 +10,7 @@ $files=array(
  'repo'=>'src/Infrastructure/Repository/CredentialRepository.php',
  'event'=>'src/Infrastructure/Repository/EventRepository.php',
  'wp'=>'tests/wp-integration/run-domain-schema.php',
- 'privacy'=>'docs/privacy-data-lifecycle-contract.md',
+ 'privacy'=>'tests/acceptance-contract.md',
  'bootstrap'=>'certloom.php',
 );
 $s=array();foreach($files as $k=>$f){$s[$k]=file_get_contents($root.'/'.$f);if(!is_string($s[$k])||$s[$k]==='')throw new RuntimeException('missing '.$f);} $checks=0;

@@ -11,6 +11,14 @@ class Ecapla_CertVerify_Fields {
 	const OPTION_KEY                = 'certverify_fields';
 	const RETIRED_OPTION_KEY        = 'certverify_retired_fields';
 	const NORMALIZATION_RETRY_OPTION = 'certverify_field_schema_repair_needed';
+	/** Pure preflight: a recovery catalog must already have valid current semantics. */
+	public static function validate_recovery_value( $value, $retired = false ) {
+		if ( ! is_array( $value ) || count( $value ) > 5000 || ( ! $retired && array_values( $value ) !== $value ) ) { return new WP_Error( 'certloom_whole_fields_invalid', __( 'Repair the saved field catalog before restoring it.', 'certloom' ) ); }
+		try { $normalized = $retired ? self::normalize_retired_fields( $value ) : self::normalize_fields( $value ); } catch ( Throwable $error ) { return new WP_Error( 'certloom_whole_fields_invalid', __( 'The saved field catalog contains unsupported values.', 'certloom' ) ); }
+		if ( ! \Certloom\Application\Restore\WholeStateOptionRows::same( $value, $normalized ) ) { return new WP_Error( 'certloom_whole_fields_invalid', __( 'The saved field catalog needs normalization before it can be restored safely.', 'certloom' ) ); }
+		foreach ( $value as $field ) { if ( $retired && ! \Certloom\Application\Restore\WholeStateOptionRows::date( $field['retired_at'], 'Y-m-d H:i:s' ) ) { return new WP_Error( 'certloom_whole_fields_invalid', __( 'A retired field has an invalid retirement date.', 'certloom' ) ); } }
+		$policies = self::validate_collection_policies( $value ); return is_wp_error( $policies ) ? $policies : $value;
+	}
 
 	/**
 	 * Runtime caches. The field schema is read many times per request (renderer,
@@ -63,14 +71,17 @@ class Ecapla_CertVerify_Fields {
 		$source     = $missing ? self::get_default_fields() : $stored;
 		$normalized = self::normalize_fields( $source );
 
-		if ( ( $missing || $normalized !== array_values( (array) $source ) ) && self::can_persist_schema() ) {
-			$generation = Ecapla_CertVerify_Backup::reserve_mutation_generation();
-			$result = is_wp_error( $generation ) ? false : update_option( self::OPTION_KEY, $normalized );
-			if ( is_wp_error( $generation ) || ( ! $result && $normalized !== get_option( self::OPTION_KEY, array() ) ) ) {
-				update_option( self::NORMALIZATION_RETRY_OPTION, 1, false );
-			} else {
-				delete_option( self::NORMALIZATION_RETRY_OPTION );
-			}
+		if ( ( $missing || $normalized !== array_values( (array) $source ) ) && ! is_wp_error( self::validate_collection_policies( $normalized ) ) && self::can_persist_schema() ) {
+			\Certloom\Infrastructure\Data\LegacyWriteGuard::run( static function () use ( $normalized ) {
+				$generation = Ecapla_CertVerify_Backup::reserve_mutation_generation();
+				$result = is_wp_error( $generation ) ? false : update_option( self::OPTION_KEY, $normalized );
+				if ( is_wp_error( $generation ) || ! \Certloom\Infrastructure\Data\LegacyWriteGuard::verify_option( self::OPTION_KEY, $normalized ) ) {
+					update_option( self::NORMALIZATION_RETRY_OPTION, 1, false );
+				} else {
+					delete_option( self::NORMALIZATION_RETRY_OPTION );
+				}
+				return true;
+			} );
 		}
 
 		self::$fields_cache = $normalized;
@@ -78,28 +89,40 @@ class Ecapla_CertVerify_Fields {
 	}
 
 	public static function save_fields( $fields ) {
-		if ( is_wp_error( Ecapla_CertVerify_Backup::assert_writes_allowed() ) ) {
-			return false;
-		}
-		$fields  = array_values( self::normalize_fields( is_array( $fields ) ? $fields : array() ) );
-		$before  = get_option( self::OPTION_KEY, array() );
-		if ( $fields === $before ) {
-			self::$fields_cache = $fields;
-			return true;
-		}
-		$generation = Ecapla_CertVerify_Backup::reserve_mutation_generation();
-		if ( is_wp_error( $generation ) ) {
-			return false;
-		}
-		$result  = update_option( self::OPTION_KEY, $fields );
-		$stored  = get_option( self::OPTION_KEY, array() );
-		$success = $result || $fields === $stored;
+		$changed = false;
+		$result = \Certloom\Infrastructure\Data\LegacyWriteGuard::run( static function () use ( $fields, &$changed ) {
+			if ( is_wp_error( Ecapla_CertVerify_Backup::assert_writes_allowed() ) ) {
+				return false;
+			}
+			$fields  = array_values( self::normalize_fields( is_array( $fields ) ? $fields : array() ) );
+			if ( is_wp_error( self::validate_collection_policies( $fields ) ) ) { return false; }
+			$name_catalog = array(); foreach ( $fields as $definition ) { $name_catalog[ $definition['key'] ] = $definition; }
+			if ( is_wp_error( ( new \Certloom\Application\Recipient\CertificateNamePolicy() )->current( $name_catalog ) ) ) { return false; }
+			$before  = get_option( self::OPTION_KEY, array() );
+			if ( $fields === $before ) {
+				self::$fields_cache = $fields;
+				return true;
+			}
+			$generation = Ecapla_CertVerify_Backup::reserve_mutation_generation();
+			if ( is_wp_error( $generation ) ) {
+				return false;
+			}
+			$result  = update_option( self::OPTION_KEY, $fields );
+			$stored  = get_option( self::OPTION_KEY, array() );
+			$success = \Certloom\Infrastructure\Data\LegacyWriteGuard::verify_option( self::OPTION_KEY, $fields );
 
-		self::$fields_cache = $success
-			? $fields
-			: self::normalize_fields( is_array( $stored ) && ! empty( $stored ) ? $stored : self::get_default_fields() );
-
-		return $success;
+			self::$fields_cache = $success
+				? $fields
+				: self::normalize_fields( is_array( $stored ) && ! empty( $stored ) ? $stored : self::get_default_fields() );
+			if ( $success ) {
+				$signal = ( new \Certloom\Infrastructure\Recipient\PendingConfigurationQueue() )->changed();
+				if ( is_wp_error( $signal ) ) { return $signal; }
+				$changed = true;
+			}
+			return $success;
+		} );
+		if ( ! is_wp_error( $result ) && $changed ) { do_action( 'certloom_pending_configuration_changed' ); }
+		return ! is_wp_error( $result ) && true === $result;
 	}
 
 	/**
@@ -116,6 +139,26 @@ class Ecapla_CertVerify_Fields {
 
 		$stored = get_option( self::RETIRED_OPTION_KEY, array() );
 		$stored = is_array( $stored ) ? $stored : array();
+		$clean = self::normalize_retired_fields( $stored );
+
+		if ( $clean !== $stored && ! is_wp_error( self::validate_collection_policies( $clean ) ) && self::can_persist_schema() ) {
+			\Certloom\Infrastructure\Data\LegacyWriteGuard::run( static function () use ( $clean ) {
+				$generation = Ecapla_CertVerify_Backup::reserve_mutation_generation();
+				$result = is_wp_error( $generation ) ? false : update_option( self::RETIRED_OPTION_KEY, $clean, false );
+				if ( is_wp_error( $generation ) || ! \Certloom\Infrastructure\Data\LegacyWriteGuard::verify_option( self::RETIRED_OPTION_KEY, $clean ) ) {
+					update_option( self::NORMALIZATION_RETRY_OPTION, 1, false );
+				} else {
+					delete_option( self::NORMALIZATION_RETRY_OPTION );
+				}
+				return true;
+			} );
+		}
+
+		self::$retired_cache = $clean;
+		return $clean;
+	}
+
+	private static function normalize_retired_fields( array $stored ) {
 		$clean  = array();
 
 		foreach ( $stored as $key => $field ) {
@@ -137,20 +180,20 @@ class Ecapla_CertVerify_Fields {
 				'sensitivity'=> $sensitivity,
 				'retired_at' => isset( $field['retired_at'] ) ? sanitize_text_field( $field['retired_at'] ) : '',
 			);
-		}
-
-		if ( $clean !== $stored && self::can_persist_schema() ) {
-			$generation = Ecapla_CertVerify_Backup::reserve_mutation_generation();
-			$result = is_wp_error( $generation ) ? false : update_option( self::RETIRED_OPTION_KEY, $clean, false );
-			if ( is_wp_error( $generation ) || ( ! $result && $clean !== get_option( self::RETIRED_OPTION_KEY, array() ) ) ) {
-				update_option( self::NORMALIZATION_RETRY_OPTION, 1, false );
-			} else {
-				delete_option( self::NORMALIZATION_RETRY_OPTION );
+			if ( array_key_exists( \Certloom\Application\Fields\FieldCollectionPolicy::KEY, $field ) ) {
+				$clean[ $key ]['public_exposure'] = $field['public_exposure'] ?? 'private';
+				$clean[ $key ] = self::with_collection_policy( $clean[ $key ], $field );
 			}
 		}
 
-		self::$retired_cache = $clean;
 		return $clean;
+	}
+
+	/** Use a database locking read without falling back to an older option-cache snapshot. */
+	public static function use_configuration_snapshot( $fields, $retired ) {
+		self::$fields_cache = self::normalize_fields( is_array( $fields ) && $fields ? $fields : self::get_default_fields() );
+		self::$retired_cache = self::normalize_retired_fields( is_array( $retired ) ? $retired : array() );
+		return self::validate_collection_policies( self::$fields_cache );
 	}
 
 	/**
@@ -160,46 +203,54 @@ class Ecapla_CertVerify_Fields {
 	 * @return bool
 	 */
 	public static function save_retired_fields( $fields ) {
-		if ( is_wp_error( Ecapla_CertVerify_Backup::assert_writes_allowed() ) ) {
-			return false;
-		}
-		$clean = array();
-		foreach ( (array) $fields as $key => $field ) {
-			$key = sanitize_key( $key );
-			if ( '' === $key || ! is_array( $field ) ) {
-				continue;
+		$result = \Certloom\Infrastructure\Data\LegacyWriteGuard::run( static function () use ( $fields ) {
+			if ( is_wp_error( Ecapla_CertVerify_Backup::assert_writes_allowed() ) ) {
+				return false;
 			}
-			$type = isset( $field['type'] ) ? sanitize_key( $field['type'] ) : 'text';
-			if ( ! in_array( $type, array( 'text', 'textarea', 'date', 'number' ), true ) ) {
-				$type = 'text';
+			$clean = array();
+			foreach ( (array) $fields as $key => $field ) {
+				$key = sanitize_key( $key );
+				if ( '' === $key || ! is_array( $field ) ) {
+					continue;
+				}
+				$type = isset( $field['type'] ) ? sanitize_key( $field['type'] ) : 'text';
+				if ( ! in_array( $type, array( 'text', 'textarea', 'date', 'number' ), true ) ) {
+					$type = 'text';
+				}
+				$sensitivity = isset( $field['sensitivity'] ) ? sanitize_key( (string) $field['sensitivity'] ) : 'personal';
+				if ( ! array_key_exists( $sensitivity, self::get_sensitivity_options() ) ) { $sensitivity = 'personal'; }
+				$clean[ $key ] = array(
+					'key'        => $key,
+					'label'      => isset( $field['label'] ) ? sanitize_text_field( $field['label'] ) : ucwords( str_replace( array( '-', '_' ), ' ', $key ) ),
+					'type'       => $type,
+					'sensitivity'=> $sensitivity,
+					'retired_at' => isset( $field['retired_at'] ) ? sanitize_text_field( $field['retired_at'] ) : current_time( 'mysql' ),
+				);
+				if ( array_key_exists( \Certloom\Application\Fields\FieldCollectionPolicy::KEY, $field ) ) {
+					$clean[ $key ]['public_exposure'] = $field['public_exposure'] ?? 'private';
+					$clean[ $key ] = self::with_collection_policy( $clean[ $key ], $field );
+				}
 			}
-			$sensitivity = isset( $field['sensitivity'] ) ? sanitize_key( (string) $field['sensitivity'] ) : 'personal';
-			if ( ! array_key_exists( $sensitivity, self::get_sensitivity_options() ) ) { $sensitivity = 'personal'; }
-			$clean[ $key ] = array(
-				'key'        => $key,
-				'label'      => isset( $field['label'] ) ? sanitize_text_field( $field['label'] ) : ucwords( str_replace( array( '-', '_' ), ' ', $key ) ),
-				'type'       => $type,
-				'sensitivity'=> $sensitivity,
-				'retired_at' => isset( $field['retired_at'] ) ? sanitize_text_field( $field['retired_at'] ) : current_time( 'mysql' ),
-			);
-		}
-		$before = get_option( self::RETIRED_OPTION_KEY, array() );
-		$before = is_array( $before ) ? $before : array();
-		if ( $clean === $before ) {
-			self::$retired_cache = $clean;
-			return true;
-		}
-		$generation = Ecapla_CertVerify_Backup::reserve_mutation_generation();
-		if ( is_wp_error( $generation ) ) {
-			return false;
-		}
-		$result  = update_option( self::RETIRED_OPTION_KEY, $clean, false );
-		$stored  = get_option( self::RETIRED_OPTION_KEY, array() );
-		$stored  = is_array( $stored ) ? $stored : array();
-		$success = $result || $clean === $stored;
+			if ( is_wp_error( self::validate_collection_policies( $clean ) ) ) { return false; }
+			$before = get_option( self::RETIRED_OPTION_KEY, array() );
+			$before = is_array( $before ) ? $before : array();
+			if ( $clean === $before ) {
+				self::$retired_cache = $clean;
+				return true;
+			}
+			$generation = Ecapla_CertVerify_Backup::reserve_mutation_generation();
+			if ( is_wp_error( $generation ) ) {
+				return false;
+			}
+			$result  = update_option( self::RETIRED_OPTION_KEY, $clean, false );
+			$stored  = get_option( self::RETIRED_OPTION_KEY, array() );
+			$stored  = is_array( $stored ) ? $stored : array();
+			$success = \Certloom\Infrastructure\Data\LegacyWriteGuard::verify_option( self::RETIRED_OPTION_KEY, $clean );
 
-		self::$retired_cache = $success ? $clean : $stored;
-		return $success;
+			self::$retired_cache = $success ? $clean : $stored;
+			return $success;
+		} );
+		return ! is_wp_error( $result ) && true === $result;
 	}
 
 	/**
@@ -209,19 +260,26 @@ class Ecapla_CertVerify_Fields {
 	 * @return bool
 	 */
 	public static function retire_field( $field ) {
-		if ( ! is_array( $field ) || empty( $field['key'] ) || ! empty( $field['core'] ) ) {
-			return false;
-		}
-		$key     = sanitize_key( $field['key'] );
-		$retired = self::get_retired_fields();
-		$retired[ $key ] = array(
-			'key'        => $key,
-			'label'      => isset( $field['label'] ) ? sanitize_text_field( $field['label'] ) : $key,
-			'type'       => isset( $field['type'] ) ? sanitize_key( $field['type'] ) : 'text',
-			'sensitivity'=> isset( $field['sensitivity'] ) ? sanitize_key( (string) $field['sensitivity'] ) : 'personal',
-			'retired_at' => current_time( 'mysql' ),
-		);
-		return self::save_retired_fields( $retired );
+		$result = \Certloom\Infrastructure\Data\LegacyWriteGuard::run( static function () use ( $field ) {
+			if ( ! is_array( $field ) || empty( $field['key'] ) || ! empty( $field['core'] ) ) {
+				return false;
+			}
+			$key     = sanitize_key( $field['key'] );
+			$retired = self::get_retired_fields();
+			$retired[ $key ] = array(
+				'key'        => $key,
+				'label'      => isset( $field['label'] ) ? sanitize_text_field( $field['label'] ) : $key,
+				'type'       => isset( $field['type'] ) ? sanitize_key( $field['type'] ) : 'text',
+				'sensitivity'=> isset( $field['sensitivity'] ) ? sanitize_key( (string) $field['sensitivity'] ) : 'personal',
+				'retired_at' => current_time( 'mysql' ),
+			);
+			if ( array_key_exists( \Certloom\Application\Fields\FieldCollectionPolicy::KEY, $field ) ) {
+				$retired[ $key ]['public_exposure'] = $field['public_exposure'] ?? 'private';
+				$retired[ $key ] = self::with_collection_policy( $retired[ $key ], $field );
+			}
+			return self::save_retired_fields( $retired );
+		} );
+		return ! is_wp_error( $result ) && true === $result;
 	}
 
 	/**
@@ -231,13 +289,16 @@ class Ecapla_CertVerify_Fields {
 	 * @return bool
 	 */
 	public static function remove_retired_field( $key ) {
-		$key     = sanitize_key( $key );
-		$retired = self::get_retired_fields();
-		if ( ! isset( $retired[ $key ] ) ) {
-			return false;
-		}
-		unset( $retired[ $key ] );
-		return self::save_retired_fields( $retired );
+		$result = \Certloom\Infrastructure\Data\LegacyWriteGuard::run( static function () use ( $key ) {
+			$key     = sanitize_key( $key );
+			$retired = self::get_retired_fields();
+			if ( ! isset( $retired[ $key ] ) ) {
+				return false;
+			}
+			unset( $retired[ $key ] );
+			return self::save_retired_fields( $retired );
+		} );
+		return ! is_wp_error( $result ) && true === $result;
 	}
 
 	/**
@@ -548,6 +609,7 @@ class Ecapla_CertVerify_Fields {
 				);
 			}
 
+			$clean = self::with_collection_policy( $clean, $field );
 			$seen[ $key ] = true;
 			$normalized[] = $clean;
 		}
@@ -571,6 +633,26 @@ class Ecapla_CertVerify_Fields {
 		unset( $field );
 
 		return array_values( $normalized );
+	}
+
+	/** Preserve explicit policies; corrupt stored policies remain visible to strict readers. */
+	private static function with_collection_policy( array $clean, array $source ) {
+		$key = \Certloom\Application\Fields\FieldCollectionPolicy::KEY;
+		if ( ! array_key_exists( $key, $source ) ) { return $clean; }
+		$policy = ( new \Certloom\Application\Fields\FieldCollectionPolicy() )->normalize( $source[ $key ], $clean );
+		$clean[ $key ] = is_wp_error( $policy ) ? $source[ $key ] : $policy;
+		return $clean;
+	}
+
+	/** @return true|WP_Error */
+	public static function validate_collection_policies( array $fields ) {
+		$policies = new \Certloom\Application\Fields\FieldCollectionPolicy();
+		foreach ( $fields as $field ) {
+			if ( ! is_array( $field ) || ! array_key_exists( \Certloom\Application\Fields\FieldCollectionPolicy::KEY, $field ) ) { continue; }
+			$policy = $policies->for_definition( $field );
+			if ( is_wp_error( $policy ) ) { return $policy; }
+		}
+		return true;
 	}
 
 }

@@ -4,6 +4,8 @@
 	var initialized = typeof WeakSet === 'function' ? new WeakSet() : null;
 	var inFlightRequests = Object.create( null );
 	var REQUEST_TIMEOUT_MS = 15000;
+	document.addEventListener( 'pointerdown', function () { document.body.classList.add( 'certloom-pointer-input' ); }, true );
+	document.addEventListener( 'keydown', function () { document.body.classList.remove( 'certloom-pointer-input' ); }, true );
 
 	function escapeHtml( value ) {
 		var div = document.createElement( 'div' );
@@ -63,6 +65,35 @@
 		} catch ( error ) {
 			return 'manual';
 		}
+	}
+
+	// A deduplicated REST response may be displayed by several widgets on one page.
+	function scopedProfileHtml( html, prefix ) {
+		var template = document.createElement( 'template' );
+		template.innerHTML = html;
+		var ids = Object.create( null );
+		var nodes = template.content.querySelectorAll( '[id]' );
+		for ( var i = 0; i < nodes.length; i++ ) {
+			var oldId = nodes[ i ].id;
+			ids[ oldId ] = prefix + '-' + oldId;
+			nodes[ i ].id = ids[ oldId ];
+		}
+		var references = template.content.querySelectorAll( '[aria-labelledby],[aria-describedby],[aria-controls],[for]' );
+		for ( var j = 0; j < references.length; j++ ) {
+			[ 'aria-labelledby', 'aria-describedby', 'aria-controls', 'for' ].forEach( function ( attribute ) {
+				var value = references[ j ].getAttribute( attribute );
+				if ( value ) { references[ j ].setAttribute( attribute, value.split( /\s+/ ).map( function ( id ) { return ids[ id ] || id; } ).join( ' ' ) ); }
+			} );
+		}
+		var artworkNodes = template.content.querySelectorAll( '*' );
+		for ( var k = 0; k < artworkNodes.length; k++ ) {
+			Array.prototype.forEach.call( artworkNodes[ k ].attributes, function ( attribute ) {
+				var value = attribute.value;
+				if ( ( attribute.name === 'href' || attribute.name === 'xlink:href' ) && value.charAt( 0 ) === '#' && ids[ value.slice( 1 ) ] ) { attribute.value = '#' + ids[ value.slice( 1 ) ]; }
+				else if ( value.indexOf( 'url(#' ) !== -1 ) { attribute.value = value.replace( /url\(#([a-zA-Z0-9_-]+)\)/g, function ( match, id ) { return ids[ id ] ? 'url(#' + ids[ id ] + ')' : match; } ); }
+			} );
+		}
+		return template.innerHTML;
 	}
 
 	function acquireCertificateRequest( endpoint, number, code, source ) {
@@ -192,14 +223,42 @@
 				buttonText.textContent = isLoading ? loadingText : originalButtonText;
 			}
 		}
+		function replaceResult( html ) {
+			if ( openShare && resultEl.contains( openShare ) ) { closeShareMenu( openShare ); }
+			var previews = resultEl.querySelectorAll( '.certloom-template-preview-scroll' );
+			for ( var i = 0; i < previews.length; i++ ) {
+				var observer = previewObservers && previewObservers.get( previews[ i ] );
+				if ( observer ) { observer.disconnect(); previewObservers.delete( previews[ i ] ); }
+			}
+			resultEl.innerHTML = html;
+			resultEl.classList.remove( 'certloom-result-enter' );
+			if ( html && document.body.classList.contains( 'certloom-pointer-input' ) ) {
+				resultEl.classList.add( 'certloom-result-enter' );
+			}
+		}
 
 		function showMessage( message ) {
-			resultEl.innerHTML = '<div class="' + config.prefix + '-result-notfound"><p>' + escapeHtml( message ) + '</p></div>';
+			root.classList.remove( 'certloom-has-design' );
+			replaceResult( '<div class="' + config.prefix + '-result-notfound"><p>' + escapeHtml( message ) + '</p></div>' );
 			announce( message );
 		}
 
 		function showResult( fields, presentation ) {
 			presentation = presentation && 'object' === typeof presentation ? presentation : {};
+			if ( 'string' === typeof presentation.profile_html && presentation.profile_html ) {
+				var isDesign = 'design' === presentation.presentation_mode;
+				var back = isDesign ? '<button type="button" class="certloom-search-again">' + escapeHtml( root.getAttribute( 'data-search-again-text' ) || 'Verify another certificate' ) + '</button>' : '';
+				// HTML comes only from this site's shared escaped, privacy-checked renderer.
+				replaceResult( '<div class="certloom-inline-profile">' + back + scopedProfileHtml( presentation.profile_html, resultEl.id ) + '</div>' );
+				root.classList.toggle( 'certloom-has-design', isDesign );
+				scanCertificatePreviews( resultEl );
+				initShareMenus( resultEl );
+				var verdict = presentation.status && presentation.status.label ? presentation.status.label : foundText;
+				announce( verdict );
+				if ( isDesign ) { resultEl.setAttribute( 'tabindex', '-1' ); resultEl.focus( { preventScroll: true } ); }
+				return;
+			}
+			root.classList.remove( 'certloom-has-design' );
 			var status = presentation.status && 'object' === typeof presentation.status ? presentation.status : {};
 			var statusKey = statusModifier( status.key );
 			var statusLabel = 'string' === typeof status.label && status.label ? status.label : foundText;
@@ -286,11 +345,13 @@
 			} );
 			var actionBar = actionHtml ? '<div class="' + config.prefix + '-result-actions">' + actionHtml + '<span class="certloom-action-feedback" aria-live="polite"></span></div>' : '';
 			var qrBlock = qrHtml ? '<div class="certloom-result-qr">' + qrHtml + '</div>' : '';
-			resultEl.innerHTML = '<div class="' + config.prefix + '-result-card ' + config.prefix + '-status-' + statusKey + '">' + summary + list + barcodeHtml + qrBlock + verified + actionBar + '</div>';
+			replaceResult( '<div class="' + config.prefix + '-result-card ' + config.prefix + '-status-' + statusKey + '">' + summary + list + barcodeHtml + qrBlock + verified + actionBar + '</div>' );
+			initShareMenus( resultEl );
 			announce( statusDescription ? statusLabel + '. ' + statusDescription : statusLabel );
 		}
 
 		function search( number, code ) {
+			root.classList.remove( 'certloom-has-design' );
 			requestSequence++;
 			var thisRequest = requestSequence;
 
@@ -312,7 +373,7 @@
 			activeRequest = acquireCertificateRequest( endpoint, number, code, verificationSource() );
 			var thisRequestHandle = activeRequest;
 			setLoading( true );
-			resultEl.innerHTML = '';
+			replaceResult( '' );
 
 			thisRequestHandle.promise
 				.then( function ( result ) {
@@ -356,6 +417,12 @@
 			event.preventDefault();
 			search( input.value, codeInput ? codeInput.value : '' );
 		} );
+		root.addEventListener( 'click', function ( event ) {
+			if ( ! event.target.closest || ! event.target.closest( '.certloom-search-again' ) ) { return; }
+			root.classList.remove( 'certloom-has-design' );
+			replaceResult( '' );
+			input.focus( { preventScroll: true } );
+		} );
 
 		input.addEventListener( 'input', function () {
 			if ( input.value.trim() ) {
@@ -389,6 +456,8 @@
 	}
 
 	function actionRoot( element ) {
+		var menu = element && element.closest ? element.closest( '.certloom-share-menu' ) : null;
+		if ( menu && menu.certloomActionRoot ) { return menu.certloomActionRoot; }
 		return element && element.closest ? element.closest( '.cv-widget, .cvx-widget, .cvp-widget, .certloom-my-credentials' ) : null;
 	}
 
@@ -397,6 +466,8 @@
 		 * contain many Share controls; querying the whole portal would otherwise update
 		 * the first credential card no matter which Copy URL button was pressed. */
 		var local = button && button.closest ? button.closest( '.certloom-share, .cv-result-actions, .cvx-result-actions, .cvp-result-actions, .certloom-my-credential-card__actions' ) : null;
+		var menu = button && button.closest ? button.closest( '.certloom-share-menu' ) : null;
+		if ( ! local && menu && menu.certloomShareDetails ) { local = menu.certloomShareDetails.closest( '.cvp-result-actions, .cv-result-actions, .cvx-result-actions, .certloom-my-credential-card__actions' ); }
 		var target = local && local.querySelector ? local.querySelector( '.certloom-action-feedback' ) : null;
 		if ( ! target ) {
 			var root = actionRoot( button );
@@ -430,10 +501,16 @@
 		portal.appendChild( root.cloneNode( true ) );
 		document.body.appendChild( portal );
 		document.body.classList.add( 'certloom-printing' );
+		var fitPrint = function () {
+			var previews = portal.querySelectorAll( '.cvp-certificate-preview .certloom-template-preview-scroll' );
+			for ( var i = 0; i < previews.length; i++ ) { fitCertificatePreview( previews[ i ] ); }
+		};
+		window.addEventListener( 'beforeprint', fitPrint, { once: true } );
 		var cleaned = false;
 		var cleanup = function () {
 			if ( cleaned ) { return; }
 			cleaned = true;
+			window.removeEventListener( 'beforeprint', fitPrint );
 			document.body.classList.remove( 'certloom-printing' );
 			if ( portal.parentNode ) { portal.parentNode.removeChild( portal ); }
 		};
@@ -447,7 +524,8 @@
 		if ( ! target ) { return; }
 		if ( target.classList.contains( 'certloom-print' ) ) {
 			event.preventDefault();
-			printCertloomArea( actionRoot( target ) );
+			if ( openShare ) { closeShareMenu( openShare ); }
+			printCertloomArea( target.closest( '.cvp-profile-card, .certloom-my-credential-card' ) || actionRoot( target ) );
 			return;
 		}
 		var url = target.getAttribute( 'data-copy-url' ) || '';
@@ -464,6 +542,80 @@
 		}
 	} );
 
+
+	// Popovers enter the browser's top layer, outside card/Elementor stacking contexts.
+	// Older browsers temporarily portal the same menu to body and restore it on close.
+	var openShare = null;
+	function positionShareMenu( details ) {
+		var menu = details.querySelector( '.certloom-share-menu' ) || details.certloomShareMenu;
+		var summary = details.querySelector( 'summary' );
+		if ( ! menu || ! summary || ! details.open ) { return; }
+		var anchor = summary.getBoundingClientRect();
+		var gap = 8;
+		var viewportHeight = window.innerHeight;
+		var viewportWidth = document.documentElement.clientWidth;
+		menu.style.maxWidth = Math.max( 1, viewportWidth - 24 ) + 'px';
+		menu.style.maxHeight = Math.max( 1, viewportHeight - 24 ) + 'px';
+		var bounds = menu.getBoundingClientRect();
+		var rtl = window.getComputedStyle( summary ).direction === 'rtl';
+		var left = rtl ? anchor.right - bounds.width : anchor.left;
+		var top = anchor.bottom + gap;
+		if ( top + bounds.height > viewportHeight - 12 ) { top = anchor.top - bounds.height - gap; }
+		menu.style.left = Math.max( 12, Math.min( left, viewportWidth - bounds.width - 12 ) ) + 'px';
+		menu.style.top = Math.max( 12, Math.min( top, viewportHeight - bounds.height - 12 ) ) + 'px';
+	}
+	function closeShareMenu( details ) {
+		if ( ! details ) { return; }
+		var menu = details.certloomShareMenu;
+		details.open = false;
+		if ( menu && menu.hidePopover ) { try { menu.hidePopover(); } catch ( error ) { /* Already closed. */ } }
+		if ( menu && details.certloomSharePlaceholder && details.certloomSharePlaceholder.parentNode ) {
+			details.certloomSharePlaceholder.parentNode.insertBefore( menu, details.certloomSharePlaceholder );
+			details.certloomSharePlaceholder.remove();
+			details.certloomSharePlaceholder = null;
+			menu.classList.remove( 'certloom-share-menu--portal' );
+		}
+		if ( openShare === details ) { openShare = null; }
+	}
+	function initShareMenus( root ) {
+		var menus = root.querySelectorAll ? root.querySelectorAll( '.certloom-share' ) : [];
+		for ( var i = 0; i < menus.length; i++ ) {
+			( function ( details ) {
+				if ( details.certloomShareMenu ) { return; }
+				var menu = details.querySelector( '.certloom-share-menu' );
+				if ( ! menu ) { return; }
+				details.certloomShareMenu = menu;
+				if ( typeof menu.showPopover === 'function' ) { menu.setAttribute( 'popover', 'manual' ); }
+				details.addEventListener( 'toggle', function () {
+					if ( ! details.open ) { closeShareMenu( details ); return; }
+					if ( openShare && openShare !== details ) { closeShareMenu( openShare ); }
+					openShare = details;
+					if ( typeof menu.showPopover === 'function' ) { menu.showPopover(); }
+					else {
+						details.certloomSharePlaceholder = document.createComment( 'certloom-share-menu' );
+						menu.parentNode.insertBefore( details.certloomSharePlaceholder, menu );
+						menu.certloomActionRoot = actionRoot( details );
+						menu.certloomShareDetails = details;
+						menu.classList.add( 'certloom-share-menu--portal' );
+						document.body.appendChild( menu );
+					}
+					positionShareMenu( details );
+				} );
+			} )( menus[ i ] );
+		}
+	}
+	document.addEventListener( 'click', function ( event ) {
+		if ( openShare && ! openShare.contains( event.target ) && ! openShare.certloomShareMenu.contains( event.target ) ) { closeShareMenu( openShare ); }
+	} );
+	document.addEventListener( 'keydown', function ( event ) {
+		if ( event.key === 'Escape' && openShare ) {
+			var summary = openShare.querySelector( 'summary' );
+			closeShareMenu( openShare );
+			if ( summary ) { summary.focus( { preventScroll: true } ); }
+		}
+	} );
+	window.addEventListener( 'resize', function () { if ( openShare ) { positionShareMenu( openShare ); } } );
+	window.addEventListener( 'scroll', function () { if ( openShare ) { positionShareMenu( openShare ); } }, { capture: true, passive: true } );
 
 	var previewObservers = typeof WeakMap === 'function' ? new WeakMap() : null;
 
@@ -488,7 +640,7 @@
 		var style = window.getComputedStyle ? window.getComputedStyle( scroll ) : null;
 		var horizontalPadding = style ? ( parseFloat( style.paddingLeft || 0 ) + parseFloat( style.paddingRight || 0 ) ) : 0;
 		var available = Math.max( 1, scroll.clientWidth - horizontalPadding );
-		var scale = Math.min( 1, available / naturalWidth );
+		var scale = Math.min( 4, available / naturalWidth );
 		page.style.transformOrigin = 'top left';
 		page.style.transform = 'scale(' + scale.toFixed( 6 ) + ')';
 		stage.style.width = Math.max( 1, naturalWidth * scale ) + 'px';
@@ -506,7 +658,9 @@
 			observer.observe( scroll );
 			if ( previewObservers ) { previewObservers.set( scroll, observer ); }
 		} else {
-			window.addEventListener( 'resize', function () { fitCertificatePreview( scroll ); } );
+			var resize = function () { fitCertificatePreview( scroll ); };
+			window.addEventListener( 'resize', resize );
+			if ( previewObservers ) { previewObservers.set( scroll, { disconnect: function () { window.removeEventListener( 'resize', resize ); } } ); }
 		}
 	}
 
@@ -519,6 +673,7 @@
 
 	function scan( scope ) {
 		var root = scope || document;
+		initShareMenus( root );
 		scanCertificatePreviews( root );
 		if ( root.matches && root.matches( '.cv-widget, .cvx-widget' ) ) {
 			initWidget( root );

@@ -1,0 +1,19 @@
+{
+    "profile-training_lms-essential": "85d7efad228dcf4ae0541f27403ea8c985e25af5f2a1fb8cf0a7ef36953e1c4e",
+    "profile-training_lms-details": "ab779dadf50985ada3490fb9925da92c4420c6f75af2f0b60f1133f3308e006e",
+    "profile-iso_management-essential": "a21f6b389f278a752fcacd2a027376417ea53e582f596578062864e387458ff8",
+    "profile-iso_management-details": "d26d9ce4f38822f9f7f6916562a6454424f5fbf8e37e97ab0730835aa0d9718d",
+    "profile-government_licensing-essential": "c044931b470bfc08d4f18683a4c16735a3d59e60e97dac21de66ca808fca8d89",
+    "profile-government_licensing-details": "e7abcdc1d99661c757add28cacbc40b3c093b1cd3fae879a84d38c124541ba0b",
+    "profile-school_results-essential": "8aebd35fbd4406eba206fc497087ec3f5c5149425f927bce82ec8034fca34e48",
+    "profile-school_results-details": "9dc2c81be7184acf76d54a8f88290bed882007a0dc8e63ab1c5a61a1592918ad",
+    "profile-corporate_compliance-essential": "9f87065572b49da13935d62fcc1cac37c6d14d87736e089031d440ef16007c97",
+    "profile-corporate_compliance-details": "2e2f08256f0f7190c3fa466d704dcdb0a6ff87cb5b8c85d84750f186cd000566",
+    "profile-membership_association-essential": "762c105990080541b025de8d790c0a84408ce886b2c3e2a8a51a6167132d36a6",
+    "profile-membership_association-details": "44ebe2dbc0ff7703284e727664e0721711af1e3f17b547363ae0a8b8140b7ba5",
+    "profile-events_awards-essential": "14001a904cc5ef3a3887bbc0b560004ecf949a913e68ee4254011f3d1a000396",
+    "profile-events_awards-details": "9220be692474a0dc291e2927bf652fb6183b37b981237a6b8fc30cb5632cdade",
+    "profile-product_inspection-essential": "77d3909f9325cd0f1b4fa8db74aa7249ded788057522c6a1a82794abfd60f8de",
+    "profile-product_inspection-details": "72f513601c387d29bfe388c58df15440e56f87ef1ab8391810d0d9c07e3fd6f0",
+    "profile-general_other-essential": "c807a77b65f0e5969369741ee4dcea15bd87f1e5ced3a5371fc539a22534c3fe"
+}

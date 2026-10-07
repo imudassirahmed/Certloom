@@ -1,5 +1,7 @@
 <?php
 /** Contextual Issuer / Program / Batch Design Rule integration regression. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $root = dirname( __DIR__ );
 $files = array(
 	'domain' => 'src/Infrastructure/Admin/DomainAdmin.php',

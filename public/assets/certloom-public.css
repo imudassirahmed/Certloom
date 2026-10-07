@@ -768,8 +768,9 @@
 	min-width: 0;
 	width: 100%;
 	max-width: none;
-	height: auto;
-	min-height: 0;
+	align-self: stretch;
+	height: 100%;
+	min-height: 44px;
 	margin: 0;
 	padding: 0;
 	background: transparent;
@@ -1963,7 +1964,7 @@
 
 .cvp-certificate-preview .certloom-template-preview-scroll[data-certloom-preview-fitted="1"]{overflow:hidden}
 .cvp-certificate-preview .certloom-certificate-preview-stage{position:relative;max-width:100%;overflow:visible}
-.cvp-certificate-preview .certloom-certificate-preview-stage>.certloom-template-preview-page{margin:0;will-change:transform}
+.cvp-certificate-preview .certloom-certificate-preview-stage>.certloom-template-preview-page{margin:0}
 @media(prefers-reduced-motion:reduce){.cvp-certificate-preview .certloom-certificate-preview-stage>.certloom-template-preview-page{will-change:auto}}
 
 .certloom-my-credential-card__status--voided,.certloom-my-credential-card__status--not_issued{color:var(--cl-error);background:var(--cl-revoked-wash)}

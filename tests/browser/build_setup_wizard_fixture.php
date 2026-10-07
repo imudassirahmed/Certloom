@@ -1,5 +1,7 @@
 <?php
 /** Browser fixture for UI Phase 3 Setup Wizard v2. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $state = getenv( 'CERTLOOM_WIZ_STATE' );
 $allowed = array( 'welcome','profile','organization','fields','appearance','context','issue','finish','rtl' );
 if ( ! in_array( $state, $allowed, true ) ) { $state = 'profile'; }

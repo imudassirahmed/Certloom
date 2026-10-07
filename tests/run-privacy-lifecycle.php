@@ -1,5 +1,7 @@
 <?php
 /** Pure application tests for Certloom PRV-02 mutable-profile anonymization. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define( 'ABSPATH', __DIR__ . '/fake-wp/' );
 if ( ! class_exists( 'WP_Error' ) ) { class WP_Error { private $code; private $message; public function __construct($c='',$m=''){ $this->code=$c;$this->message=$m;} public function get_error_code(){return $this->code;} public function get_error_message(){return $this->message;} } }
 function is_wp_error($v){return $v instanceof WP_Error;} function __($t){return $t;} function absint($v){return abs((int)$v);} function wp_salt($s='auth'){return 'privacy-unit-'.$s;}
@@ -10,6 +12,7 @@ use Certloom\Application\Contract\TransactionInterface;
 use Certloom\Application\Privacy\RecipientAnonymizationService;
 
 final class PRepo implements PrivacyRepositoryInterface {
+	public function export_workflow_for_identity($kind,$e,$u=0,$o=0,$l=50){return array();}
  public $recipients=array(); public $series=array(); public $anonymized=array();
  public function domain_storage_exists(){return true;}
  public function find_recipients_for_identity($e,$u=0,$o=0,$l=50){return array();}

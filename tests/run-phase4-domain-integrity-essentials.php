@@ -1,5 +1,7 @@
 <?php
 /** Phase 4 alpha.4.39 credential-integrity essentials contract. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $root = dirname( __DIR__ );
 $files = array(
     'manual' => 'src/Application/Issuance/ManualIssuanceService.php',

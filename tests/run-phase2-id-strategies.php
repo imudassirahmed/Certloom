@@ -1,5 +1,7 @@
 <?php
 /** Behavioral/static acceptance for ID-01 dependency-safe human-number strategies. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define( 'ABSPATH', __DIR__ . '/' );
 class WP_Error {
 	private $code;

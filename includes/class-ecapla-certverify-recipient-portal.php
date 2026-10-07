@@ -46,6 +46,7 @@ final class Ecapla_CertVerify_Recipient_Portal {
 			);
 		}
 
+		$details = \Certloom\Infrastructure\Recipient\RecipientCollectionUi::render();
 		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Authenticated, read-only filtering/pagination.
 		$status = isset( $_GET[ self::STATUS_QUERY ] ) ? sanitize_key( wp_unslash( $_GET[ self::STATUS_QUERY ] ) ) : 'all';
 		$sort   = isset( $_GET[ self::SORT_QUERY ] ) ? sanitize_key( wp_unslash( $_GET[ self::SORT_QUERY ] ) ) : 'newest';
@@ -58,10 +59,10 @@ final class Ecapla_CertVerify_Recipient_Portal {
 			array( 'status' => $status, 'sort' => $sort, 'page' => $page, 'per_page' => $per_page )
 		);
 		if ( is_wp_error( $result ) ) {
-			return self::notice( $result->get_error_message() );
+			return $details . self::notice( $result->get_error_message() );
 		}
 		if ( empty( $result['linked'] ) ) {
-			return self::notice( __( 'Your WordPress account is not linked to a Certloom recipient yet. Contact the credential issuer if you expected credentials here.', 'certloom' ) );
+			return $details;
 		}
 
 		$heading = trim( wp_strip_all_tags( (string) $atts['heading'] ) );
@@ -69,6 +70,11 @@ final class Ecapla_CertVerify_Recipient_Portal {
 		$instance_id = ++self::$instance_counter;
 		$heading_id  = 'certloom-my-credentials-heading-' . $instance_id;
 		$items = (array) ( $result['items'] ?? array() );
+		$downloads = new \Certloom\Infrastructure\Rendering\CredentialDownload();
+		foreach ( $items as &$item ) {
+			$item['downloads'] = $downloads->links( (string) ( $item['public_id'] ?? '' ) );
+		}
+		unset( $item );
 		$total = absint( $result['total'] ?? 0 );
 		$recipient_name = (string) ( $result['recipient']['display_name'] ?? '' );
 		$filter_status = (string) ( $result['status_filter'] ?? 'all' );
@@ -120,7 +126,7 @@ final class Ecapla_CertVerify_Recipient_Portal {
 			</footer>
 		</section>
 		<?php
-		return (string) ob_get_clean();
+		return $details . (string) ob_get_clean();
 	}
 
 	/** @return string */
@@ -202,7 +208,7 @@ final class Ecapla_CertVerify_Recipient_Portal {
 			<div class="certloom-my-credential-card__actions">
 				<?php if ( ! empty( $item['verify_url'] ) ) : ?><a class="certloom-my-credentials__button" href="<?php echo esc_url( $item['verify_url'] ); ?>" rel="nofollow noopener"><?php esc_html_e( 'Verify', 'certloom' ); ?></a><?php endif; ?>
 				<?php echo self::share_controls( $item ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped in helper. ?>
-				<span class="certloom-my-credentials__action-muted" title="<?php esc_attr_e( 'Certificate downloads are not available yet. You can still verify or share this credential.', 'certloom' ); ?>"><?php esc_html_e( 'Downloads unavailable', 'certloom' ); ?></span>
+				<?php echo self::download_controls( $item ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped in helper. ?>
 			</div>
 		</article>
 		<?php
@@ -223,7 +229,7 @@ final class Ecapla_CertVerify_Recipient_Portal {
 					<td><span class="certloom-my-credential-card__status certloom-my-credential-card__status--<?php echo esc_attr( $code ); ?>"><?php echo esc_html( self::status_label( $code ) ); ?></span><?php if ( ! empty( $item['expiring_soon'] ) ) : ?><small><?php esc_html_e( 'Expiring soon', 'certloom' ); ?></small><?php endif; ?></td>
 					<td><?php echo esc_html( self::date_label( $item['issued_at'] ?? null ) ); ?></td>
 					<td><?php echo esc_html( self::date_label( $item['expires_at'] ?? null, __( 'No expiry', 'certloom' ) ) ); ?></td>
-					<td><div class="certloom-my-credentials__table-actions"><?php if ( ! empty( $item['verify_url'] ) ) : ?><a href="<?php echo esc_url( $item['verify_url'] ); ?>" rel="nofollow noopener"><?php esc_html_e( 'Verify', 'certloom' ); ?></a><?php else : ?><span aria-label="<?php esc_attr_e( 'Verification unavailable', 'certloom' ); ?>">—</span><?php endif; ?><?php echo self::share_controls( $item ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped in helper. ?></div></td>
+					<td><div class="certloom-my-credentials__table-actions"><?php if ( ! empty( $item['verify_url'] ) ) : ?><a href="<?php echo esc_url( $item['verify_url'] ); ?>" rel="nofollow noopener"><?php esc_html_e( 'Verify', 'certloom' ); ?></a><?php else : ?><span aria-label="<?php esc_attr_e( 'Verification unavailable', 'certloom' ); ?>">—</span><?php endif; ?><?php echo self::share_controls( $item ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped in helper. ?><?php echo self::download_controls( $item ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped in helper. ?></div></td>
 				</tr>
 			<?php endforeach; ?>
 			</tbody>
@@ -256,6 +262,18 @@ final class Ecapla_CertVerify_Recipient_Portal {
 		}
 		if ( '' === $links ) { return ''; }
 		return '<details class="certloom-share certloom-my-credentials__share"><summary class="certloom-my-credentials__button">' . esc_html__( 'Share', 'certloom' ) . '</summary><div class="certloom-share-menu">' . $links . '<button type="button" class="certloom-share-link certloom-share-copy certloom-copy-link" data-copy-url="' . esc_attr( (string) $item['share_url'] ) . '">' . esc_html__( 'Copy URL', 'certloom' ) . '</button><span class="certloom-action-feedback" aria-live="polite"></span></div></details>';
+	}
+
+	private static function download_controls( array $item ) {
+		$downloads = (array) ( $item['downloads'] ?? array() );
+		$links = '';
+		foreach ( (array) ( $downloads['links'] ?? array() ) as $link ) {
+			$format = (string) ( $link['format'] ?? '' );
+			if ( ! in_array( $format, array( 'pdf', 'png', 'jpeg' ), true ) ) { continue; }
+			$links .= '<a class="certloom-my-credentials__button" href="' . esc_url( (string) ( $link['url'] ?? '' ) ) . '">' . esc_html( sprintf( /* translators: %s: PDF, PNG or JPEG file format. */ __( 'Download %s', 'certloom' ), strtoupper( $format ) ) ) . '</a>';
+		}
+		if ( '' !== $links ) { return $links; }
+		return '<span class="certloom-my-credentials__action-muted">' . esc_html( (string) ( $downloads['message'] ?? __( 'Downloads unavailable', 'certloom' ) ) ) . '</span>';
 	}
 
 	/** @return string */

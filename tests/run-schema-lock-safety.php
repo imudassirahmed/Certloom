@@ -1,5 +1,7 @@
 <?php
 /** Pure regression tests for checked next-domain schema-lock cleanup. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define( 'ABSPATH', __DIR__ . '/fake-wp/' );
 define( 'DAY_IN_SECONDS', 86400 );
 define( 'MINUTE_IN_SECONDS', 60 );
@@ -28,7 +30,7 @@ require_once __DIR__ . '/bootstrap-autoload.php';
 use Certloom\Infrastructure\Database\SchemaManager;
 function sl_same($e,$a,$m=''){if($e!==$a){throw new RuntimeException(($m?$m.': ':'').'Expected '.var_export($e,true).', got '.var_export($a,true));}}
 $method=new ReflectionMethod(SchemaManager::class,'release_lock');
-$method->setAccessible(true);
+if ( PHP_VERSION_ID < 80100 ) { $method->setAccessible(true); }
 $token='worker-token';
 $GLOBALS['schema_lock_options'][SchemaManager::LOCK_OPTION]=$token.'|'.time();
 sl_same(true,$method->invoke(null,$token),'owned schema lock releases');

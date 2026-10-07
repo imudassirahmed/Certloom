@@ -1,5 +1,7 @@
 <?php
 /** Static release guard for protected data-tool controller boundaries. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $source = file_get_contents( dirname( __DIR__ ) . '/src/Infrastructure/Admin/DomainDataToolsAdmin.php' );
 if ( false === $source ) { throw new RuntimeException( 'Could not read DomainDataToolsAdmin.' ); }
 $actions = array(

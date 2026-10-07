@@ -46,7 +46,8 @@ final class CourseraXapiCredentials {
 			'token_expires_at'     => 0,
 			'updated_at'           => current_time( 'mysql', true ),
 		);
-		$saved = update_option( self::OPTION, $payload, false );
+		$saved = ( new \Certloom\Infrastructure\Data\DurableOptionMutation() )->set( self::OPTION, $payload );
+		if ( is_wp_error( $saved ) ) { return $saved; }
 		if ( ! $saved && $payload !== get_option( self::OPTION, null ) ) {
 			return new \WP_Error( 'certloom_coursera_credentials_save_failed', __( 'Certloom could not save the Coursera xAPI connection safely.', 'certloom' ) );
 		}
@@ -55,8 +56,7 @@ final class CourseraXapiCredentials {
 
 	/** @return true|\WP_Error */
 	public static function disconnect() {
-		$deleted = delete_option( self::OPTION );
-		return $deleted || false === get_option( self::OPTION, false ) ? true : new \WP_Error( 'certloom_coursera_disconnect_failed', __( 'Certloom could not remove the Coursera xAPI connection safely.', 'certloom' ) );
+		return ( new \Certloom\Infrastructure\Data\DurableOptionMutation() )->remove( self::OPTION );
 	}
 
 	/** @return array{access_token:string,token_type:string,expires_in:int}|\WP_Error */
@@ -74,7 +74,8 @@ final class CourseraXapiCredentials {
 		$stored['token_sha256']     = hash( 'sha256', $token );
 		$stored['token_expires_at'] = $expires;
 		$stored['updated_at']       = current_time( 'mysql', true );
-		$saved = update_option( self::OPTION, $stored, false );
+		$saved = ( new \Certloom\Infrastructure\Data\DurableOptionMutation() )->set( self::OPTION, $stored );
+		if ( is_wp_error( $saved ) ) { return $saved; }
 		if ( ! $saved && $stored !== get_option( self::OPTION, null ) ) { return new \WP_Error( 'certloom_coursera_token_save_failed', __( 'Certloom could not save the Coursera access-token state safely.', 'certloom' ) ); }
 		return array( 'access_token' => $token, 'token_type' => 'Bearer', 'expires_in' => self::TOKEN_TTL );
 	}

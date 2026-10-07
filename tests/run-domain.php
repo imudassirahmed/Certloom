@@ -7,6 +7,8 @@
  * will be added when the database/public-route milestones are wired.
  */
 
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 require_once __DIR__ . '/bootstrap-autoload.php';
 use Certloom\Domain\Credential\PublicCredentialId;
 use Certloom\Domain\Credential\StateMachine;

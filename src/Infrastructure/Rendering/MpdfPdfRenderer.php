@@ -15,8 +15,8 @@ use RuntimeException;
 /**
  * First concrete Certloom PDF-04 candidate: dependency-prefixed mPDF.
  *
- * This class is intentionally not registered by Plugin bootstrap and does not
- * grant artifact authority. It can only execute after the normal coordinator
+ * ProductionRendererRuntime registers this class without granting artifact
+ * authority. It can only execute after the normal coordinator
  * authority/capability/font boundaries (or the source-only PDF-04 evaluator).
  */
 final class MpdfPdfRenderer implements RendererInterface {
@@ -60,7 +60,7 @@ final class MpdfPdfRenderer implements RendererInterface {
 		return array(
 			'candidate_manifest_sha256' => $this->candidate_hash,
 			'font_manifest' => $this->font_manifest,
-			'adapter' => 'certloom-mpdf-render-plan-v2',
+			'adapter' => 'certloom-mpdf-render-plan-v3',
 			'input_schema' => 'certloom-render-plan:1',
 			'network' => 'none',
 			'remote_assets' => false,
@@ -76,6 +76,7 @@ final class MpdfPdfRenderer implements RendererInterface {
 		$page = $render_plan['page'];
 		$config = array(
 			'mode' => 'utf-8',
+			'useKerning' => true,
 			'format' => array( (float) $page['width_mm'], (float) $page['height_mm'] ),
 			'margin_left' => 0,
 			'margin_right' => 0,
@@ -216,9 +217,12 @@ final class MpdfPdfRenderer implements RendererInterface {
 				if ( 'center' === (string) ( $rich['align'] ?? 'center' ) ) { $cursor = $x + ( $w - $line_w ) / 2.0; }
 				elseif ( 'right' === (string) ( $rich['align'] ?? 'center' ) ) { $cursor = $x + $w - $line_w; }
 				$fragments = 'rtl' === $direction ? array_reverse( (array) $line['fragments'] ) : (array) $line['fragments'];
+				$ascent = 0.0; $descent = 0.0;
+				// Styled fragments share one typographic baseline for the entire line.
+				foreach ( $fragments as $fragment ) { $ascent = max( $ascent, -(float) $fragment['metrics']['min_y'] ); $descent = max( $descent, (float) $fragment['metrics']['max_y'] ); }
+				$baseline = $line_top + $ascent + max( 0.0, ( (float) $line['height'] - $ascent - $descent ) / 2.0 );
 				foreach ( $fragments as $fragment ) {
 					$size = (float) $fragment['size_pt']; $visual = (string) $fragment['visual']; $metrics = (array) $fragment['metrics'];
-					$baseline = $line_top - (float) $metrics['min_y'] + max( 0.0, ( (float) $line['height'] - (float) $metrics['height'] ) / 2.0 );
 					$color = (array) $fragment['color'];
 					if ( method_exists( $mpdf, 'SetAlpha' ) ) { $mpdf->SetAlpha( $opacity * max( 0.0, min( 1.0, (float) ( $color['alpha_unit'] ?? 1.0 ) ) ) ); }
 					if ( method_exists( $mpdf, 'SetTextColor' ) ) { $mpdf->SetTextColor( (int) ( $color['r'] ?? 0 ), (int) ( $color['g'] ?? 0 ), (int) ( $color['b'] ?? 0 ) ); }
@@ -312,19 +316,7 @@ final class MpdfPdfRenderer implements RendererInterface {
 				$line_top_px = $top_px + $index * $line_px;
 				$baseline_px = $line_top_px - (float) $metrics['min_y'] + max( 0.0, ( $line_px - (float) $metrics['height'] ) / 2.0 );
 				$draw_size = $size;
-				// Only compensate when the shared GD layout actually invoked shrink.
-				// The target width remains the GD/FreeType width; mPDF's own font advance
-				// is used only to correct its emitted glyph scale, never to decide layout.
-				if ( 'shrink' === $overflow && $size < $requested_size - 0.0001 && abs( $spacing_pt ) < 0.0001 && method_exists( $mpdf, 'GetStringWidth' ) ) {
-					$mpdf->SetFont( $alias, '', $size );
-					$advance_mm = (float) $mpdf->GetStringWidth( $visual );
-					$target_mm = $this->px_to_mm( (float) $metrics['width'] );
-					if ( $advance_mm > 0.0001 && $target_mm > 0.0001 ) {
-						$ratio = $target_mm / $advance_mm;
-						if ( $ratio < 0.85 || $ratio > 1.15 ) { throw new RuntimeException( 'mPDF shrink font-scale correction escaped the bounded parity range.' ); }
-						$draw_size = $size * $ratio;
-					}
-				}
+
 				$this->native_draw_visual_at_layout( $mpdf, $alias, $font_path, $size, $draw_size, $this->px_to_mm( $draw_x_px ), $this->px_to_mm( $baseline_px ), $visual, $spacing_pt );
 			}
 		};
@@ -377,15 +369,15 @@ final class MpdfPdfRenderer implements RendererInterface {
 	}
 	private function native_visual_text( $value, $direction ) { if(1===preg_match('/[\x{0600}-\x{06FF}\x{0750}-\x{077F}\x{08A0}-\x{08FF}]/u',(string)$value)){$shaper = new ArabicPresentationShaper();return $shaper->visual_text((string)$value,(string)$direction);}return(string)$value; }
 	private function native_text_metrics( $visual, $font_path, $size, $spacing_pt = 0.0 ) {
-		$spacing_pt=(float)$spacing_pt;$box=imagettfbbox((float)$size,0.0,(string)$font_path,(string)$visual);if(false===$box){throw new RuntimeException('mPDF candidate could not measure exact-font text.');}
+		$spacing_pt=(float)$spacing_pt;$box=ExactFontMetrics::box((float)$size,0.0,(string)$font_path,(string)$visual);if(false===$box){throw new RuntimeException('mPDF candidate could not measure exact-font text.');}
 		$xs=array($box[0],$box[2],$box[4],$box[6]);$ys=array($box[1],$box[3],$box[5],$box[7]);$minx=(float)min($xs);$maxx=(float)max($xs);$miny=(float)min($ys);$maxy=(float)max($ys);
-		if(abs($spacing_pt)>0.0001){$clusters=$this->native_graphemes($visual);$width=0.0;$first=true;$miny2=0.0;$maxy2=0.0;foreach($clusters as$cluster){$b=imagettfbbox((float)$size,0.0,(string)$font_path,(string)$cluster);if(false===$b){continue;}$xx=array($b[0],$b[2],$b[4],$b[6]);$yy=array($b[1],$b[3],$b[5],$b[7]);$cw=(float)(max($xx)-min($xx));$width+=$cw;if(!$first){$width+=$spacing_pt*96.0/72.0;}$miny2=$first?(float)min($yy):min($miny2,(float)min($yy));$maxy2=$first?(float)max($yy):max($maxy2,(float)max($yy));$first=false;}return array('min_x'=>0.0,'max_x'=>$width,'min_y'=>$miny2,'max_y'=>$maxy2,'width'=>$width,'height'=>$maxy2-$miny2);}
+		if(abs($spacing_pt)>0.0001){$clusters=$this->native_graphemes($visual);$width=0.0;$first=true;$miny2=0.0;$maxy2=0.0;foreach($clusters as$cluster){$b=ExactFontMetrics::box((float)$size,0.0,(string)$font_path,(string)$cluster);if(false===$b){continue;}$xx=array($b[0],$b[2],$b[4],$b[6]);$yy=array($b[1],$b[3],$b[5],$b[7]);$cw=(float)(max($xx)-min($xx));$width+=ExactFontMetrics::advance($size,$font_path,$cluster);if(!$first){$width+=$spacing_pt*96.0/72.0;}$miny2=$first?(float)min($yy):min($miny2,(float)min($yy));$maxy2=$first?(float)max($yy):max($maxy2,(float)max($yy));$first=false;}return array('min_x'=>0.0,'max_x'=>$width,'min_y'=>$miny2,'max_y'=>$maxy2,'width'=>$width,'height'=>$maxy2-$miny2);}
 		return array('min_x'=>$minx,'max_x'=>$maxx,'min_y'=>$miny,'max_y'=>$maxy,'width'=>$maxx-$minx,'height'=>$maxy-$miny);
 	}
 	private function native_graphemes( $value ) {if(''===(string)$value){return array();}if(1===preg_match_all('/\X/u',(string)$value,$m)&&!empty($m[0])){return array_values($m[0]);}$c=preg_split('//u',(string)$value,-1,PREG_SPLIT_NO_EMPTY);return false===$c?array((string)$value):array_values($c);}
 	private function native_draw_visual( $mpdf, $alias, $font_path, $size, $x_mm, $baseline_mm, $visual, $spacing_pt = 0.0 ) {
-		$mpdf->SetFont($alias,'',(float)$size);if(abs((float)$spacing_pt)<0.0001){$mpdf->Text((float)$x_mm,(float)$baseline_mm,(string)$visual);return;}
-		$cursor_px=$this->mm_to_px((float)$x_mm);$spacing_px=(float)$spacing_pt*96.0/72.0;foreach($this->native_graphemes($visual)as$cluster){$m=$this->native_text_metrics($cluster,$font_path,$size,0.0);$mpdf->Text($this->px_to_mm($cursor_px-(float)$m['min_x']),(float)$baseline_mm,(string)$cluster);$cursor_px+=(float)$m['width']+$spacing_px;}
+		$mpdf->SetFont($alias,'',(float)$size);if(abs((float)$spacing_pt)<0.0001){$mpdf->Text((float)$x_mm,(float)$baseline_mm,(string)$visual,array(),256);return;}
+		$cursor_px=$this->mm_to_px((float)$x_mm);$spacing_px=(float)$spacing_pt*96.0/72.0;foreach($this->native_graphemes($visual)as$cluster){$m=$this->native_text_metrics($cluster,$font_path,$size,0.0);$mpdf->Text($this->px_to_mm($cursor_px-(float)$m['min_x']),(float)$baseline_mm,(string)$cluster);$cursor_px+=ExactFontMetrics::advance($size,$font_path,$cluster)+$spacing_px;}
 	}
 	private function native_layout_lines( $value, $direction, $overflow, $font_path, $size, $width_mm, $height_mm, $line_height, $spacing_pt = 0.0 ) {
 		$min=5.0;$width_px=$this->mm_to_px($width_mm);$height_px=$this->mm_to_px($height_mm);
@@ -409,7 +401,7 @@ final class MpdfPdfRenderer implements RendererInterface {
 				if ( 1 === preg_match( '/^\\R$/u', $part ) ) { $flush(); continue; }
 				$size = max( 1.0, (float) ( $run['font']['size_pt'] ?? 12.0 ) * (float) $scale );
 				$visual = $this->native_visual_text( $part, $direction ); $spacing_pt = (float) ( $run['spacing_pt'] ?? 0.0 ) * (float) $scale;
-				$metrics = $this->native_text_metrics( $visual, (string) $run['path'], $size, $spacing_pt ); $fragment_width = (float) $metrics['width'];
+				$metrics = $this->native_text_metrics( $visual, (string) $run['path'], $size, $spacing_pt ); $fragment_width = abs( $spacing_pt ) > 0.0001 ? (float) $metrics['width'] : ExactFontMetrics::advance( $size, (string) $run['path'], $visual );
 				$is_space = 1 === preg_match( '/^[ \	]+$/u', $part );
 				if ( 'wrap' === $overflow && ! empty( $current ) && ! $is_space && $current_width + $fragment_width > $width_px + 0.01 ) { $flush(); }
 				if ( 'wrap' === $overflow && empty( $current ) && $is_space ) { continue; }
@@ -424,18 +416,19 @@ final class MpdfPdfRenderer implements RendererInterface {
 	}
 
 	/** Draw at an mPDF font size while keeping GD/FreeType layout advances authoritative. */
+	// mPDF TextVars::FC_KERNING = 256; Text() does not infer this from useKerning.
 	private function native_draw_visual_at_layout( $mpdf, $alias, $font_path, $layout_size, $draw_size, $x_mm, $baseline_mm, $visual, $spacing_pt = 0.0 ) {
 		$mpdf->SetFont( (string) $alias, '', (float) $draw_size );
-		if ( abs( (float) $spacing_pt ) < 0.0001 ) { $mpdf->Text( (float) $x_mm, (float) $baseline_mm, (string) $visual ); return; }
+		if ( abs( (float) $spacing_pt ) < 0.0001 ) { $mpdf->Text( (float) $x_mm, (float) $baseline_mm, (string) $visual, array(), 256 ); return; }
 		$cursor_px = $this->mm_to_px( (float) $x_mm ); $spacing_px = (float) $spacing_pt * 96.0 / 72.0;
 		foreach ( $this->native_graphemes( $visual ) as $cluster ) {
 			$layout_metrics = $this->native_text_metrics( $cluster, $font_path, $layout_size, 0.0 );
 			$mpdf->Text( $this->px_to_mm( $cursor_px - (float) $layout_metrics['min_x'] ), (float) $baseline_mm, (string) $cluster );
-			$cursor_px += (float) $layout_metrics['width'] + $spacing_px;
+			$cursor_px += ExactFontMetrics::advance( $layout_size, $font_path, $cluster ) + $spacing_px;
 		}
 	}
 
-	private function native_crop_asset( $path, $x, $y, $w, $h ) {$bytes=@file_get_contents((string)$path);$src=is_string($bytes)?@imagecreatefromstring($bytes):false;if(false===$src){throw new RuntimeException('mPDF candidate crop could not decode the local image.');}try{$sw=imagesx($src);$sh=imagesy($src);$sx=(int)($x*$sw);$sy=(int)($y*$sh);$cw=max(1,(int)($w*$sw));$ch=max(1,(int)($h*$sh));$crop=@imagecrop($src,array('x'=>$sx,'y'=>$sy,'width'=>$cw,'height'=>$ch));if(false===$crop){throw new RuntimeException('mPDF candidate local image crop failed.');}try{$base=tempnam( '' !== $this->temp_dir ? $this->temp_dir : sys_get_temp_dir(), 'clmpdf_' );if(false===$base){throw new RuntimeException('mPDF candidate could not allocate a local crop path.');}$tmp=$base.'.png';@unlink($base);imagesavealpha($crop,true);$png_filters = defined( 'PNG_ALL_FILTERS' ) ? PNG_ALL_FILTERS : -1; if(!imagepng($crop,$tmp,9,$png_filters)){throw new RuntimeException('mPDF candidate could not encode the local crop.');}return$tmp;}finally{imagedestroy($crop);}}finally{imagedestroy($src);}}
+	private function native_crop_asset( $path, $x, $y, $w, $h ) {$bytes=@file_get_contents((string)$path);$src=is_string($bytes)?@imagecreatefromstring($bytes):false;if(false===$src){throw new RuntimeException('mPDF candidate crop could not decode the local image.');}try{$sw=imagesx($src);$sh=imagesy($src);$sx=(int)($x*$sw);$sy=(int)($y*$sh);$cw=max(1,(int)($w*$sw));$ch=max(1,(int)($h*$sh));$crop=@imagecrop($src,array('x'=>$sx,'y'=>$sy,'width'=>$cw,'height'=>$ch));if(false===$crop){throw new RuntimeException('mPDF candidate local image crop failed.');}try{$base=tempnam( '' !== $this->temp_dir ? $this->temp_dir : sys_get_temp_dir(), 'clmpdf_' );if(false===$base){throw new RuntimeException('mPDF candidate could not allocate a local crop path.');}$tmp=$base.'.png';@unlink($base);imagesavealpha($crop,true);$png_filters = defined( 'PNG_ALL_FILTERS' ) ? PNG_ALL_FILTERS : -1; if(!imagepng($crop,$tmp,9,$png_filters)){throw new RuntimeException('mPDF candidate could not encode the local crop.');}return$tmp;}finally{if(is_resource($crop)){imagedestroy($crop);}}}finally{if(is_resource($src)){imagedestroy($src);}}}
 	private function mm_to_px( $mm ) { return (float)$mm / 25.4 * 96.0; }
 	private function px_to_mm( $px ) { return (float)$px / 96.0 * 25.4; }
 

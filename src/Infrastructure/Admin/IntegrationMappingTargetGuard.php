@@ -8,6 +8,8 @@ use Certloom\Application\Integration\IntegrationFieldCompatibility;
 use Certloom\Application\Templates\TemplateFieldCompatibility;
 use Certloom\Infrastructure\Repository\BatchRepository;
 use Certloom\Infrastructure\Repository\ProgramRepository;
+use Certloom\Infrastructure\Repository\IssuerRepository;
+use Certloom\Infrastructure\Repository\ScopedFieldGlobalRepository;
 use Certloom\Infrastructure\Repository\TemplateRepository;
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
@@ -27,19 +29,25 @@ final class IntegrationMappingTargetGuard {
 	/** @var TemplateRepository */ private $templates;
 	/** @var IntegrationFieldCompatibility */ private $fields;
 	/** @var TemplateFieldCompatibility */ private $template_fields;
+	/** @var IssuerRepository */ private $issuers;
+	/** @var ScopedFieldGlobalRepository */ private $global_fields;
 
 	public function __construct(
 		?ProgramRepository $programs = null,
 		?BatchRepository $batches = null,
 		?TemplateRepository $templates = null,
 		?IntegrationFieldCompatibility $fields = null,
-		?TemplateFieldCompatibility $template_fields = null
+		?TemplateFieldCompatibility $template_fields = null,
+		?IssuerRepository $issuers = null,
+		?ScopedFieldGlobalRepository $global_fields = null
 	) {
 		$this->programs = $programs ?: new ProgramRepository();
 		$this->batches = $batches ?: new BatchRepository();
 		$this->templates = $templates ?: new TemplateRepository();
 		$this->fields = $fields ?: new IntegrationFieldCompatibility();
 		$this->template_fields = $template_fields ?: new TemplateFieldCompatibility();
+		$this->issuers = $issuers ?: new IssuerRepository();
+		$this->global_fields = $global_fields ?: new ScopedFieldGlobalRepository();
 	}
 
 	/** @return array<string,mixed>|\WP_Error */
@@ -66,7 +74,7 @@ final class IntegrationMappingTargetGuard {
 	 * @param array<string,mixed>|null $batch   Existing/proposed Batch snapshot.
 	 * @return array<string,mixed>|\WP_Error
 	 */
-	public function validate_snapshot( array $program, ?array $batch = null, ?array $excluded_assignment = null, ?array $proposed_assignment = null ) {
+	public function validate_snapshot( array $program, ?array $batch = null, ?array $excluded_assignment = null, ?array $proposed_assignment = null, ?array $source_fields = null ) {
 		$program_id = absint( $program['id'] ?? 0 );
 		if ( ! $program_id || empty( $program['active'] ) ) {
 			return new \WP_Error( 'certloom_integration_program_invalid', __( 'Choose an active Certloom Program.', 'certloom' ) );
@@ -83,14 +91,31 @@ final class IntegrationMappingTargetGuard {
 		}
 
 		$catalog = $this->catalog();
-		$field_compatibility = $this->fields->validate_context( $program, $batch, $catalog );
+		$global_contract = $this->global_fields->get( $catalog );
+		if ( is_wp_error( $global_contract ) ) { return $global_contract; }
+		$issuer_contract = null;
+		$issuer_id = absint( $program['issuer_id'] ?? 0 );
+		if ( $issuer_id ) {
+			$issuer = $this->issuers->find( $issuer_id );
+			if ( is_wp_error( $issuer ) ) { return $issuer; }
+			if ( ! is_array( $issuer ) ) {
+				return new \WP_Error( 'certloom_integration_issuer_missing', __( 'The Program’s Issuer is no longer available. Review the Program before enabling automatic issuance.', 'certloom' ) );
+			}
+			$issuer_contract = is_array( $issuer['field_contract'] ?? null ) ? $issuer['field_contract'] : null;
+		}
+		if ( null === $source_fields ) {
+			$field_compatibility = $this->fields->validate_context( $program, $batch, $catalog, $global_contract, $issuer_contract );
+		} else {
+			$effective = ( new ScopedFieldContract() )->resolve_hierarchy( $global_contract, $issuer_contract, $program['field_contract'] ?? ScopedFieldContract::empty_program(), $batch['field_contract'] ?? null, $catalog );
+			$field_compatibility = is_wp_error( $effective ) ? $effective : ( new \Certloom\Application\Integration\WebhookFieldMapping() )->validate( $source_fields, $effective, $catalog );
+		}
 		if ( is_wp_error( $field_compatibility ) ) { return $field_compatibility; }
 
 		$design = $this->resolve_design( $program, $batch, $excluded_assignment, $proposed_assignment );
 		if ( is_wp_error( $design ) ) { return $design; }
 		$program_contract = is_array( $program['field_contract'] ?? null ) ? $program['field_contract'] : ScopedFieldContract::empty_program();
 		$batch_contract = is_array( $batch ) && is_array( $batch['field_contract'] ?? null ) ? $batch['field_contract'] : null;
-		$template_compatibility = $this->template_fields->validate( (array) $design['layout'], $program_contract, $batch_contract, $catalog );
+		$template_compatibility = $this->template_fields->validate( (array) $design['layout'], $program_contract, $batch_contract, $catalog, $global_contract, $issuer_contract );
 		if ( is_wp_error( $template_compatibility ) ) { return $template_compatibility; }
 
 		return array(

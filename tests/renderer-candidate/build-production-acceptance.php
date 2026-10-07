@@ -1,5 +1,7 @@
 <?php
 /** Canonically derive RendererAcceptanceContract evidence from verified PDF-04 production evidence. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 require_once __DIR__ . '/acceptance-evidence-lib.php';
 
 if ( 6 !== $argc ) {

@@ -1,5 +1,7 @@
 <?php
 /** Phase 4 completion-candidate proof that historical certloom-layout v1-v3 authority remains identical to alpha.4.8. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define( 'ABSPATH', __DIR__ . '/' );
 if ( ! class_exists( 'WP_Error' ) ) { class WP_Error {} }
 function __( $value ) { return $value; }

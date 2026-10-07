@@ -1,5 +1,7 @@
 <?php
 /** Build a self-contained Gamma-02R Certloom Studio fixture over the canonical Designer runtime. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 ob_start();
 require __DIR__ . '/build_template_designer_fixture.php';
 $html = ob_get_clean();

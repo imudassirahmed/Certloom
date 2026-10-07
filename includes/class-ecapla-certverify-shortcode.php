@@ -28,10 +28,18 @@ class Ecapla_CertVerify_Shortcode {
 	}
 
 	public static function register_assets() {
-		wp_register_style( 'certloom-tokens', ECAPLA_CERTVERIFY_URL . 'assets/css/certloom-tokens.css', array(), ECAPLA_CERTVERIFY_VERSION );
-		wp_register_style( 'ecapla-certloom-public', ECAPLA_CERTVERIFY_URL . 'public/assets/certloom-public.css', array( 'certloom-tokens' ), ECAPLA_CERTVERIFY_VERSION );
-		wp_register_style( 'certloom-artifact-foundation', ECAPLA_CERTVERIFY_URL . 'public/assets/certloom-artifact-foundation.css', array( 'ecapla-certloom-public' ), ECAPLA_CERTVERIFY_VERSION );
-		wp_register_script( 'ecapla-certloom-public', ECAPLA_CERTVERIFY_URL . 'public/assets/certloom-public.js', array(), ECAPLA_CERTVERIFY_VERSION, true );
+		$public_version = ECAPLA_CERTVERIFY_VERSION;
+		if ( function_exists( 'wp_get_environment_type' ) && 'local' === wp_get_environment_type() ) {
+			// Local UI iteration must not keep serving assets cached under the release version.
+			$public_version .= '.' . max( filemtime( ECAPLA_CERTVERIFY_PATH . 'public/assets/certloom-public.js' ), filemtime( ECAPLA_CERTVERIFY_PATH . 'public/assets/certloom-public.css' ), filemtime( ECAPLA_CERTVERIFY_PATH . 'public/assets/certloom-artifact-foundation.css' ), filemtime( ECAPLA_CERTVERIFY_PATH . 'assets/css/certloom-tokens.css' ) );
+		}
+		wp_register_style( 'certloom-tokens', ECAPLA_CERTVERIFY_URL . 'assets/css/certloom-tokens.css', array(), $public_version );
+		wp_register_style( 'ecapla-certloom-public', ECAPLA_CERTVERIFY_URL . 'public/assets/certloom-public.css', array( 'certloom-tokens' ), $public_version );
+		wp_register_style( 'certloom-artifact-foundation', ECAPLA_CERTVERIFY_URL . 'public/assets/certloom-artifact-foundation.css', array( 'ecapla-certloom-public' ), $public_version );
+		$studio_version = $public_version;
+		if ( function_exists( 'wp_get_environment_type' ) && 'local' === wp_get_environment_type() ) { $studio_version .= '.' . filemtime( ECAPLA_CERTVERIFY_PATH . 'public/assets/certloom-pro-studio.css' ); }
+		wp_register_style( 'certloom-pro-studio', ECAPLA_CERTVERIFY_URL . 'public/assets/certloom-pro-studio.css', array( 'certloom-artifact-foundation' ), $studio_version );
+		wp_register_script( 'ecapla-certloom-public', ECAPLA_CERTVERIFY_URL . 'public/assets/certloom-public.js', array(), $public_version, true );
 	}
 
 	public static function enqueue_assets() {

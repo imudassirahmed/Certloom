@@ -1,5 +1,7 @@
 <?php
 namespace Certloom\Infrastructure\Repository {
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
+
 	class LegacyCertificateRepository {
 		public static $snapshot = array( 'count' => 3, 'max_id' => 7, 'generation' => 'generation-1' );
 		public function snapshot() { return self::$snapshot; }

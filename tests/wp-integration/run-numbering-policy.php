@@ -5,6 +5,8 @@
  * Run only on disposable/staging WordPress:
  *   wp eval-file wp-content/plugins/certloom/tests/wp-integration/run-numbering-policy.php
  */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 if ( ! defined( 'ABSPATH' ) ) {
 	fwrite( STDERR, "This integration test must run inside WordPress.\n" );
 	exit( 1 );

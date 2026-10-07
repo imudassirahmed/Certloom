@@ -1,5 +1,7 @@
 <?php
 /** UX-01 + FEUX-01 presentation-only simplification contract. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $root = dirname( __DIR__ );
 $pass = 0;
 $fail = 0;

@@ -188,8 +188,8 @@ final class RenderPlanBuilder {
 			$dx = $point[0] - $cx;
 			$dy = $point[1] - $cy;
 			$corners[] = array(
-				'x_mm' => $this->clean_float( $cx + ( $dx * $cos ) - ( $dy * $sin ) ),
-				'y_mm' => $this->clean_float( $cy + ( $dx * $sin ) + ( $dy * $cos ) ),
+				'x_mm' => $this->transformed_coordinate( $cx + ( $dx * $cos ) - ( $dy * $sin ) ),
+				'y_mm' => $this->transformed_coordinate( $cy + ( $dx * $sin ) + ( $dy * $cos ) ),
 			);
 		}
 		$xs = array_column( $corners, 'x_mm' );
@@ -671,6 +671,16 @@ final class RenderPlanBuilder {
 		$value = $this->number( $value, $label );
 		if ( $value < 0 || $value > 1 ) { throw new InvalidArgumentException( $label . ' must be between zero and one.' ); }
 		return $value;
+	}
+
+	/** @return float */
+	private function transformed_coordinate( $value ) {
+		$value = (float) $value;
+		if ( abs( $value ) < 0.000000000001 ) { return 0.0; }
+		// Trigonometric results can sit just below a decimal midpoint. PHP's
+		// round() midpoint adjustment differs across supported runtimes. Fixed
+		// locale-independent formatting keeps the frozen transformed geometry.
+		return (float) sprintf( '%.12F', $value );
 	}
 
 	/** @return float */

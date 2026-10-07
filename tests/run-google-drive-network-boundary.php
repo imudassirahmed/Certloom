@@ -1,4 +1,6 @@
 <?php
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 error_reporting( E_ALL );
 $root = dirname( __DIR__ );
 $client = file_get_contents( $root . '/src/Infrastructure/Backup/GoogleDriveClient.php' );
@@ -9,7 +11,7 @@ $prod   = '';
 $rii = new RecursiveIteratorIterator( new RecursiveDirectoryIterator( $root . '/src', FilesystemIterator::SKIP_DOTS ) );
 foreach ( $rii as $file ) {
     if ( ! $file->isFile() || 'php' !== strtolower( $file->getExtension() ) ) { continue; }
-    $prod .= "\n/* " . str_replace( $root . '/', '', $file->getPathname() ) . " */\n" . file_get_contents( $file->getPathname() );
+    $prod .= "\n/* " . str_replace( str_replace( '\\', '/', $root ) . '/', '', str_replace( '\\', '/', $file->getPathname() ) ) . " */\n" . file_get_contents( $file->getPathname() );
 }
 $prod .= "\n" . file_get_contents( $root . '/certloom.php' ) . "\n" . file_get_contents( $root . '/uninstall.php' );
 
@@ -48,7 +50,7 @@ foreach ( new RecursiveIteratorIterator( new RecursiveDirectoryIterator( $root .
     if ( ! $file->isFile() || 'php' !== strtolower( $file->getExtension() ) ) { continue; }
     $body = file_get_contents( $file->getPathname() );
     if ( false !== strpos( $body, 'googleapis.com' ) || false !== strpos( $body, 'accounts.google.com' ) ) {
-        $google_sources[] = str_replace( $root . '/', '', $file->getPathname() );
+        $google_sources[] = str_replace( str_replace( '\\', '/', $root ) . '/', '', str_replace( '\\', '/', $file->getPathname() ) );
     }
 }
 sort( $google_sources );
@@ -62,7 +64,7 @@ foreach ( new RecursiveIteratorIterator( new RecursiveDirectoryIterator( $root .
     if ( ! $file->isFile() || 'php' !== strtolower( $file->getExtension() ) ) { continue; }
     $body = file_get_contents( $file->getPathname() );
     if ( false !== strpos( $body, 'api.credly.com' ) || false !== strpos( $body, 'sandbox-api.credly.com' ) ) {
-        $credly_sources[] = str_replace( $root . '/', '', $file->getPathname() );
+        $credly_sources[] = str_replace( str_replace( '\\', '/', $root ) . '/', '', str_replace( '\\', '/', $file->getPathname() ) );
     }
 }
 sort( $credly_sources );
@@ -72,7 +74,7 @@ $relay_sources = array();
 foreach ( new RecursiveIteratorIterator( new RecursiveDirectoryIterator( $root . '/src', FilesystemIterator::SKIP_DOTS ) ) as $file ) {
     if ( ! $file->isFile() || 'php' !== strtolower( $file->getExtension() ) ) { continue; }
     $body = file_get_contents( $file->getPathname() );
-    if ( false !== strpos( $body, 'auth.ecapla.com' ) ) { $relay_sources[] = str_replace( $root . '/', '', $file->getPathname() ); }
+    if ( false !== strpos( $body, 'auth.ecapla.com' ) ) { $relay_sources[] = str_replace( str_replace( '\\', '/', $root ) . '/', '', str_replace( '\\', '/', $file->getPathname() ) ); }
 }
 sort( $relay_sources );
 ck( array( 'src/Infrastructure/Backup/EcaplaOAuthRelay.php' ) === $relay_sources, 'Ecapla OAuth relay endpoints are confined to the dedicated relay client' );

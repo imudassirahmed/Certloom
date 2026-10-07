@@ -1,5 +1,7 @@
 <?php
 /** UX-CORE-03 generic signed Webhook/API source contract. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define('ABSPATH',__DIR__.'/fake-wp/');define('CERTLOOM_DOMAIN_WRITE_PATHS_READY',false);define('CERTLOOM_DOMAIN_ADMIN_PREVIEW',false);define('CERTLOOM_DOMAIN_DATA_TOOLS_READY',false);
 if(!class_exists('WP_Error')){class WP_Error{private$c,$m;public function __construct($c='',$m=''){$this->c=$c;$this->m=$m;}public function get_error_code(){return$this->c;}public function get_error_message(){return$this->m;}}}
 $GLOBALS['wh_options']=array();function is_wp_error($v){return$v instanceof WP_Error;}function __($v,$d=null){return$v;}function absint($v){return abs((int)$v);}function sanitize_key($v){return strtolower(preg_replace('/[^a-z0-9_\-]/','',(string)$v));}function sanitize_text_field($v){return trim(strip_tags((string)$v));}function current_time($f,$gmt=false){return'timestamp'===$f?time():'2026-08-31 15:00:00';}function wp_json_encode($v,$flags=0){return json_encode($v,$flags);}function get_option($k,$d=false){return array_key_exists($k,$GLOBALS['wh_options'])?$GLOBALS['wh_options'][$k]:$d;}function update_option($k,$v,$a=null){$o=get_option($k,null);$GLOBALS['wh_options'][$k]=$v;return$o!==$v;}function delete_option($k){unset($GLOBALS['wh_options'][$k]);return true;}function wp_salt($scheme='auth'){return str_repeat('S',64).$scheme;}function add_action(){}function rest_url($p=''){return'https://example.test/wp-json/'.ltrim($p,'/');}

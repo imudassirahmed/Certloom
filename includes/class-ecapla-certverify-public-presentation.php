@@ -131,7 +131,7 @@ class Ecapla_CertVerify_Public_Presentation {
 			array( 'type' => 'copy', 'label' => __( 'Copy link', 'certloom' ), 'url' => $url ),
 			array( 'type' => 'profile', 'label' => __( 'View credential profile', 'certloom' ), 'url' => $url ),
 		);
-		return array(
+		$presentation = array(
 			'found' => true,
 			'certificate_number' => (string) ( $payload['certificate_number'] ?? '' ),
 			'fields' => $fields,
@@ -141,7 +141,7 @@ class Ecapla_CertVerify_Public_Presentation {
 				'description' => (string) ( $status['description'] ?? '' ),
 			),
 			'issuer' => (string) ( $profile['issuer_name'] ?? '' ),
-			'verified_at' => current_time( 'mysql' ),
+			'verified_at' => self::verification_timestamp(),
 			'verification_url' => $url,
 			'profile_url' => $url,
 			'visibility' => ! empty( $payload['profile_visible'] ) ? 'public' : 'verification_summary',
@@ -151,6 +151,21 @@ class Ecapla_CertVerify_Public_Presentation {
 				'verified' => __( 'Verified', 'certloom' ),
 			),
 		);
+		// An explicitly public profile may be shown inline after verification.
+		// The established fields array still follows the requested field context.
+		// Only escaped, privacy-projected HTML crosses the REST boundary, never a snapshot.
+		if ( class_exists( 'Ecapla_CertVerify_Render' ) ) {
+			$profile_presentation = Ecapla_CertVerify_Render::native_profile_presentation( $result );
+			if ( ! empty( $profile_presentation['found'] ) ) {
+				$html = Ecapla_CertVerify_Render::normalized_profile_card_html( $profile_presentation );
+				$snapshot = $profile_presentation['snapshot'];
+				$mode = (string) ( $snapshot['presentation']['mode'] ?? ( empty( $snapshot['template']['layout'] ) ? 'details_only' : 'design' ) );
+				$presentation['profile_html'] = $html;
+				$presentation['visibility'] = ! empty( $profile_presentation['profile_visible'] ) ? 'public' : 'verification_summary';
+				$presentation['presentation_mode'] = 'design' === $mode && false !== strpos( $html, 'certloom-template-preview-page' ) ? 'design' : ( 'image' === $mode ? 'image' : 'details_only' );
+			}
+		}
+		return $presentation;
 	}
 
 	/** @return string */

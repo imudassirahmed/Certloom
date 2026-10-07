@@ -30,6 +30,11 @@ final class Plugin {
 	 * @return true|\WP_Error
 	 */
 	public static function activate() {
+		$whole_recovery = self::recover_whole_workspace();
+		if ( is_wp_error( $whole_recovery ) ) { return $whole_recovery; }
+		if ( $whole_recovery ) {
+			return new \WP_Error( 'certloom_whole_recovery_pending', __( 'Complete recovery cleanup before activating or upgrading certificate storage.', 'certloom' ) );
+		}
 		/*
 		 * The additive Series/Version domain is intentionally gated while the
 		 * proven 1.5 registry remains authoritative. Do not make unused future
@@ -60,6 +65,25 @@ final class Plugin {
 	 * @return void
 	 */
 	public static function boot() {
+		// The recovery screen must remain reachable when an interrupted restore
+		// deliberately prevents ordinary schema and administration bootstrap.
+		if ( is_admin() ) { ( new \Certloom\Infrastructure\Admin\WholeStateRecoveryAdmin() )->register(); }
+		( new \Certloom\Infrastructure\Admin\RecoveryConnectionRest() )->register();
+		( new \Certloom\Infrastructure\Rendering\CredentialDownload() )->register();
+		( new \Certloom\Infrastructure\Rendering\CustomFontRest() )->register();
+		$whole_recovery = self::recover_whole_workspace();
+		if ( is_wp_error( $whole_recovery ) ) {
+			if ( function_exists( 'ecapla_certverify_add_runtime_error' ) ) { ecapla_certverify_add_runtime_error( $whole_recovery->get_error_message() ); }
+			return;
+		}
+		if ( $whole_recovery ) {
+			// The source table set may be swapped or its aliases partly cleaned.
+			// Keep its existing job dispatcher available without schema work,
+			// ordinary automation hooks, or mutable admin commands.
+			self::$job_runtime = new JobRuntime();
+			self::$job_runtime->register_recovery();
+			return;
+		}
 		if ( ! self::domain_storage_required() ) {
 			return;
 		}
@@ -87,6 +111,8 @@ final class Plugin {
 		if ( \Certloom\Infrastructure\Migration\DomainFeatureGate::admin_preview_ready() ) {
 			( new \Certloom\Infrastructure\Admin\AdminSearchRest() )->register();
 			( new \Certloom\Infrastructure\Admin\IssueCredentialRest() )->register();
+			( new \Certloom\Infrastructure\Admin\WizardSetupRest() )->register();
+			( new \Certloom\Infrastructure\Admin\PendingRequestRest() )->register();
 		}
 		if ( \Certloom\Infrastructure\Migration\DomainFeatureGate::admin_preview_ready() && is_admin() ) {
 			( new \Certloom\Infrastructure\Admin\DomainAdmin() )->register();
@@ -96,6 +122,7 @@ final class Plugin {
 			( new \Certloom\Infrastructure\Admin\EmailDesignAdmin() )->register();
 			( new \Certloom\Infrastructure\Admin\DesignRulesAdmin() )->register();
 			( new \Certloom\Infrastructure\Admin\ManualIssuanceAdmin() )->register();
+			( new \Certloom\Infrastructure\Admin\PendingRequestAdmin() )->register();
 			( new \Certloom\Infrastructure\Admin\ScopedFieldAdminAjax() )->register();
 			( new \Certloom\Infrastructure\Admin\AutomationAdmin() )->register();
 			if ( self::$job_runtime ) {
@@ -140,6 +167,13 @@ final class Plugin {
 		}
 
 		return false;
+	}
+	/** Returns whether the authenticated local whole-workspace journal remains. */
+	private static function recover_whole_workspace() {
+		$pending = \Certloom\Infrastructure\Restore\WholeStateRestoreJournal::pending();
+		if ( is_wp_error( $pending ) || ! $pending ) { return $pending; }
+		$result = ( new \Certloom\Infrastructure\Restore\WholeStateRestoreWorkspace() )->recover();
+		return is_wp_error( $result ) ? $result : \Certloom\Infrastructure\Restore\WholeStateRestoreJournal::pending();
 	}
 
 	/** Clears WordPress-local domain job events for the current site. */

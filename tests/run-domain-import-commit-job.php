@@ -1,10 +1,50 @@
 <?php
 /** Job-level tests for explicit, crash-safe staged import commit orchestration. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
+require_once __DIR__ . '/support/option-database.php';
 if(!class_exists('WP_Error')){class WP_Error{private $c,$m;function __construct($c='',$m=''){ $this->c=$c;$this->m=$m;}function get_error_code(){return $this->c;}function get_error_message(){return $this->m;}}}
 function is_wp_error($v){return $v instanceof WP_Error;} function __($t){return $t;} function absint($v){return abs((int)$v);} function sanitize_key($k){$k=strtolower((string)$k);return preg_replace('/[^a-z0-9_\-]/','',$k);} function current_time($type,$gmt=false){return '2026-08-22 00:00:00';} function wp_json_encode($v,$flags=0){return json_encode($v,$flags);} function wp_cache_delete($k,$g=''){return true;}
 $dcj_options=array('certloom_domain_data_generation'=>'G0','certverify_fields'=>array(),'certverify_retired_fields'=>array(),'certverify_settings'=>array());
 function get_option($k,$d=false){global $dcj_options;return array_key_exists($k,$dcj_options)?$dcj_options[$k]:$d;} function add_option($k,$v,$deprecated='',$autoload=false){global $dcj_options;if(array_key_exists($k,$dcj_options))return false;$dcj_options[$k]=$v;return true;} function update_option($k,$v,$autoload=false){global $dcj_options;$changed=!array_key_exists($k,$dcj_options)||$dcj_options[$k]!==$v;$dcj_options[$k]=$v;return $changed;} function delete_option($k){global $dcj_options;if(!array_key_exists($k,$dcj_options))return false;unset($dcj_options[$k]);return true;}
-final class DCJWpdb{public $options='wp_options';public $fail_delete_once=false;public function prepare($q,...$args){return array($q,$args);}public function query($prepared){global $dcj_options;[$q,$a]=$prepared;if(strpos($q,'UPDATE')===0){$new=$a[1];$name=$a[2];$old=$a[3];if(($dcj_options[$name]??null)!==$old)return 0;$dcj_options[$name]=$new;return 1;}if(strpos($q,'DELETE')===0){if($this->fail_delete_once){$this->fail_delete_once=false;return 0;}$name=$a[1];$old=$a[2];if(($dcj_options[$name]??null)!==$old)return 0;unset($dcj_options[$name]);return 1;}return 0;}}
+final class DCJWpdb {
+	public $options = 'wp_options';
+	public $last_error = '';
+	public $fail_delete_once = false;
+	public function prepare( $query, ...$args ) { return array( $query, $args ); }
+	public function get_var( $prepared ) {
+		global $dcj_options;
+		$this->last_error = '';
+		if ( is_string( $prepared ) && 'SELECT @@SESSION.innodb_lock_wait_timeout' === $prepared ) { return 50; }
+		list( $query, $args ) = $prepared;
+		if ( strpos( $query, 'SELECT ENGINE' ) === 0 ) { return 'InnoDB'; }
+		if ( strpos( $query, 'SELECT GET_LOCK' ) === 0 || strpos( $query, 'SELECT RELEASE_LOCK' ) === 0 ) { return '1'; }
+		if ( strpos( $query, 'SELECT option_value' ) === 0 ) { return $args[1] === 'certloom_domain_write_fence' ? '1' : ( $dcj_options[ $args[1] ] ?? null ); }
+		if ( strpos( $query, 'SELECT option_name' ) === 0 ) { foreach ( array_slice( $args, 1 ) as $key ) { if ( isset( $dcj_options[ $key ] ) ) { return $key; } } }
+		return null;
+	}
+	public function query( $prepared ) {
+		global $dcj_options;
+		$this->last_error = '';
+		if ( is_string( $prepared ) ) { return 0; }
+		list( $query, $args ) = $prepared;
+		if ( strpos( $query, 'UPDATE' ) === 0 ) {
+			$new = $args[1]; $name = $args[2]; $old = $args[3];
+			if ( ( $dcj_options[ $name ] ?? null ) !== $old ) { return 0; }
+			$dcj_options[ $name ] = $new; return 1;
+		}
+		if ( strpos( $query, 'DELETE' ) === 0 ) {
+			if ( $this->fail_delete_once ) { $this->fail_delete_once = false; return 0; }
+			$name = $args[1]; $old = $args[2];
+			if ( ( $dcj_options[ $name ] ?? null ) !== $old ) { return 0; }
+			unset( $dcj_options[ $name ] ); return 1;
+		}
+		return 0;
+	}
+	public function get_results( $prepared, $format ) {
+		return certloom_test_option_rows( array( 'query' => $prepared[0], 'args' => $prepared[1] ), $GLOBALS['dcj_options'] );
+	}
+}
 $wpdb=new DCJWpdb();
 require_once __DIR__.'/bootstrap-autoload.php';
 use Certloom\Application\Contract\DomainImportStageInterface;use Certloom\Application\Contract\DomainImportTargetInterface;use Certloom\Application\Contract\JobRepositoryInterface;use Certloom\Application\Import\DomainImportCommitJobHandler;use Certloom\Application\Import\DomainImportConsistencyGuard;use Certloom\Application\Import\DomainImportStagedCommitService;use Certloom\Application\Job\JobSliceResult;use Certloom\Domain\Job\JobStates;use Certloom\Domain\Job\JobTypes;

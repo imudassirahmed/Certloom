@@ -1,5 +1,7 @@
 <?php
 /** Pure filesystem tests for private randomized job files. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $root = sys_get_temp_dir() . '/certloom-private-test-' . bin2hex( random_bytes( 4 ) );
 define( 'ABSPATH', $root . '/web/' );
 define( 'WP_CONTENT_DIR', $root . '/web/wp-content' );
@@ -39,13 +41,13 @@ $GLOBALS['pf_private_dir'] = $root . '/web/wp-content/certloom-private';
 $web_exposed = $store->directory();
 pf_same( 'certloom_private_directory_web_exposed', $web_exposed->get_error_code(), 'webroot private storage rejected by default' );
 $GLOBALS['pf_allow_webroot_private'] = true;
-pf_same( $root . '/web/wp-content/certloom-private', $store->directory(), 'explicit compatibility override accepted' );
+pf_same( wp_normalize_path( $root . '/web/wp-content/certloom-private' ), $store->directory(), 'explicit compatibility override accepted' );
 $GLOBALS['pf_allow_webroot_private'] = false;
 $GLOBALS['pf_private_dir'] = 'relative/private';
 $relative = $store->directory();
 pf_same( 'certloom_private_directory_not_absolute', $relative->get_error_code(), 'relative private directory rejected' );
 $GLOBALS['pf_private_dir'] = '';
-pf_same( $root . '/certloom-private', $store->directory(), 'durable ABSPATH sibling is preferred ahead of volatile temp when wp-content is public' );
+pf_same( wp_normalize_path( $root . '/certloom-private' ), $store->directory(), 'durable ABSPATH sibling is preferred ahead of volatile temp when wp-content is public' );
 $GLOBALS['pf_private_dir'] = $root . '/private';
 echo "PASS  persistent private job storage refuses public-webroot and relative paths and prefers durable fallback storage\n";
 

@@ -1,5 +1,7 @@
 <?php
 /** Permanent seven-fixture shared render-plan manifest regression. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 require_once __DIR__ . '/render-plan-reference/reference_lib.php';
 $path = __DIR__ . '/fixtures/rendering/render-plan-manifest.json';
 $stored = (string) file_get_contents( $path );

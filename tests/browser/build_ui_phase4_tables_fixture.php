@@ -1,5 +1,7 @@
 <?php
 /** Current Table/Data Table fixture over the Certificate Studio shell. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 if ( false === getenv( 'CERTLOOM_DESIGNER_SCHEMA_VERSION' ) || '' === (string) getenv( 'CERTLOOM_DESIGNER_SCHEMA_VERSION' ) ) { putenv( 'CERTLOOM_DESIGNER_SCHEMA_VERSION=4' ); }
 ob_start(); require __DIR__ . '/build_ui_phase4_sticky_workspace_fixture.php'; $html = ob_get_clean();
 if ( ! is_string( $html ) || '' === $html ) { throw new RuntimeException( 'Current Studio fixture did not render.' ); }

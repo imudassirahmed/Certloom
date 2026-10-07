@@ -236,12 +236,29 @@ final class EmailTemplateService {
 		return is_wp_error( $resolved ) ? $resolved : $normalized;
 	}
 
+	/** @return bool */
+	public static function safe_attachment_extension( $path ) {
+		$extension = strtolower( (string) pathinfo( $path, PATHINFO_EXTENSION ) );
+		return '' !== $extension && ! in_array( $extension, array( 'php', 'php3', 'php4', 'php5', 'phtml', 'phar', 'exe', 'com', 'bat', 'cmd', 'sh', 'bash', 'js', 'jar', 'msi', 'scr', 'vbs', 'ps1' ), true );
+	}
+
 	/** @return array{paths:array<int,string>,evidence:array<int,array<string,mixed>>}|\WP_Error */
 	private function resolve_static_attachments( $ids ) {
 		$ids=$this->normalize_attachment_ids($ids); if(!$ids){return array('paths'=>array(),'evidence'=>array());}
 		if(!function_exists('get_attached_file')){return new \WP_Error('certloom_email_attachment_runtime_missing',__( 'Certloom cannot resolve static email attachments on this runtime.', 'certloom' ));}
-		$blocked=array('php','php3','php4','php5','phtml','phar','exe','com','bat','cmd','sh','bash','js','jar','msi','scr','vbs','ps1');$paths=array();$evidence=array();$total=0;
-		foreach($ids as $id){$path=(string)get_attached_file($id,true);if(''===$path||!is_file($path)||!is_readable($path)||is_link($path)){return new \WP_Error('certloom_email_attachment_unavailable',__( 'One of this email design’s static attachments is unavailable or unsafe. Re-select it in Email Studio.', 'certloom' ));}$ext=strtolower((string)pathinfo($path,PATHINFO_EXTENSION));if(''===$ext||in_array($ext,$blocked,true)){return new \WP_Error('certloom_email_attachment_type_blocked',__( 'One of this email design’s static attachments uses a blocked file type.', 'certloom' ));}$size=(int)filesize($path);if($size<1||$size>self::MAX_ATTACHMENT_BYTES){return new \WP_Error('certloom_email_attachment_size',__( 'Each static email attachment must be no larger than 10 MB.', 'certloom' ));}$total+=$size;if($total>self::MAX_ATTACHMENTS_TOTAL_BYTES){return new \WP_Error('certloom_email_attachments_total_size',__( 'Static email attachments must total no more than 20 MB.', 'certloom' ));}$sha=hash_file('sha256',$path);if(false===$sha){return new \WP_Error('certloom_email_attachment_hash_failed',__( 'Certloom could not fingerprint a static email attachment.', 'certloom' ));}$paths[]=$path;$evidence[]=array('attachment_id'=>$id,'bytes'=>$size,'sha256'=>$sha,'basename'=>sanitize_file_name(basename($path)));}
+		$paths=array();$evidence=array();$total=0;
+		foreach ( $ids as $id ) {
+			$path = (string) get_attached_file( $id, true );
+			if ( '' === $path || ! is_file( $path ) || ! is_readable( $path ) || is_link( $path ) ) { return new \WP_Error( 'certloom_email_attachment_unavailable', __( 'One of this email design’s static attachments is unavailable or unsafe. Re-select it in Email Studio.', 'certloom' ) ); }
+			if ( ! self::safe_attachment_extension( $path ) ) { return new \WP_Error( 'certloom_email_attachment_type_blocked', __( 'One of this email design’s static attachments uses a blocked file type.', 'certloom' ) ); }
+			clearstatcache( true, $path ); $size = (int) filesize( $path );
+			if ( $size < 1 || $size > self::MAX_ATTACHMENT_BYTES ) { return new \WP_Error( 'certloom_email_attachment_size', __( 'Each static email attachment must be no larger than 10 MB.', 'certloom' ) ); }
+			$total += $size;
+			if ( $total > self::MAX_ATTACHMENTS_TOTAL_BYTES ) { return new \WP_Error( 'certloom_email_attachments_total_size', __( 'Static email attachments must total no more than 20 MB.', 'certloom' ) ); }
+			$sha = hash_file( 'sha256', $path );
+			if ( false === $sha ) { return new \WP_Error( 'certloom_email_attachment_hash_failed', __( 'Certloom could not fingerprint a static email attachment.', 'certloom' ) ); }
+			$paths[] = $path; $evidence[] = array( 'attachment_id' => $id, 'bytes' => $size, 'sha256' => $sha, 'basename' => sanitize_file_name( basename( $path ) ) );
+		}
 		return array('paths'=>$paths,'evidence'=>$evidence);
 	}
 

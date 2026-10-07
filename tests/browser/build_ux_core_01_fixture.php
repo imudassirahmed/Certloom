@@ -1,4 +1,6 @@
 <?php
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $root = dirname( __DIR__, 2 );
 $admin_css = file_get_contents( $root . '/assets/css/certloom-tokens.css' ) . "\n" . file_get_contents( $root . '/admin/assets/admin.css' );
 $public_css = file_get_contents( $root . '/public/assets/certloom-public.css' );

@@ -1,4 +1,6 @@
 <?php
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 error_reporting( E_ALL );
 $root = dirname( __DIR__ );
 $tmp  = sys_get_temp_dir() . '/certloom-bak02-' . bin2hex( random_bytes( 4 ) );
@@ -45,6 +47,8 @@ function wp_next_scheduled( $hook ) { return $GLOBALS['certloom_test_event'] ? $
 function wp_clear_scheduled_hook( $hook, $args = array(), $wp_error = false ) { $GLOBALS['certloom_test_event'] = null; return 1; }
 function wp_schedule_event( $timestamp, $recurrence, $hook, $args = array(), $wp_error = false ) { $GLOBALS['certloom_test_event'] = (object) array( 'timestamp' => $timestamp, 'schedule' => $recurrence, 'hook' => $hook ); return true; }
 
+require_once __DIR__ . '/bootstrap-option-command-double.php';
+require_once __DIR__ . '/bootstrap-autoload.php';
 require $root . '/src/Infrastructure/Backup/LocalBackupStore.php';
 require $root . '/src/Infrastructure/Backup/ScheduledBackup.php';
 

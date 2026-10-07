@@ -7,6 +7,7 @@ define( 'CERTLOOM_DOMAIN_DATA_TOOLS_READY', true ); // Legacy compatibility sent
 $GLOBALS['cutover_options'] = array();
 $GLOBALS['cutover_fail_delete_once'] = false;
 $GLOBALS['cutover_mutate_option_once'] = '';
+require __DIR__ . '/support/option-database.php';
 if ( ! class_exists( 'WP_Error' ) ) {
 	class WP_Error {
 		private $code;
@@ -32,11 +33,17 @@ class CutoverWpdb {
 	public function prepare( $sql, ...$args ) { return array( $sql, $args ); }
 	public function get_var( $p ) {
 		$this->last_error = '';
+		if ( is_string( $p ) && 'SELECT @@SESSION.innodb_lock_wait_timeout' === $p ) { return 50; }
 		$q = $p[0]; $a = $p[1];
+		if ( strpos( $q, 'SELECT ENGINE' ) === 0 ) { return 'InnoDB'; }
+		if ( strpos( $q, 'SELECT option_value' ) === 0 && ( $a[1] ?? '' ) === 'certloom_domain_write_fence' ) { return '1'; }
 		if ( strpos( $q, 'SELECT GET_LOCK' ) === 0 || strpos( $q, 'SELECT RELEASE_LOCK' ) === 0 ) return '1';
 		if ( strpos( $q, 'SELECT option_value' ) === 0 ) return $GLOBALS['cutover_options'][$a[1]] ?? null;
 		if ( strpos( $q, 'SELECT option_name' ) === 0 ) { foreach ( array_slice($a,1) as $key ) if (isset($GLOBALS['cutover_options'][$key])) return $key; }
 		return null;
+	}
+	public function get_results( $prepared, $format ) {
+		return certloom_test_option_rows( array( 'query' => $prepared[0], 'args' => $prepared[1] ), $GLOBALS['cutover_options'] );
 	}
 	public function query( $prepared ) {
 		$sql = is_array( $prepared ) ? $prepared[0] : (string) $prepared;

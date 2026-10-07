@@ -1,5 +1,7 @@
 <?php
 /** Browser fixture for the dedicated Email Designer introduced by the Design workspace overhaul. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define( 'ABSPATH', __DIR__ . '/' );
 define( 'CERTLOOM_PATH', dirname( __DIR__, 2 ) . '/' );
 define( 'CERTLOOM_URL', 'data:,' );

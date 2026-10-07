@@ -1,5 +1,7 @@
 <?php
 /** Alpha.4.72 profile-driven Manual Issuance contract. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define( 'ABSPATH', __DIR__ . '/' );
 if ( ! function_exists( '__' ) ) { function __( $text, $domain = null ) { return $text; } }
 if ( ! function_exists( 'sanitize_key' ) ) { function sanitize_key( $value ) { return strtolower( preg_replace( '/[^a-z0-9_\-]/', '', (string) $value ) ); } }

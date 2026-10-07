@@ -36,13 +36,13 @@ final class GoogleDriveBackup {
 	public static function restore_settings_snapshot( array $snapshot ) {
 		$retention = max( 1, min( 60, absint( $snapshot['retention'] ?? 14 ) ?: 14 ) );
 		$previous_retention = self::retention();
-		$saved = update_option( self::RETENTION_OPTION, $retention, false );
+		$saved = ( true === ( new \Certloom\Infrastructure\Data\DurableOptionMutation() )->set( self::RETENTION_OPTION, $retention ) );
 		if ( ! $saved && $retention !== absint( get_option( self::RETENTION_OPTION, 14 ) ) ) {
 			return new \WP_Error( 'certloom_google_retention_restore_failed', __( 'Certloom could not restore the previous Google Drive retention setting.', 'certloom' ) );
 		}
 		$enabled = GoogleDriveOAuth::set_enabled( ! empty( $snapshot['enabled'] ) );
 		if ( is_wp_error( $enabled ) ) {
-			update_option( self::RETENTION_OPTION, $previous_retention, false );
+			( true === ( new \Certloom\Infrastructure\Data\DurableOptionMutation() )->set( self::RETENTION_OPTION, $previous_retention ) );
 			return $enabled;
 		}
 		return true;
@@ -57,10 +57,10 @@ final class GoogleDriveBackup {
 			if ( is_wp_error( $probe ) ) { return $probe; }
 		}
 		$old = self::retention();
-		$saved = update_option( self::RETENTION_OPTION, $retention, false );
+		$saved = ( true === ( new \Certloom\Infrastructure\Data\DurableOptionMutation() )->set( self::RETENTION_OPTION, $retention ) );
 		if ( ! $saved && $retention !== absint( get_option( self::RETENTION_OPTION, 14 ) ) ) { return new \WP_Error( 'certloom_google_retention_save_failed', __( 'Certloom could not save the Google Drive retention setting.', 'certloom' ) ); }
 		$enabled_saved = GoogleDriveOAuth::set_enabled( (bool) $enabled );
-		if ( is_wp_error( $enabled_saved ) ) { update_option( self::RETENTION_OPTION, $old, false ); return $enabled_saved; }
+		if ( is_wp_error( $enabled_saved ) ) { ( true === ( new \Certloom\Infrastructure\Data\DurableOptionMutation() )->set( self::RETENTION_OPTION, $old ) ); return $enabled_saved; }
 		return true;
 	}
 

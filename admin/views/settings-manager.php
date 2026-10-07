@@ -19,6 +19,8 @@ $certloom_show_diagnostics = current_user_can( 'manage_options' );
 			<a href="#certloom-settings-profile"><?php esc_html_e( 'Profile', 'certloom' ); ?></a>
 			<a href="#certloom-settings-numbering"><?php esc_html_e( 'Numbering', 'certloom' ); ?></a>
 			<a href="#certloom-settings-branding"><?php esc_html_e( 'Brand', 'certloom' ); ?></a>
+			<a href="#certloom-settings-certificate-layout"><?php esc_html_e( 'Certificate layout', 'certloom' ); ?></a>
+			<a href="#certloom-settings-certificate-name"><?php esc_html_e( 'Certificate names', 'certloom' ); ?></a>
 			<a href="#certloom-settings-verification"><?php esc_html_e( 'Verification', 'certloom' ); ?></a>
 			<a href="#certloom-settings-retention"><?php esc_html_e( 'Retention', 'certloom' ); ?></a>
 			<a href="#certloom-settings-guidance"><?php esc_html_e( 'Guidance & support', 'certloom' ); ?></a>
@@ -75,6 +77,24 @@ $certloom_show_diagnostics = current_user_can( 'manage_options' );
 			<?php foreach ( Ecapla_CertVerify_Permissions::get_all_roles() as $role_key => $role_info ) : ?><tr><td><?php echo esc_html( translate_user_role( $role_info['name'] ) ); ?></td><td><?php if ( 'administrator' === $role_key ) : ?><input type="checkbox" checked disabled aria-label="<?php esc_attr_e( 'Administrator access is always enabled', 'certloom' ); ?>" /><?php else : ?><input type="checkbox" name="role_access[<?php echo esc_attr( $role_key ); ?>]" value="1" <?php checked( Ecapla_CertVerify_Permissions::role_has_capability( $role_key ) ); ?> aria-label="<?php echo esc_attr( sprintf( /* translators: %s: WordPress role name. */ __( 'Allow %s to manage certificates', 'certloom' ), translate_user_role( $role_info['name'] ) ) ); ?>" /><?php endif; ?></td></tr><?php endforeach; ?>
 		</tbody></table>
 
+		<h2 id="certloom-settings-certificate-name"><?php esc_html_e( 'Certificate names', 'certloom' ); ?></h2>
+		<p class="description"><?php esc_html_e( 'Choose once for your organization. Future certificates use this name source; previously issued certificates retain their original names.', 'certloom' ); ?></p>
+		<table class="form-table" role="presentation">
+			<tr><th scope="row"><label for="certificate_name_source"><?php esc_html_e( 'Name source', 'certloom' ); ?></label></th><td><select id="certificate_name_source" name="certificate_name_source"><option value="profile" <?php selected( Ecapla_CertVerify_Settings::get( 'certificate_name_source', 'profile' ), 'profile' ); ?>><?php esc_html_e( 'Recipient profile name', 'certloom' ); ?></option><option value="approved_field" <?php selected( Ecapla_CertVerify_Settings::get( 'certificate_name_source', 'profile' ), 'approved_field' ); ?>><?php esc_html_e( 'Recipient-submitted name reviewed by your organization', 'certloom' ); ?></option></select><p class="description"><?php esc_html_e( 'Automatically connected accounts use their WordPress name. Staff-reviewed account connections preserve the organization’s recipient name.', 'certloom' ); ?></p></td></tr>
+			<tr><th scope="row"><label for="certificate_name_field_key"><?php esc_html_e( 'Reviewed name field', 'certloom' ); ?></label></th><td><select id="certificate_name_field_key" name="certificate_name_field_key"><option value=""><?php esc_html_e( 'Choose a field for reviewed names', 'certloom' ); ?></option><?php
+			$certloom_name_fields = Ecapla_CertVerify_Fields::get_field_map();
+			$certloom_saved_name_key = Ecapla_CertVerify_Settings::get( 'certificate_name_field_key', '' );
+			$certloom_name_found = false;
+			foreach ( $certloom_name_fields as $certloom_name_key => $certloom_name_field ) {
+				$certloom_name_valid = ( new \Certloom\Application\Recipient\CertificateNamePolicy() )->normalize( 'approved_field', $certloom_name_key, $certloom_name_fields );
+				if ( is_wp_error( $certloom_name_valid ) ) { continue; }
+				if ( $certloom_name_key === $certloom_saved_name_key ) { $certloom_name_found = true; }
+				?><option value="<?php echo esc_attr( $certloom_name_key ); ?>" <?php selected( $certloom_saved_name_key, $certloom_name_key ); ?>><?php echo esc_html( $certloom_name_field['label'] ); ?></option><?php
+			}
+			if ( '' !== $certloom_saved_name_key && ! $certloom_name_found ) { ?><option value="<?php echo esc_attr( $certloom_saved_name_key ); ?>" selected><?php esc_html_e( 'Current field needs configuration review', 'certloom' ); ?></option><?php }
+			?></select><p class="description"><?php esc_html_e( 'In Fields manager, create a text field supplied by the recipient, reusable in personal details, collected in the profile, requiring approval and permitted on certificate artwork. This field becomes required across Programs. Pending name changes hold issuance until the exact name is approved.', 'certloom' ); ?></p></td></tr>
+		</table>
+
 		<?php
 		$certloom_numbering_policy     = Ecapla_CertVerify_Numbering::policy();
 		$certloom_numbering_mode       = (string) $certloom_numbering_policy['numbering_mode'];
@@ -102,6 +122,12 @@ $certloom_show_diagnostics = current_user_can( 'manage_options' );
 			<tr><th scope="row"><label for="usage_profile"><?php esc_html_e( 'Active profile', 'certloom' ); ?></label></th><td><select name="usage_profile" id="usage_profile"><?php foreach ( $certloom_profile_engine->profiles() as $certloom_profile_key => $certloom_profile_row ) : ?><option value="<?php echo esc_attr( $certloom_profile_key ); ?>" <?php selected( $certloom_active_profile, $certloom_profile_key ); ?>><?php echo esc_html( $certloom_profile_row['label'] ); ?></option><?php endforeach; ?></select><p class="description"><?php esc_html_e( 'Changes human-facing Issuer, Program, Batch and Signer terminology across Certloom forms. Storage, APIs and credential history keep the canonical entity model.', 'certloom' ); ?></p></td></tr>
 		</table>
 
+		<h2 id="certloom-settings-certificate-layout"><?php esc_html_e( 'Public certificate layout', 'certloom' ); ?></h2>
+		<p class="description"><?php esc_html_e( 'Choose once for all public credential pages and verification results, including blocks, shortcodes and Elementor widgets.', 'certloom' ); ?></p>
+		<table class="form-table" role="presentation">
+			<tr><th scope="row"><label for="certificate_layout"><?php esc_html_e( 'Certificate position', 'certloom' ); ?></label></th><td><select name="certificate_layout" id="certificate_layout"><?php foreach ( array( 'left' => __( 'Left — certificate left, information right', 'certloom' ), 'right' => __( 'Right — information left, certificate right', 'certloom' ), 'center' => __( 'Center — certificate above information', 'certloom' ) ) as $position => $label ) : ?><option value="<?php echo esc_attr( $position ); ?>" <?php selected( Ecapla_CertVerify_Settings::get( 'certificate_layout', 'right' ), $position ); ?>><?php echo esc_html( $label ); ?></option><?php endforeach; ?></select><p class="description"><?php esc_html_e( 'On small screens, the certificate and information stack to stay readable.', 'certloom' ); ?></p></td></tr>
+			<tr><th scope="row"><label for="certificate_center_width"><?php esc_html_e( 'Centered certificate width', 'certloom' ); ?></label></th><td><input type="number" name="certificate_center_width" id="certificate_center_width" min="320" max="1400" step="1" value="<?php echo esc_attr( Ecapla_CertVerify_Settings::get( 'certificate_center_width', 960 ) ); ?>" class="small-text" aria-describedby="certificate_center_width_help" /> px<p class="description" id="certificate_center_width_help"><?php esc_html_e( 'Maximum width in Center layout, from 320 to 1400 pixels. Certificates always fit the available space without changing their proportions.', 'certloom' ); ?></p></td></tr>
+		</table>
 		<h2 id="certloom-settings-branding"><?php esc_html_e( 'Branding', 'certloom' ); ?></h2>
 		<table class="form-table" role="presentation">
 			<tr><th scope="row"><label for="accent_color"><?php esc_html_e( 'Default accent color', 'certloom' ); ?></label></th><td><input type="text" name="accent_color" id="accent_color" value="<?php echo esc_attr( Ecapla_CertVerify_Settings::get( 'accent_color', '#1450e0' ) ); ?>" class="regular-text" placeholder="#1450e0" /><p class="description"><?php esc_html_e( 'Used by the shortcode and as the default for new Elementor widgets.', 'certloom' ); ?></p></td></tr>
@@ -137,7 +163,10 @@ $certloom_show_diagnostics = current_user_can( 'manage_options' );
 		<p><label><input type="checkbox" name="recipient_user_sync_enabled" value="1" <?php checked( Ecapla_CertVerify_Settings::get( 'recipient_user_sync_enabled', true ) ); ?> /> <strong><?php esc_html_e( 'Keep WordPress users connected to Recipient profiles', 'certloom' ); ?></strong></label></p>
 		<p class="description"><?php esc_html_e( 'When enabled, new WordPress users receive an exact user-ID-linked Recipient profile and later profile changes keep its name/email current. Certloom never claims ownership by matching email or name, and organizations can still exist as Recipients without WordPress accounts.', 'certloom' ); ?></p>
 
-		<?php submit_button( __( 'Save settings', 'certloom' ), 'primary', 'certverify_save_settings' ); ?>
+		<div class="certloom-settings-savebar">
+			<span role="status" data-certloom-settings-save-state data-unsaved-text="<?php esc_attr_e( 'You have unsaved changes.', 'certloom' ); ?>" data-saved-text="<?php esc_attr_e( 'Settings are up to date.', 'certloom' ); ?>"><?php esc_html_e( 'Settings are up to date.', 'certloom' ); ?></span>
+			<?php submit_button( __( 'Save settings', 'certloom' ), 'primary', 'certverify_save_settings', false ); ?>
+		</div>
 	</form>
 
 	<section id="certloom-settings-guidance" class="certloom-settings-guidance" aria-labelledby="certloom-settings-guidance-title">

@@ -31,7 +31,9 @@ final class DomainRestoreConfirmationValidator {
 		if ( '' === $path || '' === $baseline_generation || ! preg_match( '/^[a-f0-9]{64}$/', $baseline_config_hash ) ) {
 			return new \WP_Error( 'certloom_domain_restore_confirmation_invalid', __( 'The Certloom restore confirmation snapshot is incomplete.', 'certloom' ) );
 		}
-		if ( ! hash_equals( $baseline_generation, $this->generation->current() ) ) {
+		$generation = $this->generation->read_current();
+		if ( is_wp_error( $generation ) ) { return $generation; }
+		if ( ! hash_equals( $baseline_generation, $generation ) ) {
 			return new \WP_Error( 'certloom_domain_restore_confirmation_stale', __( 'Certloom credential data changed after the restore was confirmed. Review and confirm the restore again.', 'certloom' ) );
 		}
 		$config = $this->backup_repository->configuration_snapshot();

@@ -1,5 +1,7 @@
 <?php
 /** Premium renderer-foundation tests. No WordPress or third-party renderer required. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 require_once __DIR__ . '/bootstrap-autoload.php';
 
 use Certloom\Application\Contract\LocalAssetResolverInterface;

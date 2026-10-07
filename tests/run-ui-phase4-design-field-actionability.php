@@ -1,5 +1,7 @@
 <?php
 /** Alpha.4.40 staging regression: Designer-required fields must be actionable in Issue Credential. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $root = dirname( __DIR__ );
 $manual = file_get_contents( $root . '/src/Infrastructure/Admin/ManualIssuanceAdmin.php' );
 $readiness = file_get_contents( $root . '/src/Application/Issuance/IssuanceDataReadiness.php' );

@@ -31,17 +31,20 @@ final class DomainRestoreStagingService implements DomainRestoreStagingInterface
 	private $format;
 	/** @var DomainRestoreRowValidator */
 	private $row_validator;
+	private $account_proof;
 
 	public function __construct(
 		?DomainRestoreWorkspaceInterface $workspace = null,
 		?PrivateJobFileStore $files = null,
 		?DomainBackupFormat $format = null,
-		?DomainRestoreRowValidator $row_validator = null
+		?DomainRestoreRowValidator $row_validator = null,
+		?WholeStateAccountMappingProof $account_proof = null
 	) {
-		$this->workspace     = $workspace ?: new DomainRestoreWorkspace();
+		$this->workspace     = $workspace ?: new DomainRestoreWorkspace( null, null, null, $account_proof );
 		$this->files         = $files ?: new PrivateJobFileStore();
 		$this->format        = $format ?: new DomainBackupFormat();
-		$this->row_validator = $row_validator ?: new DomainRestoreRowValidator();
+		$this->row_validator = $row_validator ?: new DomainRestoreRowValidator( null, $account_proof );
+		$this->account_proof = $account_proof;
 	}
 
 	/** @return array<string,mixed>|\WP_Error */
@@ -168,9 +171,9 @@ final class DomainRestoreStagingService implements DomainRestoreStagingInterface
 				fclose( $handle );
 				return $this->abort( $state, new \WP_Error( 'certloom_domain_backup_json_invalid', sprintf( /* translators: %d: line number. */ __( 'The Certloom domain backup contains invalid JSON on line %d.', 'certloom' ), $next_line_no ) ) );
 			}
-			$type = (string) ( $item['type'] ?? '' );
+			$type = $item['type'] ?? null;
 			if ( 'integrity' === $type ) {
-				if ( absint( $item['records'] ?? -1 ) !== absint( $state['records'] ) || ! hash_equals( (string) $state['hash'], (string) ( $item['chain_sha256'] ?? '' ) ) ) {
+				if ( ! $this->format->valid_integrity( $item, (int) $state['records'], (string) $state['hash'] ) ) {
 					fclose( $handle );
 					return $this->abort( $state, new \WP_Error( 'certloom_domain_backup_integrity_failed', __( 'The Certloom domain backup failed its integrity check.', 'certloom' ) ) );
 				}
@@ -183,7 +186,7 @@ final class DomainRestoreStagingService implements DomainRestoreStagingInterface
 				$processed++;
 				continue;
 			}
-			if ( 'entity' !== $type || empty( $item['entity'] ) || ! is_array( $item['data'] ?? null ) ) {
+			if ( 'entity' !== $type || ! is_string( $item['entity'] ?? null ) || ! is_array( $item['data'] ?? null ) ) {
 				fclose( $handle );
 				return $this->abort( $state, new \WP_Error( 'certloom_domain_backup_record_invalid', sprintf( /* translators: %d: line number. */ __( 'The Certloom domain backup contains an unsupported record on line %d.', 'certloom' ), $next_line_no ) ) );
 			}
@@ -198,6 +201,14 @@ final class DomainRestoreStagingService implements DomainRestoreStagingInterface
 				fclose( $handle );
 				return $this->abort( $state, $scalar );
 			}
+			if ( 'recipients' === $entity && $this->account_proof ) {
+				$row = $this->account_proof->project_recipient( $row );
+				if ( is_wp_error( $row ) ) {
+					fclose( $handle );
+					return $this->abort( $state, $row );
+				}
+			}
+			$row = RecipientWorkflowRestorePolicy::prepare( $entity, $row );
 			$inserted = $this->workspace->insert_row( $state['workspace'], $entity, $row );
 			if ( is_wp_error( $inserted ) ) {
 				fclose( $handle );

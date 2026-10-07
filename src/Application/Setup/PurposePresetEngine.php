@@ -247,7 +247,31 @@ final class PurposePresetEngine {
 				$base['checklist'] = array( __( 'Review your credential fields', 'certloom' ), __( 'Choose a reusable design if needed', 'certloom' ), __( 'Set up email delivery', 'certloom' ), __( 'Connect integrations when useful', 'certloom' ) );
 				break;
 		}
+		$bundle = ( new ProfileStarterBundle() )->get( $profile );
+		$base['starter_bundle'] = $bundle;
+		if ( is_array( $bundle ) ) {
+			$semantics = array_column( $bundle['fields'], null, 'key' );
+			foreach ( $base['recommended_fields'] as &$field ) {
+				if ( isset( $semantics[ $field['key'] ] ) ) { $field['type'] = $semantics[ $field['key'] ]['type']; }
+			}
+			unset( $field );
+		}
 		return $base;
+	}
+
+	/** Completed setup keeps profile advice useful without repeating a saved Program task. @return array<int,string> */
+	public function completion_checklist( $profile, array $draft ) {
+		$profile = $this->normalize_profile( $profile );
+		$recommendation = $this->recommend( $profile );
+		if ( is_wp_error( $recommendation ) ) { return array(); }
+		$checklist = $recommendation['checklist'];
+		if ( absint( $draft['setup_program_id'] ?? 0 ) ) {
+			$program_tasks = array( 'training_lms' => 0, 'iso_management' => 0, 'government_licensing' => 0, 'school_results' => 1, 'corporate_compliance' => 0, 'membership_association' => 0, 'events_awards' => 0, 'product_inspection' => 0 );
+			if ( isset( $program_tasks[ $profile ] ) ) {
+				$checklist[ $program_tasks[ $profile ] ] = __( 'Review Program requirements and customer fields', 'certloom' );
+			}
+		}
+		return $checklist;
 	}
 
 	/** @return array<string,string> */

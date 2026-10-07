@@ -1,6 +1,10 @@
 <?php
 /** Behavioral/static acceptance for ID-02 current-authority numbering policy. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define( 'ABSPATH', __DIR__ . '/' );
+require_once __DIR__ . '/bootstrap-autoload.php';
+require_once __DIR__ . '/support/option-database.php';
 class WP_Error {
 	private $code;
 	private $message;
@@ -32,6 +36,8 @@ class NumberingFakeWpdb {
 	public $last_insert_id = 0;
 	public function prepare( $query, ...$args ) { $this->last_args = $args; return $query; }
 	public function query( $query ) {
+		$this->last_error = '';
+		if ( preg_match( '/^(?:START TRANSACTION|COMMIT|ROLLBACK|SAVEPOINT|RELEASE SAVEPOINT)/', $query ) ) { return 0; }
 		$start = (int) ( $this->last_args[1] ?? 1 );
 		$key   = (string) ( $this->last_args[2] ?? '' );
 		$current = $GLOBALS['number_options'][ $key ] ?? null;
@@ -42,15 +48,28 @@ class NumberingFakeWpdb {
 		$GLOBALS['number_options'][ $key ] = (string) ( $allocated + 1 );
 		return 1;
 	}
-	public function get_var( $query ) { return false !== strpos( (string) $query, 'LAST_INSERT_ID' ) ? $this->last_insert_id : null; }
+	public function get_var( $query ) {
+		$this->last_error = '';
+		if ( strpos( $query, 'SELECT ENGINE' ) === 0 ) { return 'InnoDB'; }
+		if ( ( $this->last_args[1] ?? '' ) === 'certloom_domain_write_fence' ) { return '1'; }
+		return false !== strpos( (string) $query, 'LAST_INSERT_ID' ) ? $this->last_insert_id : null;
+	}
+	public function get_results( $query, $format ) { return certloom_test_option_rows( array( 'query' => $query, 'args' => $this->last_args ), $GLOBALS['number_options'] ); }
 }
 $GLOBALS['wpdb'] = new NumberingFakeWpdb();
 
+class Ecapla_CertVerify_Fields {
+	const OPTION_KEY = 'certverify_fields';
+	const RETIRED_OPTION_KEY = 'certverify_retired_fields';
+	public static function reset_runtime_cache() {}
+}
 class Ecapla_CertVerify_Settings {
+	const OPTION_KEY = 'certverify_settings';
 	public static $all = array();
 	public static function get_all() { return self::$all; }
 }
 class Ecapla_CertVerify_Backup {
+	const GENERATION_OPTION = 'certverify_data_generation';
 	public static $reserved = 0;
 	public static function assert_writes_allowed() { return true; }
 	public static function reserve_mutation_generation() { self::$reserved++; return 'generation-' . self::$reserved; }

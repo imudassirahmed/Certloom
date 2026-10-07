@@ -1,5 +1,7 @@
 <?php
 /** Audit regression: Signer relationship authority is signer_assignments; legacy Batch fields are projections only. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define( 'ABSPATH', __DIR__ . '/' );
 $fail = 0; $checks = 0;
 function sc_check( $ok, $label ) { global $fail,$checks; $checks++; echo ($ok?'PASS  ':'FAIL  ') . $label . PHP_EOL; if(!$ok){$fail++;} }

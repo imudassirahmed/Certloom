@@ -53,6 +53,7 @@ class Ecapla_CertVerify_Block {
 		foreach ( $handles as $handle ) {
 			wp_set_script_translations( $handle, 'certloom', ECAPLA_CERTVERIFY_PATH . 'languages' );
 		}
+		self::register_studio();
 		$credential_path = ECAPLA_CERTVERIFY_PATH . 'blocks/credential';
 		if ( file_exists( $credential_path . '/block.json' ) ) {
 			$credential = register_block_type(
@@ -80,6 +81,33 @@ class Ecapla_CertVerify_Block {
 				}
 			}
 		}
+	}
+
+	/** Keep saved blocks readable on downgrade; the inserter and styling require Pro. */
+	private static function register_studio() {
+		$studio = register_block_type( ECAPLA_CERTVERIFY_PATH . 'blocks/verification-studio', array( 'render_callback' => array( __CLASS__, 'render_studio' ) ) );
+		if ( ! $studio ) { return; }
+		$data = array(
+			'enabled' => \Certloom\Infrastructure\Verification\ProVerificationAccess::enabled(),
+			'recommended' => \Certloom\Infrastructure\Verification\ProVerificationStudio::recommended(),
+			'presets' => \Certloom\Infrastructure\Verification\ProVerificationStudio::choices(),
+			'numbers' => \Certloom\Infrastructure\Verification\ProVerificationStudio::numeric_controls(),
+			'colors' => \Certloom\Infrastructure\Verification\ProVerificationStudio::color_controls(),
+			'defaults' => Ecapla_CertVerify_Render::default_atts(),
+			'devices' => array( 'desktop' => __( 'Desktop', 'certloom' ), 'tablet' => __( 'Tablet', 'certloom' ), 'mobile' => __( 'Mobile', 'certloom' ) ),
+			'contentLabels' => array( 'eyebrow' => __( 'Eyebrow label', 'certloom' ), 'heading' => __( 'Heading', 'certloom' ), 'description' => __( 'Description', 'certloom' ), 'placeholder' => __( 'Input placeholder', 'certloom' ), 'button_text' => __( 'Button text', 'certloom' ), 'notfound_text' => __( 'Not found message', 'certloom' ) ),
+		);
+		foreach ( (array) $studio->editor_script_handles as $handle ) {
+			wp_add_inline_script( $handle, 'window.certloomStudioEditor = ' . wp_json_encode( $data ) . ';', 'before' );
+			wp_set_script_translations( $handle, 'certloom', ECAPLA_CERTVERIFY_PATH . 'languages' );
+		}
+	}
+	public static function render_studio( $attributes ) {
+		$attributes = is_array( $attributes ) ? $attributes : array();
+		$content = array_intersect_key( $attributes, array_flip( array( 'heading', 'eyebrow', 'description', 'placeholder', 'button_text', 'notfound_text', 'heading_tag', 'content_order', 'show_guide' ) ) );
+		$html = \Certloom\Infrastructure\Verification\ProVerificationStudio::render( $attributes, $content );
+		$wrapper = get_block_wrapper_attributes( array( 'class' => 'certloom-verification-studio-block' ) );
+		return '<div ' . $wrapper . '>' . $html . '</div>';
 	}
 
 	/**
@@ -147,7 +175,7 @@ class Ecapla_CertVerify_Block {
 		return sprintf(
 			'<div %1$s>%2$s</div>',
 			$wrapper_attributes,
-			$widget_html
+			Ecapla_CertVerify_Render::scoped_markup_html( $widget_html, 'certloom-block-' . str_replace( '-', '', wp_generate_uuid4() ) )
 		);
 	}
 	/** Renders the dynamic Credential Profile block. */
@@ -157,6 +185,7 @@ class Ecapla_CertVerify_Block {
 		$heading_tag = sanitize_key( (string) $attributes['headingTag'] );
 		if ( ! in_array( $heading_tag, array( 'h2', 'h3', 'h4', 'h5', 'h6' ), true ) ) { $heading_tag = 'h2'; }
 		$html = Ecapla_CertVerify_Render::credential_profile( $number, array( 'heading' => $attributes['heading'], 'heading_tag' => $heading_tag, 'notfound_text' => $attributes['notFoundText'] ) );
+		$html = Ecapla_CertVerify_Render::scoped_markup_html( $html, 'certloom-block-' . str_replace( '-', '', wp_generate_uuid4() ) );
 		$wrapper = function_exists( 'get_block_wrapper_attributes' ) ? get_block_wrapper_attributes( array( 'class' => 'certloom-credential-block' ) ) : 'class="certloom-credential-block"';
 		return '<div ' . $wrapper . '>' . $html . '</div>';
 	}
@@ -176,6 +205,7 @@ class Ecapla_CertVerify_Block {
 			)
 		);
 		$wrapper = function_exists( 'get_block_wrapper_attributes' ) ? get_block_wrapper_attributes( array( 'class' => 'certloom-my-credentials-block' ) ) : 'class="certloom-my-credentials-block"';
+		$html = Ecapla_CertVerify_Render::scoped_markup_html( $html, 'certloom-block-' . str_replace( '-', '', wp_generate_uuid4() ) );
 		return '<div ' . $wrapper . '>' . $html . '</div>';
 	}
 

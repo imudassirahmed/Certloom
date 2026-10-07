@@ -1,5 +1,7 @@
 <?php
 /** Pure migration commit + durable state tests. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define( 'ABSPATH', __DIR__ . '/fake-wp/' );
 
 $GLOBALS['cm_options'] = array();

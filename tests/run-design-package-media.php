@@ -1,5 +1,7 @@
 <?php
 /** Portable certificate/email design media package contract tests. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define( 'ABSPATH', __DIR__ . '/' );
 
 $GLOBALS['certloom_test_options'] = array();

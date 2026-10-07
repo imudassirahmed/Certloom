@@ -1,5 +1,7 @@
 <?php
 /** Phase 4 Gamma-02R Certloom Studio source shell contract. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $root=dirname(__DIR__);$php=file_get_contents($root.'/src/Infrastructure/Admin/TemplateAdmin.php');$nav=file_get_contents($root.'/src/Infrastructure/Admin/AdminProductNavigation.php');$css=file_get_contents($root.'/admin/assets/designer.css');$js=file_get_contents($root.'/admin/assets/designer.js');
 $checks=0; function st($ok,$m){global$checks;$checks++;if(!$ok){fwrite(STDERR,"FAIL  $m\n");exit(1);}} function sth($h,$n,$m){st(false!==strpos($h,$n),$m);} function stn($h,$n,$m){st(false===strpos($h,$n),$m);}
 sth($php,'Certloom Studio','workspace is named Certloom Studio');

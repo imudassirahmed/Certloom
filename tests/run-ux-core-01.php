@@ -1,5 +1,7 @@
 <?php
 /** UX-CORE-01 — unified product workspace + frontend continuity contract. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $root = dirname( __DIR__ );
 $checks = 0; $failures = 0;
 function uxcore_src( $root, $path ) { $value = @file_get_contents( $root . '/' . $path ); return is_string( $value ) ? $value : ''; }

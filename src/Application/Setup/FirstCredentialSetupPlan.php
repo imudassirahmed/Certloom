@@ -2,6 +2,7 @@
 namespace Certloom\Application\Setup;
 
 use Certloom\Application\Fields\ScopedFieldContract;
+use Certloom\Application\Fields\FieldCollectionPolicy;
 use Certloom\Application\Issuance\IssuanceDataReadiness;
 use Certloom\Application\Issuance\MergeSnapshotBuilder;
 
@@ -38,7 +39,9 @@ final class FirstCredentialSetupPlan {
 		$recipient = array();
 		$credential = array();
 		$grade_required = false;
+		$grade_selected = false;
 		$repeating = array( 'subjects' => false, 'results' => false );
+		$collected = array();
 
 		foreach ( (array) ( $readiness['fields'] ?? array() ) as $row ) {
 			if ( ! is_array( $row ) || 'generated' === (string) ( $row['status'] ?? '' ) ) { continue; }
@@ -91,8 +94,19 @@ final class FirstCredentialSetupPlan {
 		foreach ( array_values( array_unique( array_map( 'sanitize_key', $selected_fields ) ) ) as $key ) {
 			if ( '' === $key || in_array( $key, array( 'cert_number', 'credential_number', 'credential_title', 'status', 'issue_date', 'expiry', 'expiry_date' ), true ) ) { continue; }
 			$source = ScopedFieldContract::value_source( $key );
+			if ( isset( $catalog[ $key ][ FieldCollectionPolicy::KEY ] ) ) {
+				$policy = ( new FieldCollectionPolicy() )->for_definition( $catalog[ $key ] );
+				if ( ! is_wp_error( $policy ) && ( 'achievement' !== $policy['lifetime'] || 'staff' !== $policy['writer'] ) ) {
+					$collected[ $key ] = array( 'key' => $key, 'label' => $catalog[ $key ]['label'], 'policy' => $policy );
+					// These values belong to a reviewed account, enrollment, source or
+					// Program default. A new-recipient text box cannot replace them.
+					unset( $recipient[ $key ], $credential[ $key ] );
+					if ( 'grade' === $key ) { $grade_selected = false; }
+					continue;
+				}
+			}
 			if ( 'recipient' === $source ) { $this->add_field( $recipient, $key, '', $catalog, false ); }
-			elseif ( 'credential' === $source && 'grade' === $key ) { $grade_required = true; }
+			elseif ( 'credential' === $source && 'grade' === $key ) { $grade_selected = true; }
 			else { $this->add_field( $credential, $key, '', $catalog, false ); }
 		}
 
@@ -103,6 +117,16 @@ final class FirstCredentialSetupPlan {
 			if ( '' === $key ) { continue; }
 			$this->add_field( $credential, $key, $custom_label, $catalog, false );
 		}
+		// Design-only and legacy custom-label choices must respect the same owned
+		// providers even when the field was not selected in this wizard draft.
+		foreach ( array_unique( array_merge( array_keys( $recipient ), array_keys( $credential ), $grade_required || $grade_selected ? array( 'grade' ) : array() ) ) as $key ) {
+			if ( ! isset( $catalog[ $key ][ FieldCollectionPolicy::KEY ] ) ) { continue; }
+			$policy = ( new FieldCollectionPolicy() )->for_definition( $catalog[ $key ] );
+			if ( is_wp_error( $policy ) || ( 'achievement' === $policy['lifetime'] && 'staff' === $policy['writer'] ) ) { continue; }
+			$collected[ $key ] = array( 'key' => $key, 'label' => $catalog[ $key ]['label'], 'policy' => $policy );
+			unset( $recipient[ $key ], $credential[ $key ] );
+			if ( 'grade' === $key ) { $grade_required = false; $grade_selected = false; }
+		}
 
 		return array(
 			'design_id' => $design_id,
@@ -112,7 +136,9 @@ final class FirstCredentialSetupPlan {
 			'context_fields' => $context_fields,
 			'recipient_fields' => array_values( $recipient ),
 			'credential_fields' => array_values( $credential ),
+			'collected_fields' => array_values( $collected ),
 			'grade_required' => $grade_required,
+			'grade_enabled' => $grade_required || $grade_selected,
 			'repeating' => $repeating,
 			'requirement_count' => count( $tokens ),
 		);

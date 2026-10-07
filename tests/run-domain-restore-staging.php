@@ -1,5 +1,7 @@
 <?php
 /** Resumable staging tests for complete-domain Replace restore. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $root = sys_get_temp_dir() . '/certloom-domain-restore-stage-' . bin2hex( random_bytes( 4 ) );
 define( 'ABSPATH', $root . '/web/' );
 define( 'WP_CONTENT_DIR', $root . '/web/wp-content' );
@@ -82,6 +84,10 @@ function rs_rows() {
 		'credential_numbers' => array( array( 'id'=>'1','display_number'=>'CERT-0001','series_id'=>'1','first_version_id'=>'1','created_at'=>'2026-08-22 00:00:00','retired_at'=>null ) ),
 		'credential_versions' => array( array( 'id'=>'1','series_id'=>'1','version_number'=>'1','previous_version_id'=>null,'display_number'=>'CERT-0001','issuance_state'=>'issued','legacy_expired'=>'0','valid_from'=>'2026-08-22','issued_at'=>'2026-08-22 00:00:00','expires_at'=>null,'grade'=>null,'source_type'=>'manual','source_ref'=>null,'source_idempotency_key'=>null,'snapshot_json'=>'{}','created_at'=>'2026-08-22 00:00:00','updated_at'=>'2026-08-22 00:00:00' ) ),
 		'credential_events' => array( array( 'id'=>'1','series_id'=>'1','version_id'=>'1','event_type'=>'credential.issued','actor_user_id'=>null,'old_state_json'=>null,'new_state_json'=>'{}','reason_code'=>null,'public_reason'=>null,'internal_note'=>null,'meta_json'=>'{}','created_at'=>'2026-08-22 00:00:00' ) ),
+		'program_registrations' => array(),
+		'field_submissions' => array(),
+		'issuance_requests' => array(),
+		'issuance_request_events' => array(),
 	);
 }
 
@@ -101,7 +107,7 @@ function rs_make_backup( $job_key, $trailing = '', $version = DomainBackupFormat
 	if ( DomainBackupFormat::LEGACY_VERSION === absint( $version ) ) {
 		foreach ( $rows['credential_series'] as &$legacy_series ) { unset( $legacy_series['batch_id'] ); } unset( $legacy_series );
 	}
-	if ( absint( $version ) < DomainBackupFormat::VERSION ) {
+	if ( absint( $version ) < DomainBackupFormat::PRIVACY_VERSION ) {
 		foreach ( $rows['recipients'] as &$old_recipient ) { unset( $old_recipient['privacy_identity_hashes'], $old_recipient['privacy_anonymized_at'] ); } unset( $old_recipient );
 	}
 	$entities = array();

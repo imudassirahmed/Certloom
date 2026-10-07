@@ -1,5 +1,7 @@
 <?php
 /** UX-CORE-06: canonical design hierarchy + integration/automation consistency. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $root = dirname( __DIR__ );
 $pass = 0; $fail = 0;
 function ux6_src( $root, $file ) { $v = file_get_contents( $root . '/' . $file ); if ( false === $v ) { throw new RuntimeException( 'Missing ' . $file ); } return $v; }

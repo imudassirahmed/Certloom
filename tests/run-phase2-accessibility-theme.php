@@ -1,5 +1,7 @@
 <?php
 /** Static/contract acceptance for Phase 2 accessibility and theme resilience. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $root = dirname(__DIR__);
 $files = array(
     'render' => file_get_contents($root.'/includes/class-ecapla-certverify-render.php'),

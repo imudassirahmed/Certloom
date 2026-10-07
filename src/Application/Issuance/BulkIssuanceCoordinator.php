@@ -28,7 +28,20 @@ final class BulkIssuanceCoordinator {
 		$key=$this->queue->enqueue(JobTypes::BULK_ISSUANCE_PREFLIGHT,absint($owner_user_id),array('path'=>$private,'source_sha256'=>$sha,'original_name'=>$original_name,'shared'=>$shared,'max_rows'=>BulkIssuanceCsvReader::MAX_ROWS));if(is_wp_error($key)){return $this->cleanup($private,$key);}return $key;
 	}
 	/** @return string|\WP_Error */
-	public function enqueue_commit($preflight_job_key,$owner_user_id,$expected_review_fingerprint,$confirmed=false){if(!$confirmed){return new \WP_Error('certloom_bulk_commit_confirmation_required',__('Confirm the reviewed Bulk Issuance batch before issuing credentials.','certloom'));}$pre=$this->owned_job($preflight_job_key,$owner_user_id);if(is_wp_error($pre)){return $pre;}if(JobTypes::BULK_ISSUANCE_PREFLIGHT!==(string)($pre['job_type']??'')){return new \WP_Error('certloom_bulk_preflight_invalid',__('The selected job is not a Bulk Issuance review.','certloom'));}if(!in_array((string)($pre['status']??''),array(JobStates::SUCCEEDED,JobStates::PARTIALLY_SUCCEEDED),true)){return new \WP_Error('certloom_bulk_preflight_incomplete',__('Bulk Issuance review must finish before credentials can be issued.','certloom'));}$result=is_array($pre['result']??null)?$pre['result']:array();if(empty($result['ready_for_issue'])){return new \WP_Error('certloom_bulk_preflight_not_ready',__('Fix every blocking CSV review error before Bulk Issuance can start.','certloom'));}$expected=strtolower(trim((string)$expected_review_fingerprint));if(!preg_match('/^[a-f0-9]{64}$/',$expected)||!hash_equals((string)($result['review_fingerprint']??''),$expected)){return new \WP_Error('certloom_bulk_review_stale',__('The Bulk Issuance confirmation no longer matches the reviewed batch.','certloom'));}$total=absint($result['summary']['ready']??0);return $this->queue->enqueue(JobTypes::BULK_ISSUANCE_COMMIT,absint($owner_user_id),array('preflight_job_key'=>(string)$pre['job_key'],'review_fingerprint'=>$expected,'confirmed_issue'=>true),$total,null,(string)$pre['job_key']);}
+	public function enqueue_commit( $preflight_job_key, $owner_user_id, $expected_review_fingerprint, $confirmed = false, $qualified_waiting = false ) {
+		if ( true !== $confirmed ) { return new \WP_Error( 'certloom_bulk_commit_confirmation_required', __( 'Confirm the reviewed Bulk Issuance batch before issuing credentials.', 'certloom' ) ); }
+		$pre = $this->owned_job( $preflight_job_key, $owner_user_id ); if ( is_wp_error( $pre ) ) { return $pre; }
+		if ( JobTypes::BULK_ISSUANCE_PREFLIGHT !== $pre['job_type'] ) { return new \WP_Error( 'certloom_bulk_preflight_invalid', __( 'The selected job is not a Bulk Issuance review.', 'certloom' ) ); }
+		if ( ! in_array( $pre['status'], array( JobStates::SUCCEEDED, JobStates::PARTIALLY_SUCCEEDED ), true ) ) { return new \WP_Error( 'certloom_bulk_preflight_incomplete', __( 'Bulk Issuance review must finish before credentials can be issued.', 'certloom' ) ); }
+		$result = is_array( $pre['result'] ?? null ) ? $pre['result'] : array();
+		if ( empty( $result['ready_for_issue'] ) ) { return new \WP_Error( 'certloom_bulk_preflight_not_ready', __( 'Fix every blocking CSV review error before Bulk Issuance can start.', 'certloom' ) ); }
+		$expected = strtolower( trim( (string) $expected_review_fingerprint ) );
+		if ( ! preg_match( '/^[a-f0-9]{64}$/D', $expected ) || ! hash_equals( (string) ( $result['review_fingerprint'] ?? '' ), $expected ) ) { return new \WP_Error( 'certloom_bulk_review_stale', __( 'The Bulk Issuance confirmation no longer matches the reviewed batch.', 'certloom' ) ); }
+		$waiting = absint( $result['summary']['waiting'] ?? 0 );
+		if ( $waiting && ( true !== $qualified_waiting || 'customer' !== ( $pre['payload']['shared']['waiting_policy'] ?? 'stop' ) ) ) { return new \WP_Error( 'certloom_bulk_pending_qualification_required', __( 'Confirm that every waiting recipient has already earned this certificate. Customer details establish completeness and do not establish qualification.', 'certloom' ) ); }
+		$total = absint( $result['summary']['ready'] ?? 0 ) + $waiting;
+		return $this->queue->enqueue( JobTypes::BULK_ISSUANCE_COMMIT, absint( $owner_user_id ), array( 'preflight_job_key' => $pre['job_key'], 'review_fingerprint' => $expected, 'confirmed_issue' => true, 'qualified_waiting' => true === $qualified_waiting ), $total, null, $pre['job_key'] );
+	}
 	/** @return array<string,mixed>|\WP_Error */
 	public function owned_job($job_key,$owner_user_id){$job_key=strtolower(trim((string)$job_key));if(!preg_match('/^[a-f0-9]{32}$/',$job_key)){return new \WP_Error('certloom_bulk_job_key_invalid',__('The Bulk Issuance job identifier is invalid.','certloom'));}$job=$this->jobs->find($job_key);if(is_wp_error($job)){return $job;}if(!is_array($job)||!in_array((string)($job['job_type']??''),array(JobTypes::BULK_ISSUANCE_PREFLIGHT,JobTypes::BULK_ISSUANCE_COMMIT),true)){return new \WP_Error('certloom_bulk_job_missing',__('That Bulk Issuance job is no longer available.','certloom'));}if(absint($job['owner_user_id']??0)!==absint($owner_user_id)){return new \WP_Error('certloom_bulk_owner_mismatch',__('That Bulk Issuance job belongs to another administrator.','certloom'));}return $job;}
 	/**
@@ -41,6 +54,19 @@ final class BulkIssuanceCoordinator {
 	 * @return true|\WP_Error
 	 */
 	private function validate_scoped_schema( array $header, array $shared ) {
+		$schema = $this->csv_schema( absint( $shared['program_id'] ?? 0 ), absint( $shared['batch_id'] ?? 0 ) );
+		return is_wp_error( $schema ) ? $schema : ( new BulkIssuanceCsvSchema() )->validate( $header, $shared, $schema );
+	}
+
+	/** Read-only Program-specific CSV source contract, shared by upload and download. */
+	public function csv_schema( $program_id, $batch_id = 0 ) {
+		$contract = $this->field_contract( array( 'program_id' => absint( $program_id ), 'batch_id' => absint( $batch_id ) ) );
+		if ( is_wp_error( $contract ) ) { return $contract; }
+		$catalog = class_exists( '\Ecapla_CertVerify_Fields' ) ? \Ecapla_CertVerify_Fields::get_field_map() : array();
+		return ( new BulkIssuanceCsvSchema() )->describe( $contract, $catalog );
+	}
+
+	private function field_contract( array $shared ) {
 		$program = ( new ProgramRepository() )->find( absint( $shared['program_id'] ?? 0 ) );
 		if ( is_wp_error( $program ) ) { return $program; }
 		if ( ! is_array( $program ) || empty( $program['active'] ) ) { return new \WP_Error( 'certloom_bulk_program_unavailable', __( 'The selected Program is no longer active or available for Bulk Issuance.', 'certloom' ) ); }
@@ -70,34 +96,19 @@ final class BulkIssuanceCoordinator {
 			is_array( $batch ) ? (array) ( $batch['field_contract'] ?? ScopedFieldContract::empty_batch() ) : null,
 			$catalog
 		);
-		if ( is_wp_error( $contract ) ) { return $contract; }
-		if ( empty( $contract['_meta']['configured'] ) ) { return true; }
-
-		$allowed_custom = array(); $required_custom = array(); $grade = null;
-		foreach ( (array) ( $contract['fields'] ?? array() ) as $field ) {
-			if ( ! is_array( $field ) ) { continue; }
-			$key = sanitize_key( (string) ( $field['key'] ?? '' ) );
-			$source = (string) ( $field['value_source'] ?? ScopedFieldContract::value_source( $key ) );
-			if ( 'credential_custom' === $source ) { $allowed_custom[ $key ] = true; if ( ! empty( $field['required'] ) ) { $required_custom[ $key ] = (string) ( $field['label'] ?? $key ); } }
-			if ( 'credential' === $source && 'grade' === $key ) { $grade = $field; }
-		}
-		$header_set = array_fill_keys( array_map( 'strval', $header ), true );
-		foreach ( $header as $column ) {
-			if ( 0 !== strpos( (string) $column, 'custom:' ) ) { continue; }
-			$key = sanitize_key( substr( (string) $column, 7 ) );
-			if ( ! isset( $allowed_custom[ $key ] ) ) { return new \WP_Error( 'certloom_bulk_csv_unassigned_field', sprintf( /* translators: %s: field key. */ __( 'CSV column “custom:%s” is not assigned to the selected Program/Batch credential-field contract.', 'certloom' ), $key ) ); }
-		}
-		foreach ( $required_custom as $key => $label ) {
-			if ( ! isset( $header_set[ 'custom:' . $key ] ) ) { return new \WP_Error( 'certloom_bulk_csv_required_field_header_missing', sprintf( /* translators: %s: label; %s: field key. */ __( 'Required credential field “%s” needs a custom:%s column in this Bulk Issuance CSV.', 'certloom' ), $label, $key ) ); }
-		}
-		$has_grade_value = '' !== trim( (string) ( $shared['grade'] ?? '' ) );
-		$has_grade_column = isset( $header_set['grade'] );
-		if ( null === $grade && ( $has_grade_value || $has_grade_column ) ) { return new \WP_Error( 'certloom_bulk_csv_unassigned_grade', __( 'Grade / result is not assigned to the selected Program/Batch credential-field contract.', 'certloom' ) ); }
-		if ( is_array( $grade ) && ! empty( $grade['required'] ) && ! $has_grade_value && ! $has_grade_column ) { return new \WP_Error( 'certloom_bulk_csv_required_grade_header_missing', __( 'Grade / result is required for this Program/Batch. Add a grade column or provide one shared Grade value.', 'certloom' ) ); }
-		return true;
+		return $contract;
 	}
 
 	/** @return array<string,mixed>|\WP_Error */
-	private function shared(array $s){$program=absint($s['program_id']??0);$batch=absint($s['batch_id']??0);$template=absint($s['template_id']??0);if(!$program){return new \WP_Error('certloom_bulk_context_required',__('Choose an active Program for Bulk Issuance. Certloom can resolve the Program’s published certificate design automatically.','certloom'));}$mode=sanitize_key((string)($s['expiry_mode']??'program'));if(!in_array($mode,array('program','permanent','date'),true)){return new \WP_Error('certloom_bulk_expiry_mode_invalid',__('Choose a valid Bulk Issuance expiry policy.','certloom'));}$valid=trim(sanitize_text_field((string)($s['valid_from']??'')));$expires=trim(sanitize_text_field((string)($s['expires_at']??'')));$grade=trim(sanitize_text_field((string)($s['grade']??'')));return array('program_id'=>$program,'batch_id'=>$batch,'template_id'=>$template,'valid_from'=>$valid,'expiry_mode'=>$mode,'expires_at'=>$expires,'grade'=>$grade);}
+	private function shared( array $input ) {
+		foreach ( $input as $value ) { if ( ! is_scalar( $value ) && null !== $value ) { return new \WP_Error( 'certloom_bulk_context_invalid', __( 'Review the bulk issuance choices before uploading the CSV.', 'certloom' ) ); } }
+		$program = absint( $input['program_id'] ?? 0 );
+		if ( ! $program ) { return new \WP_Error( 'certloom_bulk_context_required', __( 'Choose an active Program for Bulk Issuance. Certloom can resolve the Program’s published certificate design automatically.', 'certloom' ) ); }
+		$mode = sanitize_key( (string) ( $input['expiry_mode'] ?? 'program' ) );
+		if ( ! in_array( $mode, array( 'program', 'permanent', 'date' ), true ) ) { return new \WP_Error( 'certloom_bulk_expiry_mode_invalid', __( 'Choose a valid Bulk Issuance expiry policy.', 'certloom' ) ); }
+		$waiting = $input['waiting_policy'] ?? 'stop';
+		if ( ! in_array( $waiting, array( 'stop', 'customer' ), true ) ) { return new \WP_Error( 'certloom_bulk_waiting_policy_invalid', __( 'Choose whether missing customer details should stop the batch or create reviewed waiting requests.', 'certloom' ) ); }
+		return array( 'program_id' => $program, 'batch_id' => absint( $input['batch_id'] ?? 0 ), 'template_id' => absint( $input['template_id'] ?? 0 ), 'valid_from' => trim( sanitize_text_field( (string) ( $input['valid_from'] ?? '' ) ) ), 'expiry_mode' => $mode, 'expires_at' => trim( sanitize_text_field( (string) ( $input['expires_at'] ?? '' ) ) ), 'grade' => trim( sanitize_text_field( (string) ( $input['grade'] ?? '' ) ) ), 'waiting_policy' => $waiting );
+	}
 	/** @return \WP_Error */ private function cleanup($path,\WP_Error $primary){$d=$this->files->delete((string)$path);return(!is_wp_error($d)&&false!==$d)?$primary:new \WP_Error('certloom_bulk_private_cleanup_failed',sprintf(/* translators: %1$s: primary error; %2$s: d. */ __('Certloom stopped Bulk Issuance safely (%1$s), but could not remove its protected CSV copy (%2$s).','certloom'),$primary->get_error_message(),is_wp_error($d)?$d->get_error_message():__('file deletion failed','certloom')));}
 }

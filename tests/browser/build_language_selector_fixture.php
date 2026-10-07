@@ -1,5 +1,7 @@
 <?php
 /** UX-C08 browser fixture using production Program-profile JS/CSS. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $css=file_get_contents(dirname(__DIR__,2).'/assets/css/certloom-tokens.css') . "\n" . file_get_contents(dirname(__DIR__,2).'/admin/assets/admin.css');
 $js=file_get_contents(dirname(__DIR__,2).'/admin/assets/admin.js');
 function options($blank=false){$o=$blank?'<option value="">Choose language</option>':'';foreach(['en_US'=>'English (United States)','ar'=>'العربية — Arabic','ur'=>'اردو — Urdu','fa_IR'=>'فارسی — Persian','fr_FR'=>'Français — French','zh_CN'=>'简体中文 — Chinese (Simplified)'] as $k=>$v){$o.='<option value="'.htmlspecialchars($k).'">'.htmlspecialchars($v).'</option>';}return $o;}

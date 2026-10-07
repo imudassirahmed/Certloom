@@ -58,15 +58,18 @@ $notices = array(
 	'mapping_deleted'             => __( 'Course mapping removed.', 'certloom' ),
 	'tutor_mapping_saved'         => __( 'Course mapping saved.', 'certloom' ),
 	'tutor_mapping_deleted'       => __( 'Course mapping removed.', 'certloom' ),
+	'tutor_pending_saved'         => __( 'Tutor customer-detail connection updated.', 'certloom' ),
 	'learndash_mapping_saved'     => __( 'Course mapping saved.', 'certloom' ),
 	'learndash_mapping_deleted'   => __( 'Course mapping removed.', 'certloom' ),
 	'woocommerce_mapping_saved'   => __( 'Product mapping saved.', 'certloom' ),
+	'woocommerce_pending_saved'   => __( 'WooCommerce customer-detail connection updated.', 'certloom' ),
 	'woocommerce_mapping_deleted' => __( 'Product mapping removed.', 'certloom' ),
 	'coursera_connection_rotated' => __( 'Coursera connection credentials generated. Copy the one-time secret now.', 'certloom' ),
 	'coursera_disconnected'       => __( 'Coursera xAPI connection disconnected.', 'certloom' ),
 	'coursera_mapping_saved'      => __( 'Coursera course mapping saved.', 'certloom' ),
 	'coursera_mapping_deleted'    => __( 'Coursera course mapping removed.', 'certloom' ),
 	'webhook_source_created'      => __( 'Webhook source created. Copy the one-time signing secret now.', 'certloom' ),
+	'webhook_v2_saved'            => __( 'App connection saved. Copy any newly shown secret and test the sending app before live intake.', 'certloom' ),
 	'webhook_secret_rotated'      => __( 'Webhook signing secret rotated. Copy the new secret now.', 'certloom' ),
 	'webhook_source_deleted'      => __( 'Webhook source removed.', 'certloom' ),
 	'credly_connected'            => __( 'Credly connection saved securely.', 'certloom' ),
@@ -89,6 +92,7 @@ $certloom_last_event = static function ( $status ) {
 	$labels = array(
 		'issued' => __( 'Issued', 'certloom' ),
 		'replayed' => __( 'Already issued', 'certloom' ),
+		'waiting' => __( 'Certificate request waiting for details or review', 'certloom' ),
 		'blocked' => __( 'Blocked', 'certloom' ),
 		'failed' => __( 'Failed', 'certloom' ),
 	);
@@ -180,7 +184,7 @@ $certloom_render_last_event = static function ( $status ) use ( $certloom_last_e
 		</div>
 	</section>
 
-	<?php if ( ! empty( $tutor['status']['available'] ) ) : ?>
+	<?php if ( ! empty( $tutor['status']['available'] ) || ! empty( $tutor['pending_mappings'] ) || is_wp_error( $tutor['pending_error'] ?? null ) ) : ?>
 	<section id="certloom-tutor-setup" class="certloom-workspace-card certloom-integration-config-card" aria-labelledby="certloom-tutor-title">
 		<header class="certloom-workspace-card-head"><div><span class="certloom-eyebrow"><?php esc_html_e( 'Learning source', 'certloom' ); ?></span><h2 id="certloom-tutor-title"><?php esc_html_e( 'Tutor LMS', 'certloom' ); ?></h2><p><?php esc_html_e( 'Map a Tutor course to a Program and optional Batch. The certificate design follows the shared inheritance hierarchy automatically.', 'certloom' ); ?></p></div><span class="certloom-count-chip"><?php echo esc_html( number_format_i18n( count( (array) ( $tutor['mappings'] ?? array() ) ) ) ); ?></span></header>
 		<?php if ( ! empty( $tutor['error'] ) && is_wp_error( $tutor['error'] ) ) : ?><div class="notice notice-error inline"><p><?php echo esc_html( $tutor['error']->get_error_message() ); ?></p></div>
@@ -192,6 +196,7 @@ $certloom_render_last_event = static function ( $status ) use ( $certloom_last_e
 		</div><input type="hidden" name="certificate_threshold" value="100"><input type="hidden" name="expiry_mode" value="program"><label class="certloom-switch-row"><input type="checkbox" name="active" value="1" checked><span><strong><?php esc_html_e( 'Issue automatically after course completion', 'certloom' ); ?></strong></span></label><div class="certloom-form-actions"><button class="button button-primary" type="submit"><?php esc_html_e( 'Save mapping', 'certloom' ); ?></button></div></form>
 		<?php endif; ?>
 		<?php if ( ! empty( $tutor['mappings'] ) ) : ?><div class="certloom-mapping-list"><?php foreach ( (array) $tutor['mappings'] as $mapping ) : $id = absint( $mapping['course_id'] ?? 0 ); ?><article class="certloom-mapping-row"><div><strong><?php echo esc_html( $tutor_course_labels[ $id ] ?? sprintf( /* translators: %d: course ID. */ __( 'Course %d', 'certloom' ), $id ) ); ?></strong><small><?php echo esc_html( $certloom_mapping_target_label( $tutor_program_labels[ absint( $mapping['program_id'] ?? 0 ) ] ?? __( 'Program', 'certloom' ), absint( $mapping['batch_id'] ?? 0 ), absint( $mapping['template_id'] ?? 0 ) ) ); ?></small></div><span class="certloom-state-pill <?php echo ! empty( $mapping['active'] ) ? 'is-success' : ''; ?>"><?php echo ! empty( $mapping['active'] ) ? esc_html__( 'On', 'certloom' ) : esc_html__( 'Paused', 'certloom' ); ?></span><form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>"><input type="hidden" name="action" value="certloom_tutor_lms_mapping_delete"><input type="hidden" name="course_id" value="<?php echo esc_attr( $id ); ?>"><?php wp_nonce_field( 'certloom_tutor_lms_mapping_delete_' . $id ); ?><button class="button button-small" type="submit" data-ecapla-confirm="<?php esc_attr_e( 'Remove this Tutor LMS mapping? Future completions for this course will no longer issue through this mapping.', 'certloom' ); ?>"><?php esc_html_e( 'Remove', 'certloom' ); ?></button></form></article><?php endforeach; ?></div><?php endif; ?>
+		<?php include ECAPLA_CERTVERIFY_PATH . 'admin/views/tutor-pending.php'; ?>
 		<details class="certloom-technical-details"><summary><?php esc_html_e( 'Technical status', 'certloom' ); ?></summary><p class="description"><?php echo esc_html( ! empty( $tutor['status']['authority_ready'] ) ? __( 'Credential-writing authority is available.', 'certloom' ) : __( 'Automatic issuance remains fail-closed until production credential-writing authority is accepted.', 'certloom' ) ); ?></p></details>
 	</section>
 	<?php endif; ?>
@@ -212,19 +217,20 @@ $certloom_render_last_event = static function ( $status ) use ( $certloom_last_e
 	</section>
 	<?php endif; ?>
 
-	<?php if ( ! empty( $woocommerce['status']['available'] ) ) : ?>
+	<?php if ( ! empty( $woocommerce['status']['available'] ) || ! empty( $woocommerce['pending_mappings'] ) || is_wp_error( $woocommerce['pending_error'] ?? null ) ) : ?>
 	<section id="certloom-woocommerce-setup" class="certloom-workspace-card certloom-integration-config-card" aria-labelledby="certloom-woocommerce-title">
 		<header class="certloom-workspace-card-head"><div><span class="certloom-eyebrow"><?php esc_html_e( 'Commerce source', 'certloom' ); ?></span><h2 id="certloom-woocommerce-title"><?php esc_html_e( 'WooCommerce', 'certloom' ); ?></h2><p><?php esc_html_e( 'Map a product to a Program and optional Batch. Certloom issues when an order reaches Completed and the customer has a linked Recipient profile. Payment or checkout alone may leave an order in Processing; complete it in WooCommerce after fulfillment.', 'certloom' ); ?></p></div><span class="certloom-count-chip"><?php echo esc_html( number_format_i18n( count( (array) ( $woocommerce['mappings'] ?? array() ) ) ) ); ?></span></header>
 		<div class="certloom-callout certloom-callout-info"><span class="dashicons dashicons-admin-users" aria-hidden="true"></span><div><strong><?php esc_html_e( 'Ownership stays explicit', 'certloom' ); ?></strong><p><?php esc_html_e( 'Guest checkout does not create credential ownership. The customer must have a WordPress account explicitly linked to a Certloom Recipient.', 'certloom' ); ?></p></div></div>
 		<?php if ( ! empty( $woocommerce['error'] ) && is_wp_error( $woocommerce['error'] ) ) : ?><div class="notice notice-error inline"><p><?php echo esc_html( $woocommerce['error']->get_error_message() ); ?></p></div>
 		<?php elseif ( ! empty( $woocommerce['configuration_ready'] ) ) : ?>
 		<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="certloom-clean-form certloom-integration-map-form"><input type="hidden" name="action" value="certloom_woocommerce_mapping_save"><?php wp_nonce_field( 'certloom_woocommerce_mapping_save' ); ?><div class="certloom-form-grid certloom-form-grid-3">
-			<label class="certloom-field-control"><span><?php esc_html_e( 'WooCommerce product', 'certloom' ); ?></span><select name="product_id" required><option value=""><?php esc_html_e( 'Choose a product', 'certloom' ); ?></option><?php foreach ( (array) ( $woocommerce['products'] ?? array() ) as $product ) : ?><option value="<?php echo esc_attr( absint( $product['id'] ?? 0 ) ); ?>"><?php echo esc_html( (string) ( $product['title'] ?? '' ) ); ?></option><?php endforeach; ?></select></label>
+			<label class="certloom-field-control"><span><?php esc_html_e( 'WooCommerce product', 'certloom' ); ?></span><select name="product_id" required data-certloom-context-lookup="woocommerce_product" data-certloom-context-search-placeholder="<?php esc_attr_e( 'Search products by name, SKU or ID…', 'certloom' ); ?>" data-certloom-context-nonce="<?php echo esc_attr( $certloom_context_nonce ); ?>"><option value=""><?php esc_html_e( 'Choose a product', 'certloom' ); ?></option><?php foreach ( (array) ( $woocommerce['products'] ?? array() ) as $product ) : ?><option value="<?php echo esc_attr( absint( $product['id'] ?? 0 ) ); ?>"><?php echo esc_html( (string) ( $product['title'] ?? '' ) ); ?></option><?php endforeach; ?></select></label>
 			<label class="certloom-field-control"><span><?php esc_html_e( 'Certloom Program', 'certloom' ); ?></span><select name="program_id" required data-certloom-context-lookup="program" data-certloom-context-nonce="<?php echo esc_attr( $certloom_context_nonce ); ?>"><option value=""><?php esc_html_e( 'Choose a Program', 'certloom' ); ?></option><?php foreach ( (array) ( $woocommerce['programs'] ?? array() ) as $program ) : ?><option value="<?php echo esc_attr( absint( $program['id'] ?? 0 ) ); ?>"><?php echo esc_html( (string) ( $program['title'] ?? '' ) ); ?></option><?php endforeach; ?></select></label>
 			<label class="certloom-field-control"><span><?php esc_html_e( 'Batch (optional)', 'certloom' ); ?></span><select name="batch_id" data-certloom-context-lookup="batch" data-certloom-context-nonce="<?php echo esc_attr( $certloom_context_nonce ); ?>" data-certloom-context-search-placeholder="<?php esc_attr_e( 'Search Batches in this Program…', 'certloom' ); ?>"><option value="0"><?php esc_html_e( 'No Batch — use Program context', 'certloom' ); ?></option></select><small><?php esc_html_e( 'Optional. A selected Batch applies its field rules and, when set, its more-specific design.', 'certloom' ); ?></small></label>
 		</div><input type="hidden" name="expiry_mode" value="program"><label class="certloom-switch-row"><input type="checkbox" name="active" value="1" checked><span><strong><?php esc_html_e( 'Issue automatically after completed order', 'certloom' ); ?></strong></span></label><div class="certloom-form-actions"><button class="button button-primary" type="submit"><?php esc_html_e( 'Save product mapping', 'certloom' ); ?></button></div></form>
 		<?php endif; ?>
 		<?php if ( ! empty( $woocommerce['mappings'] ) ) : ?><div class="certloom-mapping-list"><?php foreach ( (array) $woocommerce['mappings'] as $mapping ) : $id = absint( $mapping['product_id'] ?? 0 ); ?><article class="certloom-mapping-row"><div><strong><?php echo esc_html( $woo_product_labels[ $id ] ?? sprintf( /* translators: %d: product ID. */ __( 'Product %d', 'certloom' ), $id ) ); ?></strong><small><?php echo esc_html( $certloom_mapping_target_label( $woo_program_labels[ absint( $mapping['program_id'] ?? 0 ) ] ?? __( 'Program', 'certloom' ), absint( $mapping['batch_id'] ?? 0 ), absint( $mapping['template_id'] ?? 0 ) ) ); ?></small></div><span class="certloom-state-pill <?php echo ! empty( $mapping['active'] ) ? 'is-success' : ''; ?>"><?php echo ! empty( $mapping['active'] ) ? esc_html__( 'On', 'certloom' ) : esc_html__( 'Paused', 'certloom' ); ?></span><form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>"><input type="hidden" name="action" value="certloom_woocommerce_mapping_delete"><input type="hidden" name="product_id" value="<?php echo esc_attr( $id ); ?>"><?php wp_nonce_field( 'certloom_woocommerce_mapping_delete_' . $id ); ?><button class="button button-small" type="submit" data-ecapla-confirm="<?php esc_attr_e( 'Remove this WooCommerce mapping? Future qualifying orders for this product will no longer issue through this mapping.', 'certloom' ); ?>"><?php esc_html_e( 'Remove', 'certloom' ); ?></button></form></article><?php endforeach; ?></div><?php endif; ?>
+		<?php include ECAPLA_CERTVERIFY_PATH . 'admin/views/woocommerce-pending.php'; ?>
 		<details class="certloom-technical-details"><summary><?php esc_html_e( 'Technical status', 'certloom' ); ?></summary><p class="description"><?php echo esc_html( ! empty( $woocommerce['status']['authority_ready'] ) ? __( 'Credential-writing authority is available.', 'certloom' ) : __( 'Automatic issuance remains fail-closed until production credential-writing authority is accepted.', 'certloom' ) ); ?></p></details>
 	</section>
 	<?php endif; ?>
@@ -283,6 +289,7 @@ $certloom_render_last_event = static function ( $status ) use ( $certloom_last_e
 		<details class="certloom-technical-details"><summary><?php esc_html_e( 'Signing format', 'certloom' ); ?></summary><p class="description"><?php esc_html_e( 'Send X-Certloom-Timestamp as the current Unix timestamp and X-Certloom-Signature as sha256=HMAC_SHA256(timestamp + "." + exact_request_body, signing_secret). Requests outside a five-minute window fail closed.', 'certloom' ); ?></p></details>
 	</section>
 
+	<?php include __DIR__ . '/webhook-v2.php'; ?>
 	<section id="certloom-credly-setup" class="certloom-workspace-card certloom-destination-config-card" aria-labelledby="certloom-credly-title">
 		<header class="certloom-workspace-card-head">
 			<div><span class="certloom-eyebrow"><?php esc_html_e( 'Publishing destination', 'certloom' ); ?></span><h2 id="certloom-credly-title"><?php esc_html_e( 'Credly', 'certloom' ); ?></h2><p><?php esc_html_e( 'After Certloom issues the credential, optionally publish a matching badge to your authorized Credly organization. Certloom remains the credential source of truth.', 'certloom' ); ?></p></div>

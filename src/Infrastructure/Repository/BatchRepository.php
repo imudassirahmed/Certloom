@@ -4,7 +4,9 @@ namespace Certloom\Infrastructure\Repository;
 use Certloom\Application\Data\SafeJson;
 use Certloom\Application\Fields\ScopedFieldContract;
 use Certloom\Infrastructure\Data\DomainGeneration;
+use Certloom\Infrastructure\Database\Transaction;
 use Certloom\Infrastructure\Database\SchemaManager;
+use Certloom\Infrastructure\Recipient\PendingConfigurationQueue;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -14,98 +16,113 @@ if ( ! defined( 'ABSPATH' ) ) {
 final class BatchRepository {
 	/** @param array<string,mixed> $data @return int|\WP_Error */
 	public function create( array $data ) {
-		if ( '' === trim( (string) ( $data['code'] ?? '' ) ) ) {
-			$base = strtoupper( sanitize_key( (string) ( $data['name'] ?? '' ) ) );
-			$base = '' !== $base ? substr( $base, 0, 72 ) : 'BATCH';
-			$data['code'] = $base . '-' . strtoupper( substr( str_replace( '-', '', wp_generate_uuid4() ), 0, 8 ) );
-		}
-		$validated = $this->normalize_write( $data );
-		if ( is_wp_error( $validated ) ) {
-			return $validated;
-		}
-
-		$now                     = current_time( 'mysql', true );
-		$validated['created_at'] = $now;
-		$validated['updated_at'] = $now;
-
-		$generation = ( new DomainGeneration() )->mark_before_mutation();
-		if ( is_wp_error( $generation ) ) {
-			return $generation;
-		}
-
-		global $wpdb;
-		$wpdb->last_error = '';
-		$result            = $wpdb->insert( SchemaManager::table( 'batches' ), $validated );
-		if ( false === $result || '' !== (string) $wpdb->last_error ) {
-			if ( false !== stripos( (string) $wpdb->last_error, 'duplicate' ) ) {
-				return new \WP_Error( 'certloom_batch_code_duplicate', __( 'That batch code is already in use.', 'certloom' ) );
+		return ( new Transaction() )->run( function () use ( $data ) {
+			if ( '' === trim( (string) ( $data['code'] ?? '' ) ) ) {
+				$base = strtoupper( sanitize_key( (string) ( $data['name'] ?? '' ) ) );
+				$base = '' !== $base ? substr( $base, 0, 72 ) : 'BATCH';
+				$data['code'] = $base . '-' . strtoupper( substr( str_replace( '-', '', wp_generate_uuid4() ), 0, 8 ) );
 			}
-			return new \WP_Error( 'certloom_batch_create_failed', __( 'Certloom could not create the batch.', 'certloom' ) );
-		}
+			$validated = $this->normalize_write( $data );
+			if ( is_wp_error( $validated ) ) {
+				return $validated;
+			}
 
-		$batch_id = (int) $wpdb->insert_id;
-		$assignment = $this->ensure_instructor_assignment( $batch_id, $validated['instructor_signer_id'] ?? null );
-		if ( is_wp_error( $assignment ) ) {
-			$wpdb->delete( SchemaManager::table( 'batches' ), array( 'id' => $batch_id ) );
-			return $assignment;
-		}
-		return $batch_id;
+			$now                     = current_time( 'mysql', true );
+			$validated['created_at'] = $now;
+			$validated['updated_at'] = $now;
+
+			$generation = ( new DomainGeneration() )->mark_before_mutation();
+			if ( is_wp_error( $generation ) ) {
+				return $generation;
+			}
+
+			global $wpdb;
+			$wpdb->last_error = '';
+			$result            = $wpdb->insert( SchemaManager::table( 'batches' ), $validated );
+			if ( false === $result || '' !== (string) $wpdb->last_error ) {
+				if ( false !== stripos( (string) $wpdb->last_error, 'duplicate' ) ) {
+					return new \WP_Error( 'certloom_batch_code_duplicate', __( 'That batch code is already in use.', 'certloom' ) );
+				}
+				return new \WP_Error( 'certloom_batch_create_failed', __( 'Certloom could not create the batch.', 'certloom' ) );
+			}
+
+			$batch_id = (int) $wpdb->insert_id;
+			$assignment = $this->ensure_instructor_assignment( $batch_id, $validated['instructor_signer_id'] ?? null );
+			if ( is_wp_error( $assignment ) ) {
+				$wpdb->delete( SchemaManager::table( 'batches' ), array( 'id' => $batch_id ) );
+				return $assignment;
+			}
+			return $batch_id;
+		} );
 	}
 
 	/** @param int $id @param array<string,mixed> $data @return true|\WP_Error */
 	public function update( $id, array $data ) {
-		$id = absint( $id );
-		if ( ! $id ) {
-			return new \WP_Error( 'certloom_batch_id_required', __( 'A valid batch is required.', 'certloom' ) );
-		}
-
-		$existing = $this->find( $id );
-		if ( is_wp_error( $existing ) ) {
-			return $existing;
-		}
-		if ( ! is_array( $existing ) ) {
-			return new \WP_Error( 'certloom_batch_missing', __( 'The batch no longer exists.', 'certloom' ) );
-		}
-
-		$validated = $this->normalize_write( array_merge( $existing, $data ) );
-		if ( is_wp_error( $validated ) ) {
-			return $validated;
-		}
-		$validated['updated_at'] = current_time( 'mysql', true );
-
-		$previous_signer_id = absint( $existing['instructor_signer_id'] ?? 0 );
-		$assignment = $this->ensure_instructor_assignment( $id, $validated['instructor_signer_id'] ?? null );
-		if ( is_wp_error( $assignment ) ) { return $assignment; }
-
-		$generation = ( new DomainGeneration() )->mark_before_mutation();
-		if ( is_wp_error( $generation ) ) {
-			return $generation;
-		}
-
-		global $wpdb;
-		$wpdb->last_error = '';
-		$result            = $wpdb->update( SchemaManager::table( 'batches' ), $validated, array( 'id' => $id ) );
-		if ( false === $result || '' !== (string) $wpdb->last_error ) {
-			$write_error = (string) $wpdb->last_error;
-			// The primary assignment is synchronized before the row write so the
-			// compatibility projection never points at an unassigned signer. Restore
-			// the previous projection on a failed row update.
-			$this->ensure_instructor_assignment( $id, $previous_signer_id );
-			if ( false !== stripos( $write_error, 'duplicate' ) ) {
-				return new \WP_Error( 'certloom_batch_code_duplicate', __( 'That batch code is already in use.', 'certloom' ) );
+		$changed = false;
+		$result = ( new Transaction() )->run( function () use ( $id, $data, &$changed ) {
+			$id = absint( $id );
+			if ( ! $id ) {
+				return new \WP_Error( 'certloom_batch_id_required', __( 'A valid batch is required.', 'certloom' ) );
 			}
-			return new \WP_Error( 'certloom_batch_update_failed', __( 'Certloom could not update the batch.', 'certloom' ) );
-		}
 
-		return true;
+			$existing = $this->find( $id );
+			if ( is_wp_error( $existing ) ) {
+				return $existing;
+			}
+			if ( ! is_array( $existing ) ) {
+				return new \WP_Error( 'certloom_batch_missing', __( 'The batch no longer exists.', 'certloom' ) );
+			}
+
+			$validated = $this->normalize_write( array_merge( $existing, $data ) );
+			if ( is_wp_error( $validated ) ) {
+				return $validated;
+			}
+			$validated['updated_at'] = current_time( 'mysql', true );
+
+			$previous_signer_id = absint( $existing['instructor_signer_id'] ?? 0 );
+			$assignment = $this->ensure_instructor_assignment( $id, $validated['instructor_signer_id'] ?? null );
+			if ( is_wp_error( $assignment ) ) { return $assignment; }
+
+			$generation = ( new DomainGeneration() )->mark_before_mutation();
+			if ( is_wp_error( $generation ) ) {
+				return $generation;
+			}
+
+			global $wpdb;
+			$wpdb->last_error = '';
+			$result            = $wpdb->update( SchemaManager::table( 'batches' ), $validated, array( 'id' => $id ) );
+			if ( false === $result || '' !== (string) $wpdb->last_error ) {
+				$write_error = (string) $wpdb->last_error;
+				// The primary assignment is synchronized before the row write so the
+				// compatibility projection never points at an unassigned signer. Restore
+				// the previous projection on a failed row update.
+				$this->ensure_instructor_assignment( $id, $previous_signer_id );
+				if ( false !== stripos( $write_error, 'duplicate' ) ) {
+					return new \WP_Error( 'certloom_batch_code_duplicate', __( 'That batch code is already in use.', 'certloom' ) );
+				}
+				return new \WP_Error( 'certloom_batch_update_failed', __( 'Certloom could not update the batch.', 'certloom' ) );
+			}
+
+			if ( $result > 0 ) {
+				// A moved Batch can affect both Programs; coalesce one bounded global pass.
+				$program_id = absint( $validated['program_id'] );
+				$scope = $program_id === absint( $existing['program_id'] ) ? $program_id : 0;
+				$signal = ( new PendingConfigurationQueue() )->changed( $scope );
+				if ( is_wp_error( $signal ) ) { return $signal; }
+				$changed = true;
+			}
+			return true;
+		} );
+		if ( ! is_wp_error( $result ) && $changed ) { do_action( 'certloom_pending_configuration_changed' ); }
+		return $result;
 	}
 
 	/** @return array<string,mixed>|null|\WP_Error */
-	public function find( $id ) {
+	public function find( $id, $lock = false ) {
 		global $wpdb;
 		$wpdb->last_error = '';
 		$row = $wpdb->get_row(
-			$wpdb->prepare( 'SELECT * FROM %i WHERE id = %d', SchemaManager::table( 'batches' ), absint( $id ) ),
+			$wpdb->prepare( 'SELECT * FROM %i WHERE id = %d' . ( $lock || \Certloom\Infrastructure\Recipient\RecipientCommandReadScope::active() ? ' FOR UPDATE' : '' ), SchemaManager::table( 'batches' ), absint( $id ) ),
 			ARRAY_A
 		);
 		if ( '' !== (string) $wpdb->last_error ) {
@@ -329,86 +346,90 @@ final class BatchRepository {
 
 	/** @return true|\WP_Error */
 	public function add_recipient( $batch_id, $recipient_id ) {
-		$batch_id     = absint( $batch_id );
-		$recipient_id = absint( $recipient_id );
-		if ( ! $batch_id || ! $recipient_id ) {
-			return new \WP_Error( 'certloom_batch_member_invalid', __( 'Choose a valid batch and recipient.', 'certloom' ) );
-		}
-
-		foreach ( array( 'batches' => $batch_id, 'recipients' => $recipient_id ) as $entity => $id ) {
-			$exists = $this->exists( $entity, $id );
-			if ( is_wp_error( $exists ) ) {
-				return $exists;
+		return ( new Transaction() )->run( function () use ( $batch_id, $recipient_id ) {
+			$batch_id     = absint( $batch_id );
+			$recipient_id = absint( $recipient_id );
+			if ( ! $batch_id || ! $recipient_id ) {
+				return new \WP_Error( 'certloom_batch_member_invalid', __( 'Choose a valid batch and recipient.', 'certloom' ) );
 			}
-			if ( ! $exists ) {
-				return new \WP_Error( 'certloom_batch_member_missing', __( 'The batch or recipient no longer exists.', 'certloom' ) );
-			}
-		}
 
-		$member = $this->membership_exists( $batch_id, $recipient_id );
-		if ( is_wp_error( $member ) ) {
-			return $member;
-		}
-		if ( $member ) {
-			return true;
-		}
-
-		$generation = ( new DomainGeneration() )->mark_before_mutation();
-		if ( is_wp_error( $generation ) ) {
-			return $generation;
-		}
-
-		global $wpdb;
-		$wpdb->last_error = '';
-		$result = $wpdb->insert(
-			SchemaManager::table( 'batch_recipients' ),
-			array(
-				'batch_id'     => $batch_id,
-				'recipient_id' => $recipient_id,
-				'created_at'   => current_time( 'mysql', true ),
-			)
-		);
-		if ( false === $result || '' !== (string) $wpdb->last_error ) {
-			// A concurrent identical add is harmless; prove it exists before reporting success.
-			if ( false !== stripos( (string) $wpdb->last_error, 'duplicate' ) ) {
-				$exists = $this->membership_exists( $batch_id, $recipient_id );
-				if ( true === $exists ) {
-					return true;
+			foreach ( array( 'batches' => $batch_id, 'recipients' => $recipient_id ) as $entity => $id ) {
+				$exists = $this->exists( $entity, $id );
+				if ( is_wp_error( $exists ) ) {
+					return $exists;
+				}
+				if ( ! $exists ) {
+					return new \WP_Error( 'certloom_batch_member_missing', __( 'The batch or recipient no longer exists.', 'certloom' ) );
 				}
 			}
-			return new \WP_Error( 'certloom_batch_member_add_failed', __( 'Certloom could not add the recipient to the batch.', 'certloom' ) );
-		}
 
-		return true;
+			$member = $this->membership_exists( $batch_id, $recipient_id );
+			if ( is_wp_error( $member ) ) {
+				return $member;
+			}
+			if ( $member ) {
+				return true;
+			}
+
+			$generation = ( new DomainGeneration() )->mark_before_mutation();
+			if ( is_wp_error( $generation ) ) {
+				return $generation;
+			}
+
+			global $wpdb;
+			$wpdb->last_error = '';
+			$result = $wpdb->insert(
+				SchemaManager::table( 'batch_recipients' ),
+				array(
+					'batch_id'     => $batch_id,
+					'recipient_id' => $recipient_id,
+					'created_at'   => current_time( 'mysql', true ),
+				)
+			);
+			if ( false === $result || '' !== (string) $wpdb->last_error ) {
+				// A concurrent identical add is harmless; prove it exists before reporting success.
+				if ( false !== stripos( (string) $wpdb->last_error, 'duplicate' ) ) {
+					$exists = $this->membership_exists( $batch_id, $recipient_id );
+					if ( true === $exists ) {
+						return true;
+					}
+				}
+				return new \WP_Error( 'certloom_batch_member_add_failed', __( 'Certloom could not add the recipient to the batch.', 'certloom' ) );
+			}
+
+			return true;
+		} );
 	}
 
 	/** @return true|\WP_Error */
 	public function remove_recipient( $batch_id, $recipient_id ) {
-		$batch_id     = absint( $batch_id );
-		$recipient_id = absint( $recipient_id );
-		if ( ! $batch_id || ! $recipient_id ) {
-			return new \WP_Error( 'certloom_batch_member_invalid', __( 'Choose a valid batch and recipient.', 'certloom' ) );
-		}
+		return ( new Transaction() )->run( function () use ( $batch_id, $recipient_id ) {
+			$batch_id     = absint( $batch_id );
+			$recipient_id = absint( $recipient_id );
+			if ( ! $batch_id || ! $recipient_id ) {
+				return new \WP_Error( 'certloom_batch_member_invalid', __( 'Choose a valid batch and recipient.', 'certloom' ) );
+			}
 
-		$member = $this->membership_exists( $batch_id, $recipient_id );
-		if ( is_wp_error( $member ) ) {
-			return $member;
-		}
-		if ( ! $member ) {
-			return true;
-		}
+			$member = $this->membership_exists( $batch_id, $recipient_id );
+			if ( is_wp_error( $member ) ) {
+				return $member;
+			}
+			if ( ! $member ) {
+				return true;
+			}
 
-		$generation = ( new DomainGeneration() )->mark_before_mutation();
-		if ( is_wp_error( $generation ) ) {
-			return $generation;
-		}
+			$generation = ( new DomainGeneration() )->mark_before_mutation();
+			if ( is_wp_error( $generation ) ) {
+				return $generation;
+			}
 
-		global $wpdb;
-		$wpdb->last_error = '';
-		$result            = $wpdb->delete( SchemaManager::table( 'batch_recipients' ), array( 'batch_id' => $batch_id, 'recipient_id' => $recipient_id ) );
-		return false === $result || '' !== (string) $wpdb->last_error
-			? new \WP_Error( 'certloom_batch_member_remove_failed', __( 'Certloom could not remove the recipient from the batch.', 'certloom' ) )
-			: true;
+			global $wpdb;
+			$wpdb->last_error = '';
+			$result            = $wpdb->delete( SchemaManager::table( 'batch_recipients' ), array( 'batch_id' => $batch_id, 'recipient_id' => $recipient_id ) );
+			return false === $result || '' !== (string) $wpdb->last_error
+				? new \WP_Error( 'certloom_batch_member_remove_failed', __( 'Certloom could not remove the recipient from the batch.', 'certloom' ) )
+				: true;
+		} );
 	}
 
 	/** @return array<string,int>|\WP_Error */

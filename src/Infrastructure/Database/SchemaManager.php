@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * exercised without changing public verification truth for an existing site.
  */
 final class SchemaManager {
-	const SCHEMA_VERSION         = '19';
+	const SCHEMA_VERSION         = '20';
 	const SCHEMA_OPTION          = 'certloom_domain_schema_version';
 	const HEALTH_OPTION          = 'certloom_domain_schema_health';
 	const LOCK_OPTION            = 'certloom_domain_schema_lock';
@@ -41,6 +41,10 @@ final class SchemaManager {
 		'destination_deliveries' => 'certloom_destination_deliveries',
 		'import_rows'         => 'certloom_import_rows',
 		'restore_map'         => 'certloom_restore_map',
+		'program_registrations' => 'certloom_program_registrations',
+		'field_submissions' => 'certloom_field_submissions',
+		'issuance_requests' => 'certloom_issuance_requests',
+		'issuance_request_events' => 'certloom_issuance_request_events',
 	);
 
 	/**
@@ -753,6 +757,7 @@ final class SchemaManager {
 			KEY owner_entity_action (owner_token,entity,action),
 			KEY owner_target (owner_token,entity,target_id)
 		) ENGINE=InnoDB $charset_collate;";
+		$tables = array_merge( $tables, RecipientWorkflowSchema::sql( $charset_collate ) );
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 		foreach ( $tables as $logical_name => $sql ) {
 			$wpdb->last_error = '';
@@ -859,7 +864,7 @@ final class SchemaManager {
 		$dt   = '/^datetime$/';
 		$date = '/^date$/';
 		$lt   = '/^(?:longtext|text)$/';
-		return array(
+		$contracts = array(
 			'recipients' => array(
 				'columns' => array(
 					'id' => array( 'type' => $bigu, 'null' => 'NO', 'extra' => 'auto_increment' ),
@@ -1320,6 +1325,7 @@ final class SchemaManager {
 
 
 		);
+		return array_merge( $contracts, RecipientWorkflowSchema::contracts() );
 	}
 
 	/**

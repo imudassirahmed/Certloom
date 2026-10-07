@@ -1,6 +1,8 @@
 <?php
 /** Regression tests: gated future-domain storage must not block live plugin activation. */
 namespace {
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
+
 	define( 'ABSPATH', __DIR__ . '/fake-wp/' );
 	define( 'CERTLOOM_DOMAIN_WRITE_PATHS_READY', false );
 	define( 'CERTLOOM_DOMAIN_ADMIN_PREVIEW', false );
@@ -16,14 +18,21 @@ namespace {
 		}
 	}
 	function is_wp_error( $value ) { return $value instanceof WP_Error; }
+	function __( $value, $domain = '' ) { return $value; }
 	function get_option( $key, $default = false ) { return array_key_exists( $key, $GLOBALS['dbg_options'] ) ? $GLOBALS['dbg_options'][ $key ] : $default; }
 	function is_admin() { return true; }
 	function add_action( $hook, $callback, $priority = 10, $accepted_args = 1 ) { return true; }
+	function add_filter( $hook, $callback, $priority = 10, $accepted_args = 1 ) { return true; }
 	function dbg_same( $expected, $actual, $message ) {
 		if ( $expected !== $actual ) {
 			throw new \RuntimeException( $message . ': expected ' . var_export( $expected, true ) . ', got ' . var_export( $actual, true ) );
 		}
 	}
+}
+
+namespace Certloom\Infrastructure\Admin {
+	final class WholeStateRecoveryAdmin { public function register() {} }
+	final class RecoveryConnectionRest { public function register() {} }
 }
 
 namespace Certloom\Infrastructure\Database {
@@ -43,7 +52,9 @@ namespace Certloom\Infrastructure\Job {
 	}
 	final class JobRuntime {
 		public static $register_calls = 0;
+		public static $recovery_register_calls = 0;
 		public function register() { self::$register_calls++; }
+		public function register_recovery() { self::$recovery_register_calls++; }
 		public function email_delivery() { return true; }
 		public function queue() { return true; }
 	}
@@ -65,6 +76,20 @@ namespace Certloom\Infrastructure\Integration {
 }
 
 namespace Certloom\Infrastructure\Restore {
+	final class WholeStateRestoreJournal {
+		const OPTION = 'certloom_whole_restore_journal';
+		public static $error = false;
+		public static function pending() { return self::$error ? new \WP_Error( 'qa_recovery_read_failure' ) : array_key_exists( self::OPTION, $GLOBALS['dbg_options'] ); }
+	}
+	final class WholeStateRestoreWorkspace {
+		public static $recover_calls = 0;
+		public static $finish = false;
+		public function recover() {
+			++self::$recover_calls;
+			if ( self::$finish ) { unset( $GLOBALS['dbg_options'][WholeStateRestoreJournal::OPTION] ); }
+			return array( 'complete' => self::$finish );
+		}
+	}
 	final class DomainRestoreWorkspace {
 		const BUILD_OPTION = 'certloom_domain_restore_build';
 		const JOURNAL_OPTION = 'certloom_domain_restore_journal';
@@ -157,6 +182,23 @@ namespace {
 	$GLOBALS['dbg_options'][ DomainMaintenanceLock::OPTION ] = 'owner|purpose|expiry';
 	Plugin::boot();
 	dbg_same( 4, SchemaManager::$upgrade_calls, 'durable maintenance evidence forces recovery-capable domain boot' );
+	unset( $GLOBALS['dbg_options'][DomainMaintenanceLock::OPTION] );
+	$GLOBALS['dbg_options'][\Certloom\Infrastructure\Restore\WholeStateRestoreJournal::OPTION] = 'local-only-sealed-progress';
+	Plugin::boot();
+	dbg_same( 1, \Certloom\Infrastructure\Restore\WholeStateRestoreWorkspace::$recover_calls, 'whole journal invokes recovery even with ordinary domain features gated' );
+	dbg_same( 4, SchemaManager::$upgrade_calls, 'incomplete whole recovery prevents schema work' );
+	dbg_same( 1, JobRuntime::$recovery_register_calls, 'only the existing recovery dispatcher is registered while the journal remains' );
+	dbg_same( 'certloom_whole_recovery_pending', Plugin::activate()->get_error_code(), 'incomplete whole cleanup prevents activation schema work' );
+	dbg_same( 1, SchemaManager::$activate_calls, 'activation does not alter storage underneath an interrupted whole restore' );
+	\Certloom\Infrastructure\Restore\WholeStateRestoreJournal::$error = true;
+	Plugin::boot();
+	dbg_same( 1, JobRuntime::$recovery_register_calls, 'uncertain journal presence cannot register writable infrastructure' );
+	dbg_same( 'qa_recovery_read_failure', Plugin::activate()->get_error_code(), 'journal SQL failure remains explicit rather than appearing absent' );
+	\Certloom\Infrastructure\Restore\WholeStateRestoreJournal::$error = false;
+	\Certloom\Infrastructure\Restore\WholeStateRestoreWorkspace::$finish = true;
+	Plugin::boot();
+	dbg_same( false, array_key_exists( \Certloom\Infrastructure\Restore\WholeStateRestoreJournal::OPTION, $GLOBALS['dbg_options'] ), 'completed cleanup clears local whole recovery evidence' );
+	dbg_same( 4, SchemaManager::$upgrade_calls, 'a gated site returns to ordinary legacy boot after whole cleanup' );
 
 	echo "PASS  gated future-domain storage no longer blocks the live Certloom activation path\n\n1 test, 0 failures\n";
 }

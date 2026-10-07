@@ -1,5 +1,7 @@
 <?php
 /** ANL-01 verification analytics privacy, aggregation, reporting and lifecycle acceptance. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $runtime = sys_get_temp_dir() . '/certloom-analytics-' . getmypid() . '/';
 @mkdir( $runtime . 'wp-admin/includes', 0777, true );
 file_put_contents( $runtime . 'wp-admin/includes/upgrade.php', '<?php function dbDelta( $sql ){ $GLOBALS["wpdb"]->table_created = true; }' );

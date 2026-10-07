@@ -1,5 +1,7 @@
 <?php
 /** Dynamic regression tests for checked private-table cleanup in the live legacy restore engine. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define( 'ABSPATH', __DIR__ . '/fake-wp/' );
 define( 'MINUTE_IN_SECONDS', 60 );
 define( 'DAY_IN_SECONDS', 86400 );
@@ -16,6 +18,7 @@ if ( ! class_exists( 'WP_Error' ) ) {
 }
 function is_wp_error( $value ) { return $value instanceof WP_Error; }
 function __( $text ) { return $text; }
+class Ecapla_CertVerify_Backup { public static $owned = true; public static function owns_restore_operation() { return self::$owned; } }
 
 class LegacyRestoreTableWpdb {
 	public $prefix = 'wp_';
@@ -97,4 +100,19 @@ $result = Ecapla_CertVerify_Database::rollback_restore_table( 'wp_certverify_rol
 lr_same( true, $result, 'fully clean rollback succeeds' );
 echo "PASS  fully clean legacy rollback remains successful\n";
 
-echo "\n6 tests, 0 failures\n";
+// Public private-table helpers cannot touch the live registry or run unowned.
+lr_reset(array());
+Ecapla_CertVerify_Backup::$owned = false;
+lr_same(true,is_wp_error(Ecapla_CertVerify_Database::create_restore_staging_table('abc123',false)),'unowned staging rejected');
+lr_same(false,Ecapla_CertVerify_Database::drop_restore_table('wp_certverify_stage_abc123'),'unowned drop rejected');
+lr_same(true,is_wp_error(Ecapla_CertVerify_Database::restore_record_to_table(Ecapla_CertVerify_Database::table_name(),array(),0,array())),'live registry cannot be passed as staging');
+lr_same(true,is_wp_error(Ecapla_CertVerify_Database::swap_restore_table('wp_certverify_stage_abc123','abc123')),'unowned swap rejected');
+lr_same(false,Ecapla_CertVerify_Database::rollback_restore_table('wp_certverify_rollback_abc123','abc123'),'unowned rollback rejected');
+Ecapla_CertVerify_Backup::$owned = true;
+lr_same(false,Ecapla_CertVerify_Database::drop_restore_table(Ecapla_CertVerify_Database::table_name()),'live registry drop rejected');
+lr_same(true,is_wp_error(Ecapla_CertVerify_Database::swap_restore_table('wp_certverify_stage_other','abc123')),'mismatched swap rejected');
+lr_same(false,Ecapla_CertVerify_Database::rollback_restore_table('wp_certverify_rollback_other','abc123'),'mismatched rollback rejected');
+lr_same(true,is_wp_error(Ecapla_CertVerify_Database::create_restore_staging_table('../abc123',false)),'invalid suffix rejected');
+lr_same(0,count($GLOBALS['wpdb']->queries),'all rejected calls stop before SQL');
+echo "PASS  unowned helpers and invalid table targets cannot execute SQL\n";
+echo "\n7 tests, 0 failures\n";

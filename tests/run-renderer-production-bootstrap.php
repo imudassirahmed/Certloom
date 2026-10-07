@@ -1,12 +1,15 @@
 <?php
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 require_once __DIR__ . '/renderer-candidate/production-bootstrap-lib.php';
+require_once __DIR__ . '/support/python-process.php';
+require_once __DIR__ . '/support/packaging-tools.php';
 
 use Certloom\Application\Rendering\RendererCandidateManifest;
 
 $checks = 0; $failures = 0;
 function rpb_check( $ok, $message ) { global $checks, $failures; $checks++; if ( ! $ok ) { $failures++; fwrite( STDERR, "FAIL  {$message}\n" ); } else { echo "PASS  {$message}\n"; } }
-function rpb_cmd( array $parts ) { $out=array();$rc=0;exec(implode(' ',array_map('escapeshellarg',$parts)).' 2>&1',$out,$rc);return array($rc,implode("\n",$out)); }
-function rpb_rm( $path ) { if(!file_exists($path)&&!is_link($path))return;if(is_link($path)||is_file($path)){@unlink($path);return;}foreach(array_diff(scandir($path),array('.','..')) as $x){rpb_rm($path.DIRECTORY_SEPARATOR.$x);}@rmdir($path); }
+function rpb_cmd( array $parts ) { return certloom_test_process( $parts ); }
 function rpb_throws( callable $fn ) { try { $fn(); return false; } catch ( Throwable $e ) { return true; } }
 
 $root = dirname( __DIR__ );
@@ -28,21 +31,23 @@ try {
 	$gd_recipe = $root . '/tests/renderer-candidate/recipes/gd-raster.json';
 	$gd_lock = $root . '/tests/renderer-candidate/recipes/gd-runtime.lock.json';
 	$pdf_freeze = $tmp . '/pdf-freeze'; $gd_freeze = $tmp . '/gd-freeze';
-	list($prc,$pout)=rpb_cmd(array('python3',$tool,'--recipe',$pdf_recipe,'--candidate-root',$candidate,'--dependency-lock',$lock_path,'--output',$pdf_freeze));
-	list($grc,$gout)=rpb_cmd(array('python3',$tool,'--recipe',$gd_recipe,'--candidate-root',$root,'--dependency-lock',$gd_lock,'--output',$gd_freeze));
+	list($prc,$pout)=certloom_test_python(array($tool,'--recipe',$pdf_recipe,'--candidate-root',$candidate,'--dependency-lock',$lock_path,'--output',$pdf_freeze));
+	list($grc,$gout)=certloom_test_python(array($tool,'--recipe',$gd_recipe,'--candidate-root',$root,'--dependency-lock',$gd_lock,'--output',$gd_freeze));
 	rpb_check( 0 === $prc && 0 === $grc, 'Bootstrap regression can create exact frozen PDF and GD candidate evidence.' );
+	if ( 0 !== $prc || 0 !== $grc ) { throw new RuntimeException( 'Candidate fixture freezing failed: ' . $pout . $gout ); }
 
 	$setup = certloom_render_plan_acceptance_setup();
 	$font_hash = $setup['font_face_sha256'];
 	$font_hash_600 = (string) $setup['font_manifest']['families']['sans-serif']['600-normal']['faces'][0]['sha256'];
 	$font_source = ''; $font_source_600 = '';
-	foreach ( array('/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf','/usr/share/fonts/dejavu/DejaVuSans.ttf','/usr/local/share/fonts/truetype/dejavu/DejaVuSans.ttf','/usr/local/share/dejavu/DejaVuSans.ttf') as $path ) {
+	foreach ( array(getenv('CERTLOOM_TEST_DEJAVU_SANS'),$root.'/resources/renderer/fonts/'.$font_hash.'.ttf','/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf','/usr/share/fonts/dejavu/DejaVuSans.ttf','/usr/local/share/fonts/truetype/dejavu/DejaVuSans.ttf','/usr/local/share/dejavu/DejaVuSans.ttf') as $path ) {
 		if ( is_file($path) && hash_equals($font_hash,hash_file('sha256',$path)) ) { $font_source=$path; break; }
 	}
-	foreach ( array('/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf','/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf','/usr/local/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf','/usr/local/share/dejavu/DejaVuSans-Bold.ttf') as $path ) {
+	foreach ( array(getenv('CERTLOOM_TEST_DEJAVU_SANS_BOLD'),$root.'/resources/renderer/fonts/'.$font_hash_600.'.ttf','/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf','/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf','/usr/local/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf','/usr/local/share/dejavu/DejaVuSans-Bold.ttf') as $path ) {
 		if ( is_file($path) && hash_equals($font_hash_600,hash_file('sha256',$path)) ) { $font_source_600=$path; break; }
 	}
 	rpb_check( '' !== $font_source && '' !== $font_source_600, 'Bootstrap regression has both exact frozen 400/600 fixture fonts available locally.' );
+	if ( '' === $font_source || '' === $font_source_600 ) { throw new RuntimeException( 'Exact frozen font fixtures are required.' ); }
 	$font_root=$tmp.'/fonts';mkdir($font_root,0700);copy($font_source,$font_root.'/'.$font_hash.'.ttf');copy($font_source_600,$font_root.'/'.$font_hash_600.'.ttf');
 	$temp=$tmp.'/mpdf-temp';mkdir($temp,0700);
 
@@ -57,12 +62,16 @@ try {
 	$pdf_manifest=(new RendererCandidateManifest())->normalize(json_decode(file_get_contents($pdf_freeze.'/candidate.json'),true));
 	rpb_check( hash_equals((new RendererCandidateManifest())->hash($pdf_manifest),$config['formats']['pdf']['renderer']->context()['candidate_manifest_sha256']), 'Bootstrap renderer context binds the exact canonical frozen PDF candidate manifest.' );
 
-	$bad_link=$tmp.'/font-link';symlink($font_root,$bad_link);
-	rpb_check( rpb_throws(function()use($factory,$pdf_freeze,$gd_freeze,$bad_link,$temp){$factory->build(array('pdf_freeze_dir'=>$pdf_freeze,'raster_freeze_dir'=>$gd_freeze,'font_root'=>$bad_link,'mpdf_temp_dir'=>$temp));}), 'Bootstrap rejects a symbolic exact-font root before candidate production.' );
-	unlink($bad_link);
-	$bad_temp=$tmp.'/temp-link';symlink($temp,$bad_temp);
-	rpb_check( rpb_throws(function()use($factory,$pdf_freeze,$gd_freeze,$font_root,$bad_temp){$factory->build(array('pdf_freeze_dir'=>$pdf_freeze,'raster_freeze_dir'=>$gd_freeze,'font_root'=>$font_root,'mpdf_temp_dir'=>$bad_temp));}), 'Bootstrap rejects a symbolic mPDF temp directory.' );
-	unlink($bad_temp);
-} finally { rpb_rm( $tmp ); }
+	$bad_link=$tmp.'/font-link';
+	if ( function_exists( 'symlink' ) && @symlink( $font_root, $bad_link ) ) {
+		rpb_check( rpb_throws(function()use($factory,$pdf_freeze,$gd_freeze,$bad_link,$temp){$factory->build(array('pdf_freeze_dir'=>$pdf_freeze,'raster_freeze_dir'=>$gd_freeze,'font_root'=>$bad_link,'mpdf_temp_dir'=>$temp));}), 'Bootstrap rejects a symbolic exact-font root before candidate production.' );
+		certloom_test_remove_fixture_tree( $bad_link, $tmp );
+	} else { echo "SKIP  Font-root symbolic-link probe requires local symlink permission.\n"; }
+	$bad_temp=$tmp.'/temp-link';
+	if ( function_exists( 'symlink' ) && @symlink( $temp, $bad_temp ) ) {
+		rpb_check( rpb_throws(function()use($factory,$pdf_freeze,$gd_freeze,$font_root,$bad_temp){$factory->build(array('pdf_freeze_dir'=>$pdf_freeze,'raster_freeze_dir'=>$gd_freeze,'font_root'=>$font_root,'mpdf_temp_dir'=>$bad_temp));}), 'Bootstrap rejects a symbolic mPDF temp directory.' );
+		certloom_test_remove_fixture_tree( $bad_temp, $tmp );
+	} else { echo "SKIP  Temp-directory symbolic-link probe requires local symlink permission.\n"; }
+} finally { certloom_test_remove_fixture_tree( $tmp, $tmp ); }
 if ( $failures ) { fwrite( STDERR, "\n{$checks} checks, {$failures} failures\n" ); exit( 1 ); }
 echo "\n{$checks} checks, 0 failures\n";

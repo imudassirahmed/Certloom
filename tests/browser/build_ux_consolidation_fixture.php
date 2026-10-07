@@ -1,5 +1,7 @@
 <?php
 /** Browser fixture for UX-CONS-01 product shell + Backup & Restore. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $state = getenv( 'CERTLOOM_UX_CONS_STATE' );
 if ( ! in_array( $state, array( 'desktop', 'mobile', 'advanced' ), true ) ) { $state = 'desktop'; }
 $css = file_get_contents( dirname( __DIR__, 2 ) . '/assets/css/certloom-tokens.css' ) . "\n" . file_get_contents( dirname( __DIR__, 2 ) . '/admin/assets/admin.css' );

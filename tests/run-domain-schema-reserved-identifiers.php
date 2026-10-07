@@ -1,4 +1,6 @@
 <?php
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $checks = 0;
 function dsri_check( $condition, $message ) { global $checks; $checks++; if ( ! $condition ) { throw new RuntimeException( 'FAIL ' . $message ); } echo "PASS  $message\n"; }
 $schema = file_get_contents( dirname( __DIR__ ) . '/src/Infrastructure/Database/SchemaManager.php' );

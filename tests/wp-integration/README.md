@@ -28,6 +28,76 @@ wp eval-file wp-content/plugins/certloom/tests/wp-integration/run-domain-row-loc
 ```
 
 
+## Designer recovery concurrency probe
+
+`run-designer-autosave-concurrency.php` requires the exact disposable Local site
+and a fresh private SQL snapshot through `CERTLOOM_TEST_WP_ROOT` and
+`CERTLOOM_TEST_DB_BACKUP`. Run it directly with the Local PHP executable and its
+CLI configuration. It starts a separate WordPress/MySQL worker to hold the same
+Designer mutex, checks save/discard/editor-preparation exclusion, and verifies
+session ownership after release. Its template and user-meta writes run inside an
+intentionally rolled-back transaction. Native rows, generation and original
+administrator metadata must match afterward, with no named lock left held.
+
+This probe establishes service-level concurrency behavior. It does not cover
+browser multi-tab interaction or grant normalized-domain or renderer authority.
+
+## Pending-request organization operations on Local
+
+`run-pending-request-admin.php` requires the exact Local site/root/database/port,
+its PHP CLI configuration, and the same verified private snapshot environment
+(`CERTLOOM_TEST_WP_ROOT`, `CERTLOOM_TEST_DB_BACKUP`,
+`CERTLOOM_TEST_DB_BACKUP_SHA256`). Run directly with the Local PHP executable;
+HTTP execution is refused. External transport is suppressed and its own cron is
+disabled. The full fixture intentionally rolls back and compares all 23 business
+stores, users/usermeta/posts, owned configuration and cron.
+
+The probe covers private bounded staff reads, capabilities, strict commands,
+stale revisions, evidence-preserving reassessment, safe cancellation, actual
+canonical interrupted-receipt reconciliation, write/event/CAS failures, paged
+history, anonymized recipients and EXPLAIN of the actual joined status query.
+It does not accept new external adapters, simultaneous canonical issuance,
+production artifacts, or the full browser/assistive-technology matrix.
+
+## Pending configuration probes on Local
+
+`run-pending-configuration-writers.php` exercises real Global, Issuer and Batch
+edits, held qualified requests, bounded canonical workers, unknown qualification,
+immutable snapshots, stale option caches, and failed/zero-row signal writes. It
+deliberately rolls back the full fixture and compares all 23 business stores,
+users/usermeta/posts, Certloom-owned options and cron with the before-state.
+
+`run-pending-configuration-concurrency.php` starts independent PHP/MySQL sessions.
+It observes the second session's real `INNODB_TRX` lock wait, coalesces two
+synthetic Program-scope signals, and rejects stale generation acknowledgement.
+This probe uses an empty intake ceiling and creates no Programs, recipients or
+credentials. It tests the outbox lock/generation contract, rather than concurrent
+canonical issuance or external event qualification. It refuses existing requests
+or pending configuration work. Its exact original queue row is restored using a
+checked transaction and an owned worker receipt.
+
+Both probes require the exact `ecapla.local` Local site/database/port, its PHP
+CLI configuration, a fresh private SQL backup, `CERTLOOM_TEST_WP_ROOT`,
+`CERTLOOM_TEST_DB_BACKUP`, and `CERTLOOM_TEST_DB_BACKUP_SHA256`. Keep backup files
+outside the webroot. The probes suppress external transport and disable cron
+only in their own CLI requests. For deterministic concurrency observation, pause
+heartbeat in the task's browser tab while the probe runs. Other browser traffic
+can still advance cron or legitimately acknowledge the probe's empty ceiling.
+
+On concurrency failure, join its workers before inspecting the retained private
+journal. `inspect <private-directory>` compares scheduling fields. `restore
+<private-directory>` requires the exact committed worker receipt and unchanged
+tracked state. The narrow `restore-preserve-background <private-directory>` mode
+restores only that owned queue row while preserving other options at their current
+values; every business table must still match. It also accepts only the watchdog's
+exact pending-to-acknowledged transition for the same owned generation, zero
+ceiling and no job. A different queue generation or changed business data refuses
+cleanup. No whole-database backup is automatically restored.
+
+These are development probes. They do not emit or replace the canonical release
+acceptance bundle, and do not establish renderer, provider, multisite, scheduler
+matrix, or concurrent issue-once acceptance.
+
 ## Exact-byte evidence boundary
 
 Every real-host gate emits `certloom-wp-integration-gate-evidence` v3 before its assertions, including one machine-readable `EVIDENCE_JSON` line. It binds the transcript to one run ID, the exact Certloom semantic version and production-intended runtime payload, the exact gate/helper source hashes, and the non-sensitive WordPress/PHP/database environment plus a privacy-safe configured database/table-instance SHA-256. Use the canonical runner below rather than manually combining transcripts. A production-byte change or WordPress/PHP/database environment change makes previously stored/admin evidence stale even when the semantic version is unchanged; rerun the full applicable proof/rehearsal sequence after either change.
@@ -50,6 +120,8 @@ Required pass evidence includes:
 The historical `CERTLOOM_DOMAIN_*` readiness constants remain `false` permanently and are not release authority. These gates, plus the dedicated migration/restore/cutover exercises, must pass before DBAUTH can finalize an exact-payload release manifest on the supported database matrix.
 
 ## Canonical normalized-domain acceptance bundle
+
+Recipient workflow probes also run against the explicitly guarded Local test site. `run-recipient-account-links.php` covers exact staff-reviewed links, unlink/deletion holds, account/name policy and immutable history. `run-bulk-recipient-sources.php` exercises actual CSV parsing, durable preflight/commit workers, customer submission/approval, qualified waiting requests, mixed rows, exact repeat enrollment ownership and crash replay. Both require the exact site and a verified private database snapshot; their fixtures use checked rollback, block external transport and verify tracked rows, Certloom configuration and cron preservation. Their success is implementation evidence, separate from release authority.
 
 Do not manually stitch the real-host gate transcripts together. Run all four under one run identity and atomically publish them outside the plugin tree:
 

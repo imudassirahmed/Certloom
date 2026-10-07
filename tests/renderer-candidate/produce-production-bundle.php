@@ -1,5 +1,7 @@
 <?php
 /** Produce a two-run eleven-fixture PDF-04 production-candidate bundle. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 require_once __DIR__ . '/producer-lib.php';
 
 if ( 3 !== $argc ) {

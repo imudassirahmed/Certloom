@@ -9,6 +9,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 final class EmailAutomationRuleRepository {
 	const OPTION    = 'certloom_email_automation_rules_v1';
 	const MAX_RULES = 100;
+	public function validate_recovery_value( $value ) {
+		return \Certloom\Application\Restore\WholeStateOptionRows::validate_list( $value, self::MAX_RULES, function ( $row ) { return $this->normalize( $row, false ); }, array( 'id' ) );
+	}
 
 	/** @return array<int,array<string,mixed>> */
 	public function all() {
@@ -88,10 +91,8 @@ final class EmailAutomationRuleRepository {
 			}
 			$all[] = $normalized;
 		}
-		$saved = update_option( self::OPTION, array_values( $all ), false );
-		return $saved || array_values( $all ) === get_option( self::OPTION, array() )
-			? (string) $normalized['id']
-			: new \WP_Error( 'certloom_email_rule_save_failed', __( 'Certloom could not save the email automation.', 'certloom' ) );
+		$saved = ( new \Certloom\Infrastructure\Data\DurableOptionMutation() )->set( self::OPTION, array_values( $all ) );
+		return is_wp_error( $saved ) ? $saved : (string) $normalized['id'];
 	}
 
 	/** Change only the delivery state of an existing rule. @return string|\WP_Error */
@@ -117,10 +118,7 @@ final class EmailAutomationRuleRepository {
 				}
 			)
 		);
-		$saved = update_option( self::OPTION, $all, false );
-		return $saved || $all === get_option( self::OPTION, array() )
-			? true
-			: new \WP_Error( 'certloom_email_rule_delete_failed', __( 'Certloom could not remove the email automation.', 'certloom' ) );
+		return ( new \Certloom\Infrastructure\Data\DurableOptionMutation() )->set( self::OPTION, $all );
 	}
 
 	/** @return array<string,mixed>|\WP_Error */

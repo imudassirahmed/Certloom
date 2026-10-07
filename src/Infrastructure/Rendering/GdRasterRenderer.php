@@ -59,7 +59,7 @@ final class GdRasterRenderer implements RendererInterface {
 		return array(
 			'candidate_manifest_sha256' => $this->candidate_hash,
 			'font_manifest' => $this->font_manifest,
-			'adapter' => 'certloom-gd-render-plan-v1',
+			'adapter' => 'certloom-gd-render-plan-v2',
 			'input_schema' => 'certloom-render-plan:1',
 			'raster_dpi' => self::DPI,
 			'jpeg' => array( 'quality' => 95, 'progressive' => false ),
@@ -218,9 +218,12 @@ final class GdRasterRenderer implements RendererInterface {
 			if ( 'center' === (string) ( $rich['align'] ?? 'center' ) ) { $cursor = $x + ( $w - $line_w ) / 2.0; }
 			elseif ( 'right' === (string) ( $rich['align'] ?? 'center' ) ) { $cursor = $x + $w - $line_w; }
 			$fragments = 'rtl' === $direction ? array_reverse( $line['fragments'] ) : $line['fragments'];
+			$ascent = 0.0; $descent = 0.0;
+			// Styled fragments share one typographic baseline for the entire line.
+			foreach ( $fragments as $fragment ) { $ascent = max( $ascent, -(float) $fragment['metrics']['min_y'] ); $descent = max( $descent, (float) $fragment['metrics']['max_y'] ); }
+			$baseline = $line_top + $ascent + max( 0.0, ( (float) $line['height'] - $ascent - $descent ) / 2.0 );
 			foreach ( $fragments as $fragment ) {
 				$size = (float) $fragment['size_pt']; $visual = (string) $fragment['visual']; $metrics = $fragment['metrics'];
-				$baseline = $line_top - (float) $metrics['min_y'] + max( 0.0, ( (float) $line['height'] - (float) $metrics['height'] ) / 2.0 );
 				$color = $this->driver->allocate_color( $canvas, (array) $fragment['color'], (float) $op['opacity'] );
 				$this->draw_visual_text( $canvas, $size, $cursor - (float) $metrics['min_x'], $baseline, $color, (string) $fragment['path'], $visual, (float) ( $fragment['spacing_pt'] ?? 0.0 ) );
 				$cursor += (float) $fragment['width'];
@@ -242,7 +245,7 @@ final class GdRasterRenderer implements RendererInterface {
 			foreach ( $parts as $part ) {
 				if ( 1 === preg_match( '/^\\R$/u', $part ) ) { $flush(); continue; }
 				$size = max( 1.0, (float) ( $run['font']['size_pt'] ?? 12.0 ) * $scale );
-				$visual = $this->visual_text( $part, $direction ); $spacing_pt = (float) ( $run['spacing_pt'] ?? 0.0 ) * $scale; $metrics = $this->text_metrics( $visual, (string) $run['path'], $size, $spacing_pt ); $fragment_width = (float) $metrics['width'];
+				$visual = $this->visual_text( $part, $direction ); $spacing_pt = (float) ( $run['spacing_pt'] ?? 0.0 ) * $scale; $metrics = $this->text_metrics( $visual, (string) $run['path'], $size, $spacing_pt ); $fragment_width = abs( $spacing_pt ) > 0.0001 ? (float) $metrics['width'] : ExactFontMetrics::advance( $size, (string) $run['path'], $visual );
 				$is_space = 1 === preg_match( '/^[ \\t]+$/u', $part );
 				if ( 'wrap' === $overflow && ! empty( $current ) && ! $is_space && $current_width + $fragment_width > $width_px + 0.01 ) { $flush(); }
 				if ( 'wrap' === $overflow && empty( $current ) && $is_space ) { continue; }
@@ -317,7 +320,7 @@ final class GdRasterRenderer implements RendererInterface {
 		$spacing_px = $spacing_pt * self::DPI / 72.0; $width = 0.0; $min_y = 0.0; $max_y = 0.0; $first = true;
 		foreach ( $clusters as $cluster ) {
 			$m = $this->bbox_metrics( $this->driver->text_box( $size, 0.0, $font_path, $cluster ) );
-			$width += (float) $m['width']; if ( ! $first ) { $width += $spacing_px; }
+			$width += ExactFontMetrics::advance( $size, $font_path, $cluster ); if ( ! $first ) { $width += $spacing_px; }
 			$min_y = $first ? (float) $m['min_y'] : min( $min_y, (float) $m['min_y'] ); $max_y = $first ? (float) $m['max_y'] : max( $max_y, (float) $m['max_y'] ); $first = false;
 		}
 		return array( 'min_x'=>0.0,'max_x'=>$width,'min_y'=>$min_y,'max_y'=>$max_y,'width'=>$width,'height'=>$max_y-$min_y );
@@ -329,7 +332,7 @@ final class GdRasterRenderer implements RendererInterface {
 		foreach ( $this->grapheme_clusters( $visual ) as $cluster ) {
 			$m = $this->bbox_metrics( $this->driver->text_box( $size, 0.0, $font_path, $cluster ) );
 			$this->driver->text( $canvas, $size, 0.0, $cursor - (float) $m['min_x'], $baseline, $color, $font_path, $cluster );
-			$cursor += (float) $m['width'] + $spacing_px;
+			$cursor += ExactFontMetrics::advance( $size, $font_path, $cluster ) + $spacing_px;
 		}
 	}
 	/** @return string[] */

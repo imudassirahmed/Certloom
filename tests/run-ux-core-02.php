@@ -5,6 +5,8 @@
  * This contract protects Recipient/issuance ownership, exact WordPress-account
  * identity, contextual quick-create continuity and the Programs sub-navigation.
  */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $root = dirname( __DIR__ );
 $pass = 0; $fail = 0;
 function ux2( $ok, $label ) { global $pass, $fail; if ( $ok ) { $pass++; echo "PASS  {$label}\n"; } else { $fail++; echo "FAIL  {$label}\n"; } }
@@ -32,7 +34,7 @@ foreach ( array( 'display_name', 'email', 'first_name', 'middle_name', 'last_nam
 	ux2( false !== strpos( $manual, 'new_recipient.' . $field ), 'New Recipient panel carries canonical profile field ' . $field );
 }
 ux2( false !== strpos( $manual, "render_async_picker( 'wp_user'" ) && false !== strpos( $issue_js, 'state.issuance.new_recipient.wp_user_id = id' ), 'New Recipient panel can link an exact WordPress account without exposing a raw numeric ID' );
-ux2( false !== strpos( $manual, 'data-step-key="details"' ) && false === strpos( $manual, 'data-step-key="data"' ) && false !== strpos( $manual, 'credential-specific facts remain on each issued credential' ), 'Credential-specific fields stay separate from Recipient profile creation while living in the combined Details step' );
+ux2( false !== strpos( $manual, 'data-step-key="details"' ) && false === strpos( $manual, 'data-step-key="data"' ) && false !== strpos( $manual, 'data-new-recipient' ) && false !== strpos( $manual, 'data-scoped-fields' ), 'Credential-specific fields stay separate from Recipient profile creation while living in the combined Details step' );
 ux2( false !== strpos( $issue_js, "if ('recipient' === source)" ) && false !== strpos( $issue_js, 'From Recipient profile' ), 'Program/Batch field contracts keep Recipient-owned facts read-only in credential data' );
 ux2( false !== strpos( $issue_js, "'grade' === key" ) && false !== strpos( $issue_js, 'data-scoped-input="grade"' ), 'Required Grade remains a credential field for existing or new Recipients' );
 ux2( false !== strpos( $service, "if ( 'recipient' === \$source )" ) && false !== strpos( $service, "'grade' === \$key" ) && false !== strpos( $service, '$submitted[ $key ]' ), 'Issuance resolves Recipient, Grade and credential-custom values from their separate authorities' );

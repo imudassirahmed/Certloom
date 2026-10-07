@@ -1,5 +1,7 @@
 <?php
 /** Current Issue Credential six-step REST compatibility contract. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $root = dirname( __DIR__ );
 $manual = file_get_contents( $root . '/src/Infrastructure/Admin/ManualIssuanceAdmin.php' );
 $rest = file_get_contents( $root . '/src/Infrastructure/Admin/IssueCredentialRest.php' );

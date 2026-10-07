@@ -1,5 +1,7 @@
 <?php
 /** Regression tests for checked lock cleanup on the live legacy 1.5 authority paths. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define( 'ABSPATH', __DIR__ . '/fake-wp/' );
 define( 'MINUTE_IN_SECONDS', 60 );
 define( 'HOUR_IN_SECONDS', 3600 );
@@ -34,11 +36,27 @@ function get_transient( $k ) { return $GLOBALS['legacy_lock_transients'][ $k ] ?
 function wp_cache_delete() { return true; }
 function wp_generate_password( $len = 12 ) { return str_repeat( 'g', $len ); }
 function maybe_serialize( $v ) { return serialize( $v ); }
+require __DIR__ . '/support/option-database.php';
+require dirname( __DIR__ ) . '/src/Infrastructure/Data/DatabaseOptions.php';
+require_once __DIR__ . '/bootstrap-autoload.php';
 
 class LegacyLockWpdb {
 	public $options = 'wp_options';
 	public $last_error = '';
 	public function prepare( $sql, ...$args ) { return array( 'sql' => $sql, 'args' => $args ); }
+	public function get_var( $prepared ) {
+		$this->last_error = '';
+		$sql = is_array( $prepared ) ? $prepared['sql'] : $prepared;
+		if ( strpos( $sql, 'SELECT GET_LOCK' ) === 0 || strpos( $sql, 'SELECT RELEASE_LOCK' ) === 0 ) { return '1'; }
+		if ( strpos( $sql, 'SELECT option_name' ) === 0 ) { return null; }
+		$key = $prepared['args'][1] ?? '';
+		$value = $GLOBALS['legacy_lock_options'][ $key ] ?? null;
+		return is_array( $value ) ? serialize( $value ) : $value;
+	}
+	public function get_results( $prepared, $format ) {
+		$this->last_error = '';
+		return certloom_test_option_rows( array( 'query' => $prepared['sql'], 'args' => $prepared['args'] ), $GLOBALS['legacy_lock_options'] );
+	}
 	public function query( $prepared ) {
 		$args = is_array( $prepared ) ? $prepared['args'] : array();
 		if ( false === stripos( (string) ( $prepared['sql'] ?? '' ), 'DELETE' ) ) { return 0; }
@@ -71,7 +89,7 @@ echo "PASS  CSV formula neutralization fails safe on malformed UTF-8\n";
 
 // Legacy schema migration lock.
 $migration = new ReflectionMethod( Ecapla_CertVerify_Database::class, 'release_migration_lock' );
-$migration->setAccessible( true );
+if ( PHP_VERSION_ID < 80100 ) { $migration->setAccessible( true ); }
 $token = 'schema-owner';
 $GLOBALS['legacy_lock_options'][ Ecapla_CertVerify_Database::MIGRATION_LOCK_OPTION ] = $token . '|' . time();
 ll_same( true, $migration->invoke( null, $token ), 'owned migration lock releases' );
@@ -84,9 +102,9 @@ echo "PASS  live legacy schema-migration lock cleanup is owner-checked and expli
 
 // Resumable CSV process lock.
 $import_key_method = new ReflectionMethod( Ecapla_CertVerify_Import::class, 'process_lock_key' );
-$import_key_method->setAccessible( true );
+if ( PHP_VERSION_ID < 80100 ) { $import_key_method->setAccessible( true ); }
 $import_release = new ReflectionMethod( Ecapla_CertVerify_Import::class, 'release_process_lock' );
-$import_release->setAccessible( true );
+if ( PHP_VERSION_ID < 80100 ) { $import_release->setAccessible( true ); }
 $import_token = 'import-session';
 $import_owner = 'import-owner';
 $import_key = $import_key_method->invoke( null, $import_token );
@@ -101,9 +119,9 @@ echo "PASS  live resumable-import lock cleanup cannot silently fail\n";
 
 // Short per-request restore lock.
 $restore_name = new ReflectionMethod( Ecapla_CertVerify_Backup::class, 'restore_lock_name' );
-$restore_name->setAccessible( true );
+if ( PHP_VERSION_ID < 80100 ) { $restore_name->setAccessible( true ); }
 $restore_release = new ReflectionMethod( Ecapla_CertVerify_Backup::class, 'release_restore_lock' );
-$restore_release->setAccessible( true );
+if ( PHP_VERSION_ID < 80100 ) { $restore_release->setAccessible( true ); }
 $restore_token = 'restore-session';
 $restore_owner = 'restore-owner|' . time();
 $restore_key = $restore_name->invoke( null, $restore_token );
@@ -150,7 +168,7 @@ echo "PASS  committed live restore cleanup remains durably replayable\n";
 // Abandoning an uncommitted restore must surface maintenance-release failure
 // instead of returning only the original validation/storage error.
 $abandon = new ReflectionMethod( Ecapla_CertVerify_Backup::class, 'abandon_restore_process' );
-$abandon->setAccessible( true );
+if ( PHP_VERSION_ID < 80100 ) { $abandon->setAccessible( true ); }
 $abandon_token = 'abandon-session';
 $abandon_hash = substr( hash( 'sha256', $abandon_token ), 0, 40 );
 $GLOBALS['legacy_lock_options'][ Ecapla_CertVerify_Backup::MAINTENANCE_LOCK_OPTION ] = array(
@@ -169,7 +187,7 @@ echo "PASS  uncommitted restore abandon cannot hide cleanup uncertainty\n";
 // Expired restore-build cleanup must not forget its tracking record when the
 // owner-matched maintenance lock cannot be released yet.
 $cleanup_stale = new ReflectionMethod( Ecapla_CertVerify_Backup::class, 'cleanup_stale_restore_builds' );
-$cleanup_stale->setAccessible( true );
+if ( PHP_VERSION_ID < 80100 ) { $cleanup_stale->setAccessible( true ); }
 $stale_hash = str_repeat( 'b', 40 );
 $stale_key = substr( $stale_hash, 0, 32 );
 $GLOBALS['legacy_lock_options']['certverify_restore_builds'] = array(

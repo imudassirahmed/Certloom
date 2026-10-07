@@ -1,5 +1,7 @@
 <?php
 /** Regression guard: live legacy mutations must reserve their source-generation boundary before mutating durable state. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $root=dirname(__DIR__);
 $db=file_get_contents($root.'/includes/class-ecapla-certverify-database.php');
 $backup=file_get_contents($root.'/includes/class-ecapla-certverify-backup.php');

@@ -1,4 +1,5 @@
 <?php
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 /** TPLUX-02 curated premium Template breadth contract. */
 define( 'ABSPATH', __DIR__ . '/' );
 if ( ! class_exists( 'WP_Error' ) ) { class WP_Error { private $c,$m; public function __construct($c='',$m=''){ $this->c=$c;$this->m=$m; } public function get_error_code(){return $this->c;} public function get_error_message(){return $this->m;} } }
@@ -42,11 +43,11 @@ c76(is_file($manifest_path),'curated visual reference manifest exists');
 $manifest=json_decode(file_get_contents($manifest_path),true); c76(is_array($manifest),'curated visual reference manifest JSON valid');
 c76('certloom-curated-template-reference'===($manifest['schema']??''),'curated visual reference schema exact');
 c76(18===count($manifest['presets']??array()),'curated visual reference covers all 18 concepts');
-foreach($all as $d){$m=$manifest['presets'][$d['preset_key']]??null;c76(is_array($m),'curated visual ref exists '.$d['preset_key']);c76(hash_equals($d['layout_sha256'],(string)($m['layout_sha256']??'')),'curated visual ref bound to canonical layout '.$d['preset_key']);$dir=__DIR__.'/fixtures/templates/curated-reference/'.$d['preset_key'];$png=$dir.'/reference.png';$svg=$dir.'/reference.svg';c76(is_file($png)&&is_file($svg),'curated reference files exist '.$d['preset_key']);c76(hash_equals((string)$m['png_sha256'],hash_file('sha256',$png)),'curated PNG matches manifest '.$d['preset_key']);c76(hash_equals((string)$m['svg_sha256'],hash_file('sha256',$svg)),'curated SVG matches manifest '.$d['preset_key']);}
+foreach($all as $d){$m=$manifest['presets'][$d['preset_key']]??null;c76(is_array($m),'curated visual ref exists '.$d['preset_key']);c76(hash_equals($catalog->get($d['preset_key'],(int)$manifest['catalog_version'])['layout_sha256'],(string)($m['layout_sha256']??'')),'curated visual ref bound to canonical layout '.$d['preset_key']);$dir=__DIR__.'/fixtures/templates/curated-reference/'.$d['preset_key'];$png=$dir.'/reference.png';$svg=$dir.'/reference.svg';c76(is_file($png)&&is_file($svg),'curated reference files exist '.$d['preset_key']);c76(hash_equals((string)$m['png_sha256'],hash_file('sha256',$png)),'curated PNG matches manifest '.$d['preset_key']);c76(hash_equals((string)$m['svg_sha256'],hash_file('sha256',$svg)),'curated SVG matches manifest '.$d['preset_key']);}
 c76(is_file(__DIR__.'/fixtures/templates/curated-reference/contact-sheet.png'),'curated contact sheet review artifact exists');
 
 $root=dirname(__DIR__);$service=file_get_contents($root.'/src/Application/Templates/FactoryPresetService.php');$admin=file_get_contents($root.'/src/Infrastructure/Admin/TemplateAdmin.php');
-c76(false!==strpos($service,'array_merge( $this->catalog->all(), $this->curated_catalog->all() )'),'factory synchronization includes legacy plus curated catalogs');
+c76(false!==strpos($service,'array_merge( $this->catalog->all(), $this->curated_catalog->all(), $this->profile_catalog->all() )'),'factory synchronization retains legacy and curated catalogs alongside additive profile layouts');
 c76(false!==strpos($service,'definition_for_key'),'factory reset resolves both historical and curated stable identities');
 c76(false!==strpos($service,'starter_definitions') && false!==strpos($service,'array_slice( $this->curated_catalog->all(), 0, $limit )'),'starter setup set is the first ten stable premium curated designs');
 c76(false!==strpos($service,'ensure_starter_publications') && false===strpos($service,'RendererAuthorityGate') && false!==strpos($service,"'starter_publication_ready'"),'starter designs publish for first-use selection independently of production artifact authority');

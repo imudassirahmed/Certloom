@@ -1,5 +1,8 @@
 <?php
 /** INT-02 Tutor LMS first-party adapter contract. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
+require_once __DIR__ . '/bootstrap-option-command-double.php';
 define( 'ABSPATH', __DIR__ . '/fake-wp/' );
 define( 'TUTOR_VERSION', '3.7.0' );
 define( 'CERTLOOM_DOMAIN_WRITE_PATHS_READY', false );
@@ -110,6 +113,7 @@ $adapterSrc=file_get_contents($root.'/src/Infrastructure/Integration/TutorLmsAda
 $bridgeSrc=file_get_contents($root.'/src/Infrastructure/Integration/TutorLmsBridge.php');
 $mappingSrc=file_get_contents($root.'/src/Infrastructure/Integration/TutorLmsMappingStore.php');
 $adminSrc=file_get_contents($root.'/src/Infrastructure/Admin/TutorLmsIntegrationAdmin.php');
+$mappingCommandSrc=file_get_contents($root.'/src/Infrastructure/Integration/TutorCompletionMappingCommand.php');
 $coordSrc=file_get_contents($root.'/src/Application/Integration/IntegrationIssuanceCoordinator.php');
 $registrySrc=file_get_contents($root.'/src/Application/Integration/IntegrationAdapterRegistry.php');
 $plugin=file_get_contents($root.'/certloom.php');
@@ -119,7 +123,7 @@ tcheck(false!==strpos($bridgeSrc,"const HOOK = 'tutor_course_complete_after'")&&
 tcheck(false===strpos($adapterSrc,'Ecapla_CertVerify_Database')&&false===strpos($bridgeSrc,'Ecapla_CertVerify_Database'),'Tutor adapter never writes legacy credential tables directly');
 tcheck(false===stripos($adapterSrc,'user_email')&&false===stripos($bridgeSrc,'user_email')&&false===stripos($mappingSrc,'email'),'Tutor path contains no email-based recipient inference');
 tcheck(false!==strpos($adminSrc,'CAP_MANAGE_INTEGRATIONS')&&false!==strpos($adminSrc,'check_admin_referer'),'Tutor mapping mutations require dedicated capability and nonce');
-tcheck(false!==strpos($adminSrc,'DomainFeatureGate::admin_preview_ready()')&&false!==strpos($adminSrc,'IntegrationMappingTargetGuard'),'Tutor mappings require gated Program/Batch preview and shared hierarchy compatibility validation');
+tcheck(false!==strpos($adminSrc,'TutorCompletionMappingCommand')&&false!==strpos($mappingCommandSrc,'DomainFeatureGate::admin_preview_ready()')&&false!==strpos($mappingCommandSrc,'IntegrationMappingTargetGuard'),'Tutor mappings require gated Program/Batch preview and shared hierarchy compatibility validation');
 tcheck(false!==strpos($adminSrc,"add_query_arg( 'certloom_error', \$result->get_error_message(), \$url )")&&false===strpos($adminSrc,'rawurlencode( $result->get_error_message() )'),'Tutor admin redirect lets WordPress encode errors once rather than double-encoding');
 tcheck(false!==strpos($view,"'mapping_deleted'")&&false!==strpos($view,"'learndash_mapping_deleted'")&&false!==strpos($view,"'Course mapping removed.'")&&false!==strpos($view,"'Course mapping saved.'"),'shared LMS mapping saved/deleted notices remain distinct and accurate');
 tcheck(false!==strpos($coordSrc,'certificate_threshold')&&false!==strpos($coordSrc,'certloom_integration_mapping_threshold_mismatch'),'generic coordinator binds Tutor mapping threshold to normalized event threshold');

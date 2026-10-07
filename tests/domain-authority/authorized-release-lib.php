@@ -1,5 +1,7 @@
 <?php
 /** Source-only validator/exporter for packaging reviewed normalized-domain authority. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 require_once dirname( __DIR__ ) . '/bootstrap-autoload.php';
 
 use Certloom\Application\Migration\DomainAcceptanceImporter;

@@ -3,7 +3,9 @@ namespace Certloom\Infrastructure\Repository;
 
 use Certloom\Application\Data\SafeJson;
 use Certloom\Infrastructure\Data\DomainGeneration;
+use Certloom\Infrastructure\Database\Transaction;
 use Certloom\Infrastructure\Database\SchemaManager;
+use Certloom\Infrastructure\Recipient\PendingConfigurationQueue;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -16,70 +18,75 @@ final class SignerRepository {
 
 	/** @param array<string,mixed> $data @return int|\WP_Error */
 	public function create( array $data ) {
-		$row = $this->normalize_profile( $data );
-		if ( is_wp_error( $row ) ) {
-			return $row;
-		}
-
-		$now               = current_time( 'mysql', true );
-		$row['created_at'] = $now;
-		$row['updated_at'] = $now;
-
-		$generation = ( new DomainGeneration() )->mark_before_mutation();
-		if ( is_wp_error( $generation ) ) {
-			return $generation;
-		}
-
-		global $wpdb;
-		$wpdb->last_error = '';
-		$result            = $wpdb->insert( SchemaManager::table( 'signers' ), $row );
-		if ( false === $result || '' !== (string) $wpdb->last_error ) {
-			if ( false !== stripos( (string) $wpdb->last_error, 'duplicate' ) ) {
-				return new \WP_Error( 'certloom_signer_slug_duplicate', __( 'That signer key is already in use.', 'certloom' ) );
+		return ( new Transaction() )->run( function () use ( $data ) {
+			$row = $this->normalize_profile( $data );
+			if ( is_wp_error( $row ) ) {
+				return $row;
 			}
-			return new \WP_Error( 'certloom_signer_create_failed', __( 'Certloom could not create the signer profile.', 'certloom' ) );
-		}
 
-		return (int) $wpdb->insert_id;
+			$now               = current_time( 'mysql', true );
+			$row['created_at'] = $now;
+			$row['updated_at'] = $now;
+
+			$generation = ( new DomainGeneration() )->mark_before_mutation();
+			if ( is_wp_error( $generation ) ) {
+				return $generation;
+			}
+
+			global $wpdb;
+			$wpdb->last_error = '';
+			$result            = $wpdb->insert( SchemaManager::table( 'signers' ), $row );
+			if ( false === $result || '' !== (string) $wpdb->last_error ) {
+				if ( false !== stripos( (string) $wpdb->last_error, 'duplicate' ) ) {
+					return new \WP_Error( 'certloom_signer_slug_duplicate', __( 'That signer key is already in use.', 'certloom' ) );
+				}
+				return new \WP_Error( 'certloom_signer_create_failed', __( 'Certloom could not create the signer profile.', 'certloom' ) );
+			}
+
+			return (int) $wpdb->insert_id;
+		} );
 	}
 
 	/** @param int $id @param array<string,mixed> $data @return true|\WP_Error */
 	public function update( $id, array $data ) {
-		$id = absint( $id );
-		if ( ! $id ) {
-			return new \WP_Error( 'certloom_signer_id_required', __( 'A valid signer is required.', 'certloom' ) );
-		}
-
-		$existing = $this->find( $id );
-		if ( is_wp_error( $existing ) ) {
-			return $existing;
-		}
-		if ( ! is_array( $existing ) ) {
-			return new \WP_Error( 'certloom_signer_missing', __( 'The signer no longer exists.', 'certloom' ) );
-		}
-
-		$row = $this->normalize_profile( array_merge( $existing, $data ) );
-		if ( is_wp_error( $row ) ) {
-			return $row;
-		}
-		$row['updated_at'] = current_time( 'mysql', true );
-
-		$generation = ( new DomainGeneration() )->mark_before_mutation();
-		if ( is_wp_error( $generation ) ) {
-			return $generation;
-		}
-
-		global $wpdb;
-		$wpdb->last_error = '';
-		$result            = $wpdb->update( SchemaManager::table( 'signers' ), $row, array( 'id' => $id ) );
-		if ( false === $result || '' !== (string) $wpdb->last_error ) {
-			if ( false !== stripos( (string) $wpdb->last_error, 'duplicate' ) ) {
-				return new \WP_Error( 'certloom_signer_slug_duplicate', __( 'That signer key is already in use.', 'certloom' ) );
+		return $this->configuration_command( function ( &$changed ) use ( $id, $data ) {
+			$id = absint( $id );
+			if ( ! $id ) {
+				return new \WP_Error( 'certloom_signer_id_required', __( 'A valid signer is required.', 'certloom' ) );
 			}
-			return new \WP_Error( 'certloom_signer_update_failed', __( 'Certloom could not update the signer profile.', 'certloom' ) );
-		}
 
-		return true;
+			$existing = $this->find( $id );
+			if ( is_wp_error( $existing ) ) {
+				return $existing;
+			}
+			if ( ! is_array( $existing ) ) {
+				return new \WP_Error( 'certloom_signer_missing', __( 'The signer no longer exists.', 'certloom' ) );
+			}
+
+			$row = $this->normalize_profile( array_merge( $existing, $data ) );
+			if ( is_wp_error( $row ) ) {
+				return $row;
+			}
+			if ( $row === $this->normalize_profile( $existing ) ) { return true; }
+			$row['updated_at'] = current_time( 'mysql', true );
+
+			$generation = ( new DomainGeneration() )->mark_before_mutation();
+			if ( is_wp_error( $generation ) ) {
+				return $generation;
+			}
+
+			global $wpdb;
+			$wpdb->last_error = '';
+			$result            = $wpdb->update( SchemaManager::table( 'signers' ), $row, array( 'id' => $id ) );
+			if ( false === $result || '' !== (string) $wpdb->last_error ) {
+				if ( false !== stripos( (string) $wpdb->last_error, 'duplicate' ) ) {
+					return new \WP_Error( 'certloom_signer_slug_duplicate', __( 'That signer key is already in use.', 'certloom' ) );
+				}
+				return new \WP_Error( 'certloom_signer_update_failed', __( 'Certloom could not update the signer profile.', 'certloom' ) );
+			}
+
+			return $this->configuration_changed( $result, $changed );
+		} );
 	}
 
 	/** @return array<string,mixed>|null|\WP_Error */
@@ -184,78 +191,82 @@ final class SignerRepository {
 
 	/** @return int|\WP_Error */
 	public function add_assignment( $signer_id, $scope_type, $scope_id, $role_type = 'signer', $priority = 100 ) {
-		$signer_id  = absint( $signer_id );
-		$scope_type = sanitize_key( (string) $scope_type );
-		$role_type  = sanitize_key( (string) $role_type );
-		$scope_id   = absint( $scope_id );
-		$priority   = min( 1000, absint( $priority ) );
-		if ( ! $signer_id ) {
-			return new \WP_Error( 'certloom_signer_assignment_signer_missing', __( 'The signer profile does not exist.', 'certloom' ) );
-		}
-
-		$signer = $this->find( $signer_id );
-		if ( is_wp_error( $signer ) ) {
-			return $signer;
-		}
-		if ( ! is_array( $signer ) ) {
-			return new \WP_Error( 'certloom_signer_assignment_signer_missing', __( 'The signer profile does not exist.', 'certloom' ) );
-		}
-		if ( ! in_array( $scope_type, self::SCOPES, true ) || ! in_array( $role_type, self::ROLES, true ) ) {
-			return new \WP_Error( 'certloom_signer_assignment_invalid', __( 'Choose a valid signer scope and role.', 'certloom' ) );
-		}
-
-		if ( 'global' === $scope_type ) {
-			$scope_id = 0;
-		} else {
-			if ( ! $scope_id ) {
-				return new \WP_Error( 'certloom_signer_assignment_scope_missing', __( 'The selected signer scope no longer exists.', 'certloom' ) );
+		return $this->configuration_command( function ( &$changed ) use ( $signer_id, $scope_type, $scope_id, $role_type, $priority ) {
+			$signer_id  = absint( $signer_id );
+			$scope_type = sanitize_key( (string) $scope_type );
+			$role_type  = sanitize_key( (string) $role_type );
+			$scope_id   = absint( $scope_id );
+			$priority   = min( 1000, absint( $priority ) );
+			if ( ! $signer_id ) {
+				return new \WP_Error( 'certloom_signer_assignment_signer_missing', __( 'The signer profile does not exist.', 'certloom' ) );
 			}
-			$scope_exists = $this->scope_exists( $scope_type, $scope_id );
-			if ( is_wp_error( $scope_exists ) ) {
-				return $scope_exists;
+
+			$signer = $this->find( $signer_id );
+			if ( is_wp_error( $signer ) ) {
+				return $signer;
 			}
-			if ( ! $scope_exists ) {
-				return new \WP_Error( 'certloom_signer_assignment_scope_missing', __( 'The selected signer scope no longer exists.', 'certloom' ) );
+			if ( ! is_array( $signer ) ) {
+				return new \WP_Error( 'certloom_signer_assignment_signer_missing', __( 'The signer profile does not exist.', 'certloom' ) );
 			}
-		}
+			if ( ! in_array( $scope_type, self::SCOPES, true ) || ! in_array( $role_type, self::ROLES, true ) ) {
+				return new \WP_Error( 'certloom_signer_assignment_invalid', __( 'Choose a valid signer scope and role.', 'certloom' ) );
+			}
 
-		$duplicate = $this->assignment_exists( $signer_id, $scope_type, $scope_id, $role_type );
-		if ( is_wp_error( $duplicate ) ) {
-			return $duplicate;
-		}
-		if ( $duplicate ) {
-			return new \WP_Error( 'certloom_signer_assignment_duplicate', __( 'That signer already has the same scope and role assignment.', 'certloom' ) );
-		}
+			if ( 'global' === $scope_type ) {
+				$scope_id = 0;
+			} else {
+				if ( ! $scope_id ) {
+					return new \WP_Error( 'certloom_signer_assignment_scope_missing', __( 'The selected signer scope no longer exists.', 'certloom' ) );
+				}
+				$scope_exists = $this->scope_exists( $scope_type, $scope_id );
+				if ( is_wp_error( $scope_exists ) ) {
+					return $scope_exists;
+				}
+				if ( ! $scope_exists ) {
+					return new \WP_Error( 'certloom_signer_assignment_scope_missing', __( 'The selected signer scope no longer exists.', 'certloom' ) );
+				}
+			}
 
-		$now        = current_time( 'mysql', true );
-		$generation = ( new DomainGeneration() )->mark_before_mutation();
-		if ( is_wp_error( $generation ) ) {
-			return $generation;
-		}
-
-		global $wpdb;
-		$wpdb->last_error = '';
-		$result = $wpdb->insert(
-			SchemaManager::table( 'signer_assignments' ),
-			array(
-				'signer_id'  => $signer_id,
-				'scope_type' => $scope_type,
-				'scope_id'   => $scope_id,
-				'role_type'  => $role_type,
-				'priority'   => $priority,
-				'active'     => 1,
-				'created_at' => $now,
-				'updated_at' => $now,
-			)
-		);
-		if ( false === $result || '' !== (string) $wpdb->last_error ) {
-			if ( false !== stripos( (string) $wpdb->last_error, 'duplicate' ) ) {
+			$duplicate = $this->assignment_exists( $signer_id, $scope_type, $scope_id, $role_type );
+			if ( is_wp_error( $duplicate ) ) {
+				return $duplicate;
+			}
+			if ( $duplicate ) {
 				return new \WP_Error( 'certloom_signer_assignment_duplicate', __( 'That signer already has the same scope and role assignment.', 'certloom' ) );
 			}
-			return new \WP_Error( 'certloom_signer_assignment_create_failed', __( 'Certloom could not create the signer assignment.', 'certloom' ) );
-		}
 
-		return (int) $wpdb->insert_id;
+			$now        = current_time( 'mysql', true );
+			$generation = ( new DomainGeneration() )->mark_before_mutation();
+			if ( is_wp_error( $generation ) ) {
+				return $generation;
+			}
+
+			global $wpdb;
+			$wpdb->last_error = '';
+			$result = $wpdb->insert(
+				SchemaManager::table( 'signer_assignments' ),
+				array(
+					'signer_id'  => $signer_id,
+					'scope_type' => $scope_type,
+					'scope_id'   => $scope_id,
+					'role_type'  => $role_type,
+					'priority'   => $priority,
+					'active'     => 1,
+					'created_at' => $now,
+					'updated_at' => $now,
+				)
+			);
+			if ( false === $result || '' !== (string) $wpdb->last_error ) {
+				if ( false !== stripos( (string) $wpdb->last_error, 'duplicate' ) ) {
+					return new \WP_Error( 'certloom_signer_assignment_duplicate', __( 'That signer already has the same scope and role assignment.', 'certloom' ) );
+				}
+				return new \WP_Error( 'certloom_signer_assignment_create_failed', __( 'Certloom could not create the signer assignment.', 'certloom' ) );
+			}
+
+			$assignment_id = (int) $wpdb->insert_id;
+			$queued = $this->configuration_changed( $result, $changed, 'program' === $scope_type ? $scope_id : 0 );
+			return is_wp_error( $queued ) ? $queued : $assignment_id;
+		} );
 	}
 
 	/**
@@ -295,106 +306,111 @@ final class SignerRepository {
 	 * @return true|\WP_Error
 	 */
 	public function sync_primary_assignment( $signer_id, $scope_type, $scope_id, $role_type = 'signer' ) {
-		$signer_id  = absint( $signer_id );
-		$scope_type = sanitize_key( (string) $scope_type );
-		$scope_id   = absint( $scope_id );
-		$role_type  = sanitize_key( (string) $role_type );
+		return $this->configuration_command( function ( &$changed ) use ( $signer_id, $scope_type, $scope_id, $role_type ) {
+			$signer_id  = absint( $signer_id );
+			$scope_type = sanitize_key( (string) $scope_type );
+			$scope_id   = absint( $scope_id );
+			$role_type  = sanitize_key( (string) $role_type );
 
-		if ( ! in_array( $scope_type, self::SCOPES, true ) || ! in_array( $role_type, self::ROLES, true ) ) {
-			return new \WP_Error( 'certloom_signer_assignment_invalid', __( 'Choose a valid signer scope and role.', 'certloom' ) );
-		}
-		if ( 'global' === $scope_type ) {
-			$scope_id = 0;
-		} elseif ( ! $scope_id ) {
-			return new \WP_Error( 'certloom_signer_assignment_scope_missing', __( 'The selected signer scope no longer exists.', 'certloom' ) );
-		} else {
-			$scope_exists = $this->scope_exists( $scope_type, $scope_id );
-			if ( is_wp_error( $scope_exists ) ) { return $scope_exists; }
-			if ( ! $scope_exists ) {
+			if ( ! in_array( $scope_type, self::SCOPES, true ) || ! in_array( $role_type, self::ROLES, true ) ) {
+				return new \WP_Error( 'certloom_signer_assignment_invalid', __( 'Choose a valid signer scope and role.', 'certloom' ) );
+			}
+			if ( 'global' === $scope_type ) {
+				$scope_id = 0;
+			} elseif ( ! $scope_id ) {
 				return new \WP_Error( 'certloom_signer_assignment_scope_missing', __( 'The selected signer scope no longer exists.', 'certloom' ) );
+			} else {
+				$scope_exists = $this->scope_exists( $scope_type, $scope_id );
+				if ( is_wp_error( $scope_exists ) ) { return $scope_exists; }
+				if ( ! $scope_exists ) {
+					return new \WP_Error( 'certloom_signer_assignment_scope_missing', __( 'The selected signer scope no longer exists.', 'certloom' ) );
+				}
 			}
-		}
 
-		if ( $signer_id ) {
-			$signer = $this->find( $signer_id );
-			if ( is_wp_error( $signer ) ) { return $signer; }
-			if ( ! is_array( $signer ) ) {
-				return new \WP_Error( 'certloom_signer_assignment_signer_missing', __( 'The signer profile does not exist.', 'certloom' ) );
+			if ( $signer_id ) {
+				$signer = $this->find( $signer_id );
+				if ( is_wp_error( $signer ) ) { return $signer; }
+				if ( ! is_array( $signer ) ) {
+					return new \WP_Error( 'certloom_signer_assignment_signer_missing', __( 'The signer profile does not exist.', 'certloom' ) );
+				}
 			}
-		}
 
-		$generation = ( new DomainGeneration() )->mark_before_mutation();
-		if ( is_wp_error( $generation ) ) { return $generation; }
+			$generation = ( new DomainGeneration() )->mark_before_mutation();
+			if ( is_wp_error( $generation ) ) { return $generation; }
 
-		global $wpdb;
-		$table = SchemaManager::table( 'signer_assignments' );
-		$wpdb->last_error = '';
-
-		// Remove only the projection slot. Other instructor/signature assignments
-		// remain independent and keep their authored priority.
-		if ( $signer_id ) {
-			$result = $wpdb->query(
-				$wpdb->prepare(
-					'DELETE FROM %i WHERE scope_type=%s AND scope_id=%d AND role_type=%s AND priority=0 AND signer_id<>%d',
-					$table, $scope_type, $scope_id, $role_type, $signer_id
-				)
-			);
-		} else {
-			$result = $wpdb->query(
-				$wpdb->prepare(
-					'DELETE FROM %i WHERE scope_type=%s AND scope_id=%d AND role_type=%s AND priority=0',
-					$table, $scope_type, $scope_id, $role_type
-				)
-			);
-		}
-		if ( false === $result || '' !== (string) $wpdb->last_error ) {
-			return new \WP_Error( 'certloom_signer_assignment_delete_failed', __( 'Certloom could not synchronize the signer assignment.', 'certloom' ) );
-		}
-		if ( ! $signer_id ) { return true; }
-
-		$wpdb->last_error = '';
-		$existing = $wpdb->get_var(
-			$wpdb->prepare(
-				'SELECT id FROM %i WHERE signer_id=%d AND scope_type=%s AND scope_id=%d AND role_type=%s LIMIT 1',
-				$table, $signer_id, $scope_type, $scope_id, $role_type
-			)
-		);
-		if ( '' !== (string) $wpdb->last_error ) {
-			return new \WP_Error( 'certloom_signer_assignment_read_failed', __( 'Certloom could not validate the signer assignment.', 'certloom' ) );
-		}
-
-		$now = current_time( 'mysql', true );
-		if ( $existing ) {
+			global $wpdb;
+			$table = SchemaManager::table( 'signer_assignments' );
 			$wpdb->last_error = '';
-			$updated = $wpdb->update(
-				$table,
-				array( 'priority' => 0, 'active' => 1, 'updated_at' => $now ),
-				array( 'id' => absint( $existing ) )
-			);
-			if ( false === $updated || '' !== (string) $wpdb->last_error ) {
-				return new \WP_Error( 'certloom_signer_assignment_update_failed', __( 'Certloom could not synchronize the signer assignment.', 'certloom' ) );
-			}
-			return true;
-		}
 
-		$wpdb->last_error = '';
-		$inserted = $wpdb->insert(
-			$table,
-			array(
-				'signer_id' => $signer_id,
-				'scope_type' => $scope_type,
-				'scope_id' => $scope_id,
-				'role_type' => $role_type,
-				'priority' => 0,
-				'active' => 1,
-				'created_at' => $now,
-				'updated_at' => $now,
-			)
-		);
-		if ( false === $inserted || '' !== (string) $wpdb->last_error ) {
-			return new \WP_Error( 'certloom_signer_assignment_create_failed', __( 'Certloom could not synchronize the signer assignment.', 'certloom' ) );
-		}
-		return true;
+			// Remove only the projection slot. Other instructor/signature assignments
+			// remain independent and keep their authored priority.
+			if ( $signer_id ) {
+				$result = $wpdb->query(
+					$wpdb->prepare(
+						'DELETE FROM %i WHERE scope_type=%s AND scope_id=%d AND role_type=%s AND priority=0 AND signer_id<>%d',
+						$table, $scope_type, $scope_id, $role_type, $signer_id
+					)
+				);
+			} else {
+				$result = $wpdb->query(
+					$wpdb->prepare(
+						'DELETE FROM %i WHERE scope_type=%s AND scope_id=%d AND role_type=%s AND priority=0',
+						$table, $scope_type, $scope_id, $role_type
+					)
+				);
+			}
+			if ( false === $result || '' !== (string) $wpdb->last_error ) {
+				return new \WP_Error( 'certloom_signer_assignment_delete_failed', __( 'Certloom could not synchronize the signer assignment.', 'certloom' ) );
+			}
+			$deleted_count = $result;
+			$program_id = 'program' === $scope_type ? $scope_id : 0;
+			if ( ! $signer_id ) { return $this->configuration_changed( $deleted_count, $changed, $program_id ); }
+
+			$wpdb->last_error = '';
+			$existing = $wpdb->get_row(
+				$wpdb->prepare(
+					'SELECT id,priority,active FROM %i WHERE signer_id=%d AND scope_type=%s AND scope_id=%d AND role_type=%s LIMIT 1 FOR UPDATE',
+					$table, $signer_id, $scope_type, $scope_id, $role_type
+				), ARRAY_A
+			);
+			if ( '' !== (string) $wpdb->last_error ) {
+				return new \WP_Error( 'certloom_signer_assignment_read_failed', __( 'Certloom could not validate the signer assignment.', 'certloom' ) );
+			}
+
+			$now = current_time( 'mysql', true );
+			if ( $existing ) {
+				if ( 0 === (int) $existing['priority'] && 1 === (int) $existing['active'] ) { return $this->configuration_changed( $deleted_count, $changed, $program_id ); }
+				$wpdb->last_error = '';
+				$updated = $wpdb->update(
+					$table,
+					array( 'priority' => 0, 'active' => 1, 'updated_at' => $now ),
+					array( 'id' => absint( $existing['id'] ) )
+				);
+				if ( false === $updated || '' !== (string) $wpdb->last_error ) {
+					return new \WP_Error( 'certloom_signer_assignment_update_failed', __( 'Certloom could not synchronize the signer assignment.', 'certloom' ) );
+				}
+				return $this->configuration_changed( $deleted_count + $updated, $changed, $program_id );
+			}
+
+			$wpdb->last_error = '';
+			$inserted = $wpdb->insert(
+				$table,
+				array(
+					'signer_id' => $signer_id,
+					'scope_type' => $scope_type,
+					'scope_id' => $scope_id,
+					'role_type' => $role_type,
+					'priority' => 0,
+					'active' => 1,
+					'created_at' => $now,
+					'updated_at' => $now,
+				)
+			);
+			if ( false === $inserted || '' !== (string) $wpdb->last_error ) {
+				return new \WP_Error( 'certloom_signer_assignment_create_failed', __( 'Certloom could not synchronize the signer assignment.', 'certloom' ) );
+			}
+			return $this->configuration_changed( $deleted_count + $inserted, $changed, $program_id );
+		} );
 	}
 
 	/**
@@ -440,31 +456,47 @@ final class SignerRepository {
 
 	/** @return true|\WP_Error */
 	public function remove_assignment( $signer_id, $assignment_id ) {
-		$signer_id    = absint( $signer_id );
-		$assignment_id = absint( $assignment_id );
-		if ( ! $signer_id || ! $assignment_id ) {
-			return new \WP_Error( 'certloom_signer_assignment_invalid', __( 'Choose a valid signer assignment.', 'certloom' ) );
-		}
+		return $this->configuration_command( function ( &$changed ) use ( $signer_id, $assignment_id ) {
+			$signer_id    = absint( $signer_id );
+			$assignment_id = absint( $assignment_id );
+			if ( ! $signer_id || ! $assignment_id ) {
+				return new \WP_Error( 'certloom_signer_assignment_invalid', __( 'Choose a valid signer assignment.', 'certloom' ) );
+			}
 
-		$exists = $this->assignment_id_exists( $signer_id, $assignment_id );
-		if ( is_wp_error( $exists ) ) {
-			return $exists;
-		}
-		if ( ! $exists ) {
-			return true;
-		}
+			$exists = $this->assignment_id_exists( $signer_id, $assignment_id );
+			if ( is_wp_error( $exists ) ) {
+				return $exists;
+			}
+			if ( ! $exists ) {
+				return true;
+			}
 
-		$generation = ( new DomainGeneration() )->mark_before_mutation();
-		if ( is_wp_error( $generation ) ) {
-			return $generation;
-		}
+			$generation = ( new DomainGeneration() )->mark_before_mutation();
+			if ( is_wp_error( $generation ) ) {
+				return $generation;
+			}
 
-		global $wpdb;
-		$wpdb->last_error = '';
-		$result            = $wpdb->delete( SchemaManager::table( 'signer_assignments' ), array( 'id' => $assignment_id, 'signer_id' => $signer_id ) );
-		return false === $result || '' !== (string) $wpdb->last_error
-			? new \WP_Error( 'certloom_signer_assignment_delete_failed', __( 'Certloom could not remove the signer assignment.', 'certloom' ) )
-			: true;
+			global $wpdb;
+			$wpdb->last_error = '';
+			$result            = $wpdb->delete( SchemaManager::table( 'signer_assignments' ), array( 'id' => $assignment_id, 'signer_id' => $signer_id ) );
+			return false === $result || '' !== (string) $wpdb->last_error
+				? new \WP_Error( 'certloom_signer_assignment_delete_failed', __( 'Certloom could not remove the signer assignment.', 'certloom' ) )
+				: $this->configuration_changed( $result, $changed );
+		} );
+	}
+
+	/** Retain reassessment with the edit; wake the scheduler only after command success. */
+	private function configuration_command( callable $callback ) {
+		$changed = false;
+		$result = ( new Transaction() )->run( static function () use ( $callback, &$changed ) { return $callback( $changed ); } );
+		if ( ! is_wp_error( $result ) && $changed ) { do_action( 'certloom_pending_configuration_changed' ); }
+		return $result;
+	}
+	private function configuration_changed( $affected, &$changed, $program_id = 0 ) {
+		if ( $affected < 1 ) { return true; }
+		$result = ( new PendingConfigurationQueue() )->changed( $program_id );
+		if ( ! is_wp_error( $result ) ) { $changed = true; }
+		return $result;
 	}
 
 	/** @return array<int,array<string,mixed>>|\WP_Error */

@@ -89,7 +89,8 @@ os.chmod(staging,0o700)
 for value in (bundle,target,staging):
     if has_control(value):
         fail('resolved production verification path contains control characters')
-    print(value)
+    # Bash mapfile expects LF even when this Python runs on Windows.
+    sys.stdout.buffer.write((value+'\n').encode('utf-8'))
 PY
 )
 
@@ -164,12 +165,13 @@ for name in expected:
     path=os.path.join(staging,name)
     if os.path.islink(path) or not os.path.isfile(path) or os.path.getsize(path) < 2:
         raise SystemExit('production verification staging contains an invalid evidence file')
-    fd=os.open(path,os.O_RDONLY)
+    fd=os.open(path,os.O_RDWR if os.name == 'nt' else os.O_RDONLY)
     try: os.fsync(fd)
     finally: os.close(fd)
-fd=os.open(staging,os.O_RDONLY)
-try: os.fsync(fd)
-finally: os.close(fd)
+if os.name != 'nt':
+    fd=os.open(staging,os.O_RDONLY)
+    try: os.fsync(fd)
+    finally: os.close(fd)
 if os.path.lexists(target):
     raise SystemExit('production verification output appeared before atomic publication')
 root=os.path.realpath(root); parent=os.path.realpath(os.path.dirname(target))
@@ -184,7 +186,28 @@ if [[ -e "$TARGET" || -L "$TARGET" ]]; then
   echo "production verification output appeared before atomic publication" >&2
   exit 4
 fi
-mv -- "$STAGING" "$TARGET"
+python3 - "$STAGING" "$TARGET" <<'PY'
+import os,sys
+staging,target=sys.argv[1:]
+if os.path.lexists(target):
+    raise SystemExit('production verification output appeared before atomic publication')
+if os.name == 'nt':
+    # Windows cannot fsync a directory through the POSIX file-descriptor API.
+    # Files were flushed above; publish with a checked write-through directory
+    # move, without the REPLACE_EXISTING or COPY_ALLOWED flags.
+    import ctypes
+    from ctypes import wintypes
+    move=ctypes.WinDLL('kernel32',use_last_error=True).MoveFileExW
+    move.argtypes=[wintypes.LPCWSTR,wintypes.LPCWSTR,wintypes.DWORD]
+    move.restype=wintypes.BOOL
+    if not move(staging,target,8):
+        raise ctypes.WinError(ctypes.get_last_error())
+else:
+    os.rename(staging,target)
+    fd=os.open(os.path.dirname(target),os.O_RDONLY)
+    try: os.fsync(fd)
+    finally: os.close(fd)
+PY
 PUBLISHED=1
 trap - EXIT INT TERM HUP
 

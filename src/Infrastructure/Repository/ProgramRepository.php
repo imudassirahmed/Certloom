@@ -2,11 +2,14 @@
 namespace Certloom\Infrastructure\Repository;
 
 use Certloom\Infrastructure\Data\DomainGeneration;
+use Certloom\Infrastructure\Database\Transaction;
 use Certloom\Application\Data\SafeJson;
 use Certloom\Application\Program\ProgramProfile;
 use Certloom\Application\Program\ProgramLifecyclePolicy;
 use Certloom\Application\Fields\ScopedFieldContract;
+use Certloom\Application\Fields\ProgramFieldDefaults;
 use Certloom\Infrastructure\Database\SchemaManager;
+use Certloom\Infrastructure\Recipient\PendingConfigurationQueue;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -18,43 +21,55 @@ final class ProgramRepository {
 
 	/** @param array<string,mixed> $data @return int|\WP_Error */
 	public function create( array $data ) {
-		global $wpdb;
-		$row = $this->normalize_patch( $data, true );
-		if ( is_wp_error( $row ) ) { return $row; }
-		$now = current_time( 'mysql', true );
-		$row['created_at'] = $now;
-		$row['updated_at'] = $now;
-		$generation = ( new DomainGeneration() )->mark_before_mutation();
-		if ( is_wp_error( $generation ) ) { return $generation; }
-		$wpdb->last_error = '';
-		$inserted = $wpdb->insert( SchemaManager::table( 'programs' ), $row );
-		if ( false === $inserted || '' !== (string) $wpdb->last_error ) {
-			if ( false !== stripos( (string) $wpdb->last_error, 'duplicate' ) ) {
-				return new \WP_Error( 'certloom_program_code_duplicate', __( 'That program code is already in use.', 'certloom' ) );
+		return ( new Transaction() )->run( function () use ( $data ) {
+			global $wpdb;
+			$row = $this->normalize_patch( $data, true );
+			if ( is_wp_error( $row ) ) { return $row; }
+			$now = current_time( 'mysql', true );
+			$row['created_at'] = $now;
+			$row['updated_at'] = $now;
+			$generation = ( new DomainGeneration() )->mark_before_mutation();
+			if ( is_wp_error( $generation ) ) { return $generation; }
+			$wpdb->last_error = '';
+			$inserted = $wpdb->insert( SchemaManager::table( 'programs' ), $row );
+			if ( false === $inserted || '' !== (string) $wpdb->last_error ) {
+				if ( false !== stripos( (string) $wpdb->last_error, 'duplicate' ) ) {
+					return new \WP_Error( 'certloom_program_code_duplicate', __( 'That program code is already in use.', 'certloom' ) );
+				}
+				return new \WP_Error( 'certloom_program_create_failed', __( 'Certloom could not create the program.', 'certloom' ) );
 			}
-			return new \WP_Error( 'certloom_program_create_failed', __( 'Certloom could not create the program.', 'certloom' ) );
-		}
-		return (int) $wpdb->insert_id;
+			return (int) $wpdb->insert_id;
+		} );
 	}
 
 	/** Applies a whitelisted field patch without clearing omitted data. @return true|\WP_Error */
 	public function update( $id, array $data ) {
-		global $wpdb;
-		$id = absint( $id );
-		if ( ! $id ) { return new \WP_Error( 'certloom_program_id_required', __( 'A valid program is required.', 'certloom' ) ); }
-		$row = $this->normalize_patch( $data, false );
-		if ( is_wp_error( $row ) ) { return $row; }
-		if ( empty( $row ) ) { return true; }
-		$row['updated_at'] = current_time( 'mysql', true );
-		$generation = ( new DomainGeneration() )->mark_before_mutation();
-		if ( is_wp_error( $generation ) ) { return $generation; }
-		$wpdb->last_error = '';
-		$updated = $wpdb->update( SchemaManager::table( 'programs' ), $row, array( 'id' => $id ) );
-		if ( false === $updated || '' !== (string) $wpdb->last_error ) {
-			if ( false !== stripos( (string) $wpdb->last_error, 'duplicate' ) ) { return new \WP_Error( 'certloom_program_code_duplicate', __( 'That program code is already in use.', 'certloom' ) ); }
-			return new \WP_Error( 'certloom_program_update_failed', __( 'Certloom could not update the program.', 'certloom' ) );
-		}
-		return true;
+		$changed = false;
+		$result = ( new Transaction() )->run( function () use ( $id, $data, &$changed ) {
+			global $wpdb;
+			$id = absint( $id );
+			if ( ! $id ) { return new \WP_Error( 'certloom_program_id_required', __( 'A valid program is required.', 'certloom' ) ); }
+			$row = $this->normalize_patch( $data, false );
+			if ( is_wp_error( $row ) ) { return $row; }
+			if ( empty( $row ) ) { return true; }
+			$row['updated_at'] = current_time( 'mysql', true );
+			$generation = ( new DomainGeneration() )->mark_before_mutation();
+			if ( is_wp_error( $generation ) ) { return $generation; }
+			$wpdb->last_error = '';
+			$updated = $wpdb->update( SchemaManager::table( 'programs' ), $row, array( 'id' => $id ) );
+			if ( false === $updated || '' !== (string) $wpdb->last_error ) {
+				if ( false !== stripos( (string) $wpdb->last_error, 'duplicate' ) ) { return new \WP_Error( 'certloom_program_code_duplicate', __( 'That program code is already in use.', 'certloom' ) ); }
+				return new \WP_Error( 'certloom_program_update_failed', __( 'Certloom could not update the program.', 'certloom' ) );
+			}
+			if ( $updated > 0 ) {
+				$signal = ( new PendingConfigurationQueue() )->changed( $id );
+				if ( is_wp_error( $signal ) ) { return $signal; }
+				$changed = true;
+			}
+			return true;
+		} );
+		if ( ! is_wp_error( $result ) && $changed ) { do_action( 'certloom_pending_configuration_changed' ); }
+		return $result;
 	}
 
 	/** @return array{items:array<int,array<string,mixed>>,total:int}|\WP_Error */
@@ -194,10 +209,24 @@ final class ProgramRepository {
 
 	/** @return array<string,mixed>|null|\WP_Error */
 	public function find( $id ) {
+		if ( \Certloom\Infrastructure\Recipient\RecipientCommandReadScope::active() ) { return $this->find_for_update( $id ); }
 		global $wpdb;
 		$wpdb->last_error = '';
 		$row = $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM %i WHERE id = %d', SchemaManager::table( 'programs' ), absint( $id ) ), ARRAY_A );
 		if ( '' !== (string) $wpdb->last_error ) { return new \WP_Error( 'certloom_program_read_failed', __( 'Certloom could not read the program.', 'certloom' ) ); }
+		return $this->hydrate( $row );
+	}
+
+	/** Current locking read, even when an enclosing transaction already established an older snapshot. */
+	public function find_for_update( $id ) {
+		global $wpdb;
+		$wpdb->last_error = '';
+		$row = $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM %i WHERE id = %d FOR UPDATE', SchemaManager::table( 'programs' ), absint( $id ) ), ARRAY_A );
+		if ( '' !== (string) $wpdb->last_error ) { return new \WP_Error( 'certloom_program_read_failed', __( 'Certloom could not read the program.', 'certloom' ) ); }
+		return $this->hydrate( $row );
+	}
+
+	private function hydrate( $row ) {
 		if ( ! is_array( $row ) ) { return null; }
 		$row['id'] = absint( $row['id'] );
 		$row['issuer_id'] = ! empty( $row['issuer_id'] ) ? absint( $row['issuer_id'] ) : null;
@@ -262,6 +291,11 @@ final class ProgramRepository {
 		if ( $creating || array_key_exists( 'validity_days', $data ) ) { $row['validity_days'] = null === ( $data['validity_days'] ?? null ) || '' === (string) ( $data['validity_days'] ?? '' ) ? null : max( 0, absint( $data['validity_days'] ) ); }
 		if ( $creating || array_key_exists( 'active', $data ) ) { $row['active'] = isset( $data['active'] ) ? (int) (bool) $data['active'] : 1; }
 		if ( array_key_exists( 'metadata', $data ) ) {
+			if ( is_array( $data['metadata'] ) && array_key_exists( ProgramFieldDefaults::KEY, $data['metadata'] ) ) {
+				$defaults = ( new ProgramFieldDefaults() )->normalize( $data['metadata'][ ProgramFieldDefaults::KEY ], \Ecapla_CertVerify_Fields::get_field_map() );
+				if ( is_wp_error( $defaults ) ) { return $defaults; }
+				$data['metadata'][ ProgramFieldDefaults::KEY ] = $defaults;
+			}
 			$encoded = ( new SafeJson() )->encode_array( $data['metadata'], 'certloom_program_metadata_invalid', __( 'Program metadata could not be encoded safely.', 'certloom' ) );
 			if ( is_wp_error( $encoded ) ) { return $encoded; }
 			$row['metadata_json'] = $encoded;

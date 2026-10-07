@@ -92,6 +92,7 @@
 		}
 		box.classList.remove('is-empty', 'is-loading');
 		box.innerHTML = String(data.html || '');
+		if (window.CertloomTextFit) { window.CertloomTextFit.refresh(box); }
 		var footer = document.createElement('footer');
 		var strong = document.createElement('strong');
 		var source = document.createElement('span');

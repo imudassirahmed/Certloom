@@ -128,6 +128,27 @@ final class FontManifest {
 		return array_values( $required );
 	}
 
+	/** Actual local glyphs must satisfy the same explicit variant/face stacks. */
+	public function assert_local_glyphs( array $document, array $manifest, \Certloom\Application\Contract\LocalFontResolverInterface $resolver ) {
+		$this->assert_document_supported( $document, $manifest );
+		$manifest = $this->normalize( $manifest ); $coverage = new FontGlyphCoverage(); $assets = array(); $inspector = new FontAssetInspector();
+		foreach ( $this->text_segments( $document ) as $segment ) {
+			$style = $segment['style']; $family = strtolower( trim( (string) ( $style['font_family'] ?? '' ) ) );
+			$variant = (int) ( $style['font_weight'] ?? 400 ) . '-' . ( ! empty( $style['italic'] ) ? 'italic' : 'normal' );
+			foreach ( $this->unicode->codepoints( $segment['text'] ) as $codepoint ) {
+				if ( in_array( $codepoint, array( 9, 10, 13 ), true ) ) { continue; }
+				$found = false;
+				foreach ( $manifest['families'][ $family ][ $variant ]['faces'] as $face ) {
+					$hash = $face['sha256'];
+					if ( ! isset( $assets[ $hash ] ) ) { $assets[ $hash ] = $inspector->inspect( $resolver->resolve( $hash, $face['format'] ) ); }
+					if ( ! hash_equals( $hash, $assets[ $hash ]['sha256'] ) ) { throw new \RuntimeException( 'Font glyph map does not match the manifest face.' ); }
+					if ( $coverage->has_glyph( $assets[ $hash ]['path'], $codepoint ) ) { $found = true; break; }
+				}
+				if ( ! $found ) { throw new \RuntimeException( 'The exact font has no glyph for this credential text.' ); }
+			}
+		}
+	}
+
 	/** @return bool */
 	public function document_uses_text( array $resolved_document ) {
 		foreach ( isset( $resolved_document['elements'] ) && is_array( $resolved_document['elements'] ) ? $resolved_document['elements'] : array() as $element ) {

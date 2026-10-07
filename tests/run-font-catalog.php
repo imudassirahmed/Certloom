@@ -1,5 +1,7 @@
 <?php
 /** FONT-02A controlled Designer font-family catalog contract. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define( 'ABSPATH', __DIR__ . '/' );
 function __($v){return $v;} function esc_attr($v){return htmlspecialchars((string)$v,ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8');} function esc_html__($v,$d=null){return $v;} function esc_attr__($v,$d=null){return $v;} function sanitize_key($v){return strtolower(preg_replace('/[^a-z0-9_\-]/','',(string)$v));} function wp_strip_all_tags($v){return strip_tags((string)$v);} function wp_get_global_settings(){return array('typography'=>array('fontFamilies'=>array('custom'=>array(array('name'=>'Inter Local','slug'=>'inter','fontFamily'=>'Inter, Arial, sans-serif','fontFace'=>array(array('src'=>'https://example.test/uploads/fonts/inter.woff2','fontWeight'=>'400')))))));}
 require_once __DIR__ . '/bootstrap-autoload.php';

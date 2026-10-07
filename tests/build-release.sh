@@ -2,6 +2,8 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+source "$ROOT/tests/support/shell-paths.sh"
+ROOT_COMPARE="$(certloom_shell_compare_path "$ROOT")"
 PLUGIN_VERSION="$(sed -n 's/^[[:space:]]*\* Version:[[:space:]]*//p' "$ROOT/certloom.php" | head -n 1 | tr -d '\r')"
 README_STABLE_TAG="$(sed -n 's/^Stable tag:[[:space:]]*//p' "$ROOT/readme.txt" | head -n 1 | tr -d '\r')"
 if [[ -z "$PLUGIN_VERSION" || "$README_STABLE_TAG" != "$PLUGIN_VERSION" ]]; then
@@ -24,11 +26,12 @@ if ! OUT_REAL="$(realpath -m -- "$OUT" 2>/dev/null)"; then
   echo "Invalid Certloom build output path." >&2
   exit 2
 fi
-case "$OUT_REAL" in
-  "$ROOT"|"$ROOT"/*) echo "Refusing to build inside the plugin source tree." >&2; exit 2 ;;
+OUT_COMPARE="$(certloom_shell_compare_path "$OUT_REAL")"
+case "$OUT_COMPARE" in
+  "$ROOT_COMPARE"|"$ROOT_COMPARE"/*) echo "Refusing to build inside the plugin source tree." >&2; exit 2 ;;
 esac
-case "$ROOT" in
-  "$OUT_REAL"/*) echo "Refusing to build into an ancestor of the plugin source tree." >&2; exit 2 ;;
+case "$ROOT_COMPARE" in
+  "$OUT_COMPARE"/*) echo "Refusing to build into an ancestor of the plugin source tree." >&2; exit 2 ;;
 esac
 if [[ -e "$OUT_REAL" || -L "$OUT_REAL" ]]; then
   echo "Refusing to replace an existing build output path: $OUT_REAL" >&2
@@ -36,7 +39,6 @@ if [[ -e "$OUT_REAL" || -L "$OUT_REAL" ]]; then
 fi
 OUT="$OUT_REAL"
 EPOCH="${SOURCE_DATE_EPOCH:-1787356800}"
-STAGE="$OUT/.stage"
 AUTHORITY_DIR="${CERTLOOM_RENDERER_AUTHORITY_DIR:-}"
 AUTHORITY_SNAPSHOT=""
 AUTHORITY_MANIFEST=""
@@ -44,7 +46,21 @@ DOMAIN_AUTHORITY_DIR="${CERTLOOM_DOMAIN_AUTHORITY_DIR:-}"
 DOMAIN_AUTHORITY_SNAPSHOT=""
 DOMAIN_AUTHORITY_MANIFEST=""
 CLEANUP_DIRS=()
-cleanup_authority_dirs() { for dir in "${CLEANUP_DIRS[@]:-}"; do [[ -n "$dir" ]] && rm -rf -- "$dir" || true; done; return 0; }
+cleanup_authority_dirs() {
+  local dir resolved expected_parent
+  expected_parent="$(realpath -e -- "$(dirname "$OUT")" 2>/dev/null)" || return 0
+  for dir in "${CLEANUP_DIRS[@]:-}"; do
+    [[ -n "$dir" && -d "$dir" && ! -L "$dir" ]] || continue
+    resolved="$(realpath -e -- "$dir" 2>/dev/null)" || continue
+    # Delete only the exact generated metadata directory below the verified
+    # output parent. Never follow a replaced link or a computed foreign path.
+    [[ "$resolved" == "$dir" && "$(dirname "$resolved")" == "$expected_parent" ]] || continue
+    case "$(basename "$resolved")" in
+      .certloom-authorized-build.*|.certloom-domain-authorized-build.*) rm -rf -- "$resolved" ;;
+    esac
+  done
+  return 0
+}
 trap cleanup_authority_dirs EXIT
 
 # Renderer authority has exactly two legitimate packaging modes:
@@ -52,7 +68,7 @@ trap cleanup_authority_dirs EXIT
 #  2. a newly finalized external authority directory is supplied explicitly.
 # Never merge both paths because that would make the release authority source
 # ambiguous. External authority is snapshotted first; the exact snapshot that is
-# validated is the one whose canonical accepted.json is injected into staging.
+# validated is the one whose canonical accepted.json enters the ZIP stream.
 if [[ -n "$AUTHORITY_DIR" && -f "$ROOT/resources/renderer/accepted.json" ]]; then
   echo "Refusing ambiguous renderer authority: source already contains accepted.json and an external authority directory was supplied." >&2
   exit 5
@@ -63,8 +79,9 @@ if [[ -n "$AUTHORITY_DIR" ]]; then
     echo "Renderer authority directory is invalid or unavailable." >&2
     exit 5
   fi
-  case "$AUTHORITY_REAL" in
-    "$ROOT"|"$ROOT"/*) echo "Renderer authority directory must remain outside the Certloom source tree." >&2; exit 5 ;;
+  AUTHORITY_COMPARE="$(certloom_shell_compare_path "$AUTHORITY_REAL")"
+  case "$AUTHORITY_COMPARE" in
+    "$ROOT_COMPARE"|"$ROOT_COMPARE"/*) echo "Renderer authority directory must remain outside the Certloom source tree." >&2; exit 5 ;;
   esac
   parent="$(dirname "$OUT")"
   mkdir -p "$parent"
@@ -93,8 +110,9 @@ if [[ -n "$DOMAIN_AUTHORITY_DIR" ]]; then
     echo "Normalized-domain authority directory is invalid or unavailable." >&2
     exit 7
   fi
-  case "$DOMAIN_AUTHORITY_REAL" in
-    "$ROOT"|"$ROOT"/*) echo "Normalized-domain authority directory must remain outside the Certloom source tree." >&2; exit 7 ;;
+  DOMAIN_AUTHORITY_COMPARE="$(certloom_shell_compare_path "$DOMAIN_AUTHORITY_REAL")"
+  case "$DOMAIN_AUTHORITY_COMPARE" in
+    "$ROOT_COMPARE"|"$ROOT_COMPARE"/*) echo "Normalized-domain authority directory must remain outside the Certloom source tree." >&2; exit 7 ;;
   esac
   parent="$(dirname "$OUT")"
   mkdir -p "$parent"
@@ -109,132 +127,9 @@ elif [[ -f "$ROOT/resources/domain/accepted.json" ]]; then
   php "$ROOT/tests/domain-authority/validate-bundled-authority.php" "$ROOT/resources/domain/accepted.json" >/dev/null
 fi
 
-mkdir -p "$STAGE/source/certloom" "$STAGE/release/certloom"
-# Package the working contents of tracked files only. Copying the entire
-# checkout can silently ship ignored credentials, scratch files, or artifacts.
-if [[ ! -d "$ROOT/.git" ]]; then
-  echo "Release source must be a Git checkout with an auditable file list." >&2
-  exit 2
-fi
-if [[ -n "$(git -C "$ROOT" ls-files --others --exclude-standard)" ]]; then
-  echo "Untracked release inputs exist. Review and add or remove them before packaging." >&2
-  exit 2
-fi
-while IFS= read -r -d '' rel; do
-  if [[ ! -e "$ROOT/$rel" && ! -L "$ROOT/$rel" ]]; then
-    echo "Skipping deleted tracked release input: $rel" >&2
-    continue
-  fi
-  if [[ ! -f "$ROOT/$rel" || -L "$ROOT/$rel" ]]; then
-    echo "Tracked release input is not a regular file: $rel" >&2
-    exit 2
-  fi
-  for tree in source release; do
-    mkdir -p "$STAGE/$tree/certloom/$(dirname "$rel")"
-    cp -- "$ROOT/$rel" "$STAGE/$tree/certloom/$rel"
-  done
-done < <(git -C "$ROOT" ls-files -z --cached --)
-
-if [[ -n "$AUTHORITY_MANIFEST" ]]; then
-  mkdir -p "$STAGE/source/certloom/resources/renderer" "$STAGE/release/certloom/resources/renderer"
-  cp -- "$AUTHORITY_MANIFEST" "$STAGE/source/certloom/resources/renderer/accepted.json"
-  cp -- "$AUTHORITY_MANIFEST" "$STAGE/release/certloom/resources/renderer/accepted.json"
-  chmod 0644 "$STAGE/source/certloom/resources/renderer/accepted.json" "$STAGE/release/certloom/resources/renderer/accepted.json"
-fi
-
-if [[ -n "$DOMAIN_AUTHORITY_MANIFEST" ]]; then
-  mkdir -p "$STAGE/source/certloom/resources/domain" "$STAGE/release/certloom/resources/domain"
-  cp -- "$DOMAIN_AUTHORITY_MANIFEST" "$STAGE/source/certloom/resources/domain/accepted.json"
-  cp -- "$DOMAIN_AUTHORITY_MANIFEST" "$STAGE/release/certloom/resources/domain/accepted.json"
-  chmod 0644 "$STAGE/source/certloom/resources/domain/accepted.json" "$STAGE/release/certloom/resources/domain/accepted.json"
-fi
-
-# The shipped translation catalog is part of the deterministic release identity.
-# Regenerate it from the exact staged source with the same fixed build epoch and
-# fail closed if the committed POT is stale or carries a wall-clock timestamp.
-pot_check="$STAGE/.certloom.pot"
-SOURCE_DATE_EPOCH="$EPOCH" python3 "$STAGE/source/certloom/tests/i18n/make-pot.py" \
-  "$STAGE/source/certloom" -o "$pot_check" >/dev/null
-if ! cmp -s "$pot_check" "$STAGE/source/certloom/languages/certloom.pot"; then
-  echo "Translation catalog is stale or non-deterministic. Regenerate languages/certloom.pot with SOURCE_DATE_EPOCH=$EPOCH." >&2
-  exit 6
-fi
-rm -f "$pot_check"
-
-# I18N-03 quality packs are release-bound to the exact POT and must remain
-# honest. Planned locales cannot claim artifacts; candidate/reviewed catalogs
-# are structurally validated; reviewed PO/MO/WordPress-JS artifacts must be
-# complete, safe and byte-identical to the deterministic compiler output.
-python3 "$STAGE/source/certloom/tests/i18n/validate_language_packs.py" \
-  "$STAGE/source/certloom" --manifest languages/certloom-language-packs.json >/dev/null
-
-# Generated/interpreter/VCS metadata is never part of a Certloom source or
-# production artifact, even if local development tools created it in-tree.
-find "$STAGE/source/certloom" "$STAGE/release/certloom" -type d \( -name __pycache__ -o -name .git -o -name .svn \) -prune -exec rm -rf {} +
-find "$STAGE/source/certloom" "$STAGE/release/certloom" -type f \( -name '*.pyc' -o -name '*.pyo' -o -name '.DS_Store' \) -delete
-
-rm -rf "$STAGE/release/certloom/docs" "$STAGE/release/certloom/tests" "$STAGE/release/certloom/bin"
-
-# Development-only reproducibility: archive metadata must not depend on the
-# operator's clock or filesystem traversal order.
-find "$STAGE/source" "$STAGE/release" -exec touch -h -d "@$EPOCH" {} +
-
-zip_sorted() {
-  local base="$1" target="$2"
-  rm -f "$target"
-  (
-    cd "$base"
-    find certloom -type f -print | LC_ALL=C sort | zip -X -q "$target" -@
-  )
-}
-
-zip_sorted "$STAGE/source" "$OUT/certloom-$VERSION-source.zip"
-zip_sorted "$STAGE/release" "$OUT/certloom-$VERSION.zip"
-
-unzip -tq "$OUT/certloom-$VERSION-source.zip" >/dev/null
-unzip -tq "$OUT/certloom-$VERSION.zip" >/dev/null
-
-source_list="$OUT/source-files.txt"
-release_list="$OUT/release-files.txt"
-(
-  cd "$STAGE/source/certloom"
-  find . -type f -print | LC_ALL=C sort > "$source_list"
-)
-(
-  cd "$STAGE/release/certloom"
-  find . -type f -print | LC_ALL=C sort > "$release_list"
-)
-
-LC_ALL=C sort -c "$source_list"
-LC_ALL=C sort -c "$release_list"
-if LC_ALL=C comm -13 "$source_list" "$release_list" | grep -q .; then
-  echo "Production archive contains files absent from source." >&2
-  exit 3
-fi
-
-while IFS= read -r rel; do
-  src="$STAGE/source/certloom/${rel#./}"
-  dst="$STAGE/release/certloom/${rel#./}"
-  if ! cmp -s "$src" "$dst"; then
-    echo "Source/release byte mismatch: $rel" >&2
-    exit 4
-  fi
-done < "$release_list"
-
-# Rebuild once from the same normalized stage and require identical bytes.
-cp "$OUT/certloom-$VERSION-source.zip" "$OUT/.source-first.zip"
-cp "$OUT/certloom-$VERSION.zip" "$OUT/.release-first.zip"
-zip_sorted "$STAGE/source" "$OUT/certloom-$VERSION-source.zip"
-zip_sorted "$STAGE/release" "$OUT/certloom-$VERSION.zip"
-cmp -s "$OUT/.source-first.zip" "$OUT/certloom-$VERSION-source.zip"
-cmp -s "$OUT/.release-first.zip" "$OUT/certloom-$VERSION.zip"
-rm -f "$OUT/.source-first.zip" "$OUT/.release-first.zip"
-
-sha256sum "$OUT/certloom-$VERSION.zip" "$OUT/certloom-$VERSION-source.zip" > "$OUT/certloom-$VERSION-SHA256SUMS.txt"
-
-printf 'source_files=%s\n' "$(wc -l < "$source_list" | tr -d ' ')"
-printf 'release_files=%s\n' "$(wc -l < "$release_list" | tr -d ' ')"
-printf 'production_only=0\nmodified_common=0\nreproducible_zip=yes\n'
-if [[ -f "$STAGE/release/certloom/resources/renderer/accepted.json" ]]; then printf 'renderer_authority=validated\n'; else printf 'renderer_authority=absent\n'; fi
-if [[ -f "$STAGE/release/certloom/resources/domain/accepted.json" ]]; then printf 'domain_authority=validated\n'; else printf 'domain_authority=absent\n'; fi
-cat "$OUT/certloom-$VERSION-SHA256SUMS.txt"
+# Stream tracked working files directly into ZIPs. No staging/extraction of
+# either plugin tree is necessary. package-stream.py checks source/release byte
+# parity, RuntimePayloadFingerprint, fixed-epoch POT and language-pack quality
+# (validate_language_packs.py), and repeated ZIP byte determinism.
+"${CERTLOOM_BUILD_PYTHON:-python3}" "$ROOT/tests/package-stream.py" "$ROOT" "$OUT" "$VERSION" "$EPOCH" \
+  "$AUTHORITY_MANIFEST" "$DOMAIN_AUTHORITY_MANIFEST"

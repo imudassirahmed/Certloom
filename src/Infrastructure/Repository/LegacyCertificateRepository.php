@@ -18,7 +18,9 @@ final class LegacyCertificateRepository implements LegacySourceSnapshotInterface
 		if ( '' !== (string) $wpdb->last_error || ! is_array( $row ) ) {
 			return new \WP_Error( 'certloom_legacy_snapshot_failed', __( 'Certloom could not snapshot the legacy certificate registry.', 'certloom' ) );
 		}
-		return array( 'count' => absint( $row['row_count'] ?? 0 ), 'max_id' => absint( $row['max_id'] ?? 0 ), 'generation' => (string) \Ecapla_CertVerify_Backup::current_generation() );
+		$generation = \Ecapla_CertVerify_Backup::read_current_generation();
+		if ( is_wp_error( $generation ) ) { return $generation; }
+		return array( 'count' => absint( $row['row_count'] ?? 0 ), 'max_id' => absint( $row['max_id'] ?? 0 ), 'generation' => $generation );
 	}
 
 	/**

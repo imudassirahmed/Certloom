@@ -1,5 +1,7 @@
 <?php
 /** UX-QA browser fixture for the real current-authority Add credential view. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define( 'ABSPATH', __DIR__ . '/' );
 define( 'ECAPLA_CERTVERIFY_PATH', dirname( __DIR__, 2 ) . '/' );
 define( 'CERTLOOM_PATH', ECAPLA_CERTVERIFY_PATH );

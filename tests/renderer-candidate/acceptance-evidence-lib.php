@@ -6,6 +6,8 @@
  * the exact independently published verification evidence. No acceptance hash,
  * renderer identity or mandatory check is copied by an operator by hand.
  */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 require_once dirname( __DIR__ ) . '/bootstrap-autoload.php';
 
 use Certloom\Application\Rendering\CanonicalJson;

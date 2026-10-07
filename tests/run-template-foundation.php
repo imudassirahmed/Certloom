@@ -1,5 +1,7 @@
 <?php
 /** TPL-01 template foundation contract tests. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define( 'ABSPATH', __DIR__ . '/' );
 if ( ! class_exists( 'WP_Error' ) ) {
 	class WP_Error { private $c,$m,$d; public function __construct($c='',$m='',$d=null){$this->c=$c;$this->m=$m;$this->d=$d;} public function get_error_code(){return $this->c;} public function get_error_message(){return $this->m;} public function get_error_data(){return $this->d;} }
@@ -54,7 +56,7 @@ $files=array(
  'acceptance'=>file_get_contents($root.'/src/Infrastructure/Diagnostics/DomainAcceptanceProof.php'),
 );
 foreach($files as $k=>$v){tpl_check(is_string($v)&&''!==$v,'source '.$k.' available');}
-tpl_has($files['schema'],"const SCHEMA_VERSION         = '19'",'schema v19');
+tpl_check(1===preg_match("/const SCHEMA_VERSION\\s*=\\s*'(\\d+)'/",$files['schema'],$schema_version) && (int)$schema_version[1]>=20,'current schema retains template contracts alongside recipient workflow stores');
 foreach(array('templates','template_revisions','template_assignments') as $table){tpl_has($files['schema'],"'$table'",'schema maps '.$table);tpl_has($files['backup_repo'],"'$table'",'backup owns '.$table);}
 tpl_has($files['schema'],'UNIQUE KEY machine_key (machine_key)','stable template identity is unique');
 tpl_has($files['schema'],'UNIQUE KEY template_revision (template_id,revision_number)','revision number immutable identity');
@@ -68,12 +70,13 @@ tpl_has($files['admin'],'expected_revision_id','admin carries optimistic revisio
 tpl_has($files['admin'],'Publish design','admin exposes publication from a valid immutable revision independently of artifact rendering');
 tpl_has($files['admin'],'Production downloads unavailable','admin may still communicate artifact/download authority separately from design publication');
 tpl_has($files['plugin'],'TemplateAdmin','gated template admin is wired');
-tpl_has($files['backup'],'const VERSION = 4','template-aware backup is v4');
+tpl_has($files['backup'],'const ARTWORK_VERSION = 4','historical template-aware v4 backup remains supported');
 tpl_has($files['backup'],'const PRIVACY_VERSION = 3','v3 backups remain explicitly supported');
 tpl_has($files['preflight'],'template_parent_revision_invalid','semantic preflight validates revision lineage');
 tpl_has($files['workspace'],'template_published_revision_invalid','staged restore re-proves published pointer');
 tpl_has($files['workspace'],"'templates' => 't', 'template_revisions' => 'u', 'template_assignments' => 'y'",'restore workspace gives every template entity a unique private-table code');
-tpl_has($files['restore_map'],"'templates', 'template_revisions', 'template_assignments'",'durable Merge mapping accepts template entities');
+tpl_has($files['restore_map'],'DomainBackupRepository::entity_types()','durable Merge mapping uses the complete canonical entity inventory');
+foreach(array('templates','template_revisions','template_assignments') as $entity){tpl_check(in_array($entity,\Certloom\Infrastructure\Backup\DomainBackupRepository::entity_types(),true),'durable Merge inventory accepts '.$entity);}
 tpl_has($files['acceptance'],'const RESULT_VERSION = 7','exact-payload-bound domain acceptance invalidates older template-era evidence');
 tpl_has($files['uninstall'],'certloom_template_assignments','uninstall owns template assignments');
 tpl_has($files['uninstall'],'certloom_template_revisions','uninstall owns revisions');

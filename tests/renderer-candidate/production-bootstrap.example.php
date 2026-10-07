@@ -11,6 +11,8 @@
  * Certloom source root rather than from __DIR__, because __DIR__ is the external
  * operator workspace after the copy.
  */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 throw new RuntimeException(
 	'Example only. Copy outside the Certloom tree, configure absolute paths, remove this guard, and then use it only for source-side PDF-04 evaluation.'
 );

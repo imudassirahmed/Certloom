@@ -198,11 +198,16 @@ class Ecapla_CertVerify_System_Status {
 		}
 		$status = ( new $class() )->manifest_status();
 		if ( ! empty( $status['accepted'] ) ) {
-			return self::check( 'renderer_authority', __( 'Production renderer authority', 'certloom' ), 'good', __( 'Accepted for this release', 'certloom' ), __( 'This Certloom release contains a valid release-bound PDF-04 authority manifest. Per-host artifact execution still requires the exact accepted renderer candidates and their runtime dependencies.', 'certloom' ) );
+			$runtime = new \Certloom\Infrastructure\Rendering\ProductionRendererRuntime();
+			foreach ( array( 'pdf', 'png', 'jpeg' ) as $format ) {
+				$ready = $runtime->status( $format );
+				if ( empty( $ready['accepted'] ) ) { return self::check( 'renderer_authority', __( 'Certificate downloads', 'certloom' ), 'bad', __( 'Renderer unavailable on this host', 'certloom' ), __( 'Release acceptance is present, but an exact renderer or required PHP dependency is unavailable. Downloads remain disabled.', 'certloom' ) ); }
+			}
+			return self::check( 'renderer_authority', __( 'Certificate downloads', 'certloom' ), 'good', __( 'PDF, PNG and JPEG ready', 'certloom' ), __( 'The accepted engines are available. Each credential must also have a supported saved design, exact fonts and local assets.', 'certloom' ) );
 		}
 		$reason = sanitize_key( (string) ( $status['reason'] ?? 'unknown' ) );
 		if ( 'manifest_missing' === $reason ) {
-			return self::check( 'renderer_authority', __( 'Production renderer authority', 'certloom' ), 'warning', __( 'Not accepted in this release', 'certloom' ), __( 'Expected while PDF-04 is open. Template publication and production artifact actions remain fail-closed; no WordPress option can bypass this release-bound gate.', 'certloom' ) );
+			return self::check( 'renderer_authority', __( 'Certificate downloads', 'certloom' ), 'warning', __( 'Awaiting release acceptance', 'certloom' ), __( 'Templates can be saved, previewed and published. File downloads remain disabled until this release passes artifact review; no WordPress option can bypass this release-bound gate.', 'certloom' ) );
 		}
 		return self::check( 'renderer_authority', __( 'Production renderer authority', 'certloom' ), 'bad', __( 'Invalid / mismatched authority', 'certloom' ), __( 'A bundled renderer authority record exists but could not be validated for this Certloom release. Renderer-backed product authority must remain disabled.', 'certloom' ) );
 	}

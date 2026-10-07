@@ -1553,6 +1553,7 @@ body.certloom-setup-v2-body { overflow: hidden; }
   inset: 0;
   z-index: 100000;
   overflow: auto;
+  scroll-padding-block-start: calc(64px + var(--cl-3));
   background: var(--cl-paper);
   color: var(--cl-ink);
   font-family: var(--cl-sans);
@@ -1595,7 +1596,7 @@ body.certloom-setup-v2-body { overflow: hidden; }
 .certloom-setup-v2-notice .dashicons { color: var(--cl-brand-blue); }
 .certloom-setup-v2-progress {
   display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-template-columns: repeat(9, minmax(0, 1fr));
   gap: 0;
   padding-top: var(--cl-5);
 }
@@ -1610,6 +1611,26 @@ body.certloom-setup-v2-body { overflow: hidden; }
   border-top: 0;
   color: var(--cl-ink-soft);
   text-decoration: none;
+}
+.certloom-setup-v2-email-choice { display: flex; align-items: flex-start; gap: var(--cl-3); padding: var(--cl-4); border: 1px solid var(--cl-rule); border-radius: var(--cl-r-panel); }
+.certloom-setup-v2-progress-step { flex-direction: column; align-items: center; text-align: center; padding-left: 6px; padding-right: 6px; }
+.certloom-setup-v2-progress-label { max-width: 100%; }
+.certloom-setup-v2-email-choice:has(input:checked) { border-color: var(--cl-brand-blue); background: var(--cl-blue-wash); }
+.certloom-setup-v2-email-choice input { flex: 0 0 auto; margin-top: 3px; }
+.certloom-setup-v2-email-choice small, .certloom-setup-v2-review small { display: block; margin-top: var(--cl-1); color: var(--cl-ink-soft); }
+.certloom-setup-v2-email-preview { min-width: 0; padding: var(--cl-3); border: 1px solid var(--cl-rule); border-radius: var(--cl-r-panel); overflow: hidden; }
+.certloom-setup-v2-email-preview[hidden] { display: none; }
+.certloom-setup-v2-email-preview img { max-width: 100%; height: auto; }
+.certloom-setup-v2-email-preview table { max-width: 100%; }
+.certloom-setup-v2-review { margin: 0 0 var(--cl-5); }
+.certloom-setup-v2-review > div { display: grid; grid-template-columns: 140px minmax(0, 1fr) auto; align-items: start; gap: var(--cl-3); padding: var(--cl-4) 0; border-bottom: 1px solid var(--cl-rule); }
+.certloom-setup-v2-review dt { font-weight: 600; color: var(--cl-ink-soft); }
+.certloom-setup-v2-review dd { margin: 0; overflow-wrap: anywhere; }
+.certloom-setup-v2-review a { min-height: 32px; }
+@media (max-width: 600px) {
+  .certloom-setup-v2-review > div { grid-template-columns: minmax(0, 1fr) auto; }
+  .certloom-setup-v2-review dt { grid-column: 1 / -1; }
+  .certloom-setup-v2-review a { min-height: 44px; display: flex; align-items: center; }
 }
 .certloom-setup-v2-progress-step::before {
   content: "";
@@ -1737,6 +1758,21 @@ body.certloom-setup-v2-body { overflow: hidden; }
 .certloom-setup-v2-model-help div { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--cl-2) var(--cl-5); padding-top: var(--cl-3); }
 .certloom-setup-v2-model-help p { margin: 0; color: var(--cl-ink-soft); }
 .certloom-setup-v2-model-help strong { color: var(--cl-ink); }
+.certloom-setup-fields { display: grid; gap: var(--cl-3); }
+.certloom-setup-field { border: 1px solid var(--cl-rule); border-radius: 12px; overflow: hidden; background: #fff; }
+.certloom-setup-field__choice { display: flex; gap: 10px; align-items: center; min-height: 48px; padding: 12px 16px; cursor: pointer; font-weight: 600; }
+.certloom-setup-field__choice small { margin-left: auto; font-size: 12px; font-weight: 400; color: var(--cl-muted); }
+.certloom-setup-field__settings { display: none; min-inline-size: 0; margin: 0; border: 0; padding: 0 16px 16px; }
+.certloom-setup-field[data-enabled] { border-color: #b6c6ff; }
+.certloom-setup-field[data-enabled] .certloom-setup-field__settings { display: grid; gap: 12px; }
+.certloom-setup-field .certloom-field-collection { border-top: 1px solid var(--cl-rule); padding-top: 12px; }
+.certloom-setup-field .certloom-field-collection__grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,240px),1fr)); gap: 12px; margin: 12px 0; }
+.certloom-setup-field .certloom-field-collection__grid label { display: grid; gap: 6px; }
+.certloom-setup-field .certloom-field-collection__grid .certloom-field-collection__check { display: flex; align-items: start; gap: 8px; }
+.certloom-setup-field .certloom-field-collection__grid input[type=text], .certloom-setup-field select, .certloom-setup-field textarea { width: 100%; max-width: 100%; }
+.certloom-setup-field-review ul { list-style: none; margin: 16px 0; padding: 0; }
+.certloom-setup-field-review li { padding: 12px 0; border-bottom: 1px solid var(--cl-rule); display: grid; gap: 6px; }
+.certloom-setup-field-review li span { color: var(--cl-muted); font-size: 13px; }
 .certloom-setup-v2-field-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-top: 1px solid var(--cl-rule); }
 .certloom-setup-v2-field-options label { display: flex; align-items: center; gap: var(--cl-2); min-height: 44px; padding: var(--cl-2) var(--cl-3); border-bottom: 1px solid var(--cl-rule); }
 .certloom-setup-v2-field-options label:nth-child(odd) { border-right: 1px solid var(--cl-rule); }
@@ -1749,7 +1785,9 @@ body.certloom-setup-v2-body { overflow: hidden; }
 .certloom-setup-v2-presentation-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--cl-3); }
 .certloom-setup-v2-presentation-panel { padding: var(--cl-4); border: 1px solid var(--cl-rule); background: var(--cl-paper); }
 .certloom-setup-v2-presentation-panel[hidden] { display: none; }
-.certloom-setup-v2-panel-head { display: flex; justify-content: space-between; gap: var(--cl-4); align-items: flex-start; margin-bottom: var(--cl-3); }
+.certloom-setup-v2-panel-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--cl-4); align-items: flex-start; margin-bottom: var(--cl-3); }
+.certloom-setup-v2-panel-head > div { flex: 1 1 200px; min-width: 0; }
+.certloom-setup-v2-panel-head > a { flex: 0 0 auto; }
 .certloom-setup-v2-panel-head p { margin: var(--cl-1) 0 0; color: var(--cl-ink-soft); }
 .certloom-setup-v2-media { display: grid; gap: var(--cl-2); }
 .certloom-setup-v2-media-preview { display: flex; align-items: center; gap: var(--cl-3); min-height: 64px; padding: var(--cl-2); border: 1px solid var(--cl-rule); border-radius: var(--cl-r-ctl); background: var(--cl-surface); color: var(--cl-ink-soft); }
@@ -1828,12 +1866,14 @@ body.certloom-setup-v2-body { overflow: hidden; }
 .certloom-active-draft-notice .button { margin-left: 4px; }
 
 @media (max-width: 900px) {
-  .certloom-setup-v2-progress { grid-template-columns: repeat(7, minmax(132px, 1fr)); overflow-x: auto; }
+  .certloom-setup-v2-progress { grid-template-columns: repeat(9, minmax(132px, 1fr)); overflow-x: auto; }
   .certloom-setup-v2-profile-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .certloom-setup-v2-presentation-grid { grid-template-columns: 1fr; }
+  .certloom-setup-v2-presentation-grid > label { min-height: 0; }
 }
 @media (max-width: 600px) {
   .certloom-setup-v2-topbar { min-height: 56px; padding: 0 var(--cl-3); }
+  .certloom-setup-v2 { scroll-padding-block-start: calc(56px + var(--cl-3)); }
   .certloom-setup-v2-notices,
   .certloom-setup-v2-progress,
   .certloom-setup-v2-main,
@@ -2384,4 +2424,89 @@ body.certloom-setup-v2-body { overflow: hidden; }
 	.certloom-setup-v2-restart {
 		margin-top: 8px;
 	}
+}
+
+/* Verification Studio and shared admin polish. Keep the existing brand hero. */
+.certloom-admin-shell .ecapla-certverify-admin-card,
+.certloom-admin-shell .certloom-metric-card {
+  border: 1px solid var(--cl-rule);
+  border-radius: var(--cl-r-card);
+  background: var(--cl-surface);
+}
+.certloom-admin-shell .certloom-metric-card { overflow: hidden; }
+.certloom-admin-shell .certloom-product-subnav {
+  gap: 6px;
+  padding: 8px;
+  border-radius: var(--cl-r-card);
+  flex-wrap: wrap;
+  background: var(--cl-surface);
+}
+.certloom-admin-shell .certloom-product-subnav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: var(--cl-r-lift);
+  color: var(--cl-ink-soft);
+  text-decoration: none;
+}
+.certloom-admin-shell .certloom-product-subnav a[aria-current="page"] {
+  background: var(--cl-blue-wash);
+  color: var(--cl-blue-deep);
+  font-weight: 600;
+}
+.certloom-admin-shell .certloom-product-subnav a:hover { background: var(--cl-paper); color: var(--cl-ink); }
+.certloom-admin-shell .certloom-product-subnav a:focus-visible,
+.certloom-admin-shell .certloom-settings-local-nav a:focus-visible { outline: 3px solid var(--cl-focus); outline-offset: 2px; }
+.certloom-admin-shell .certloom-settings-local-nav { gap: 4px; flex-wrap: wrap; }
+.certloom-admin-shell .certloom-settings-local-nav a { min-height: 36px; display: inline-flex; align-items: center; border-radius: var(--cl-r-lift); padding: 0 10px; }
+.certloom-admin-shell .certloom-settings-local-nav a:hover { background: var(--cl-blue-wash); }
+.certloom-admin-shell .certloom-settings-workspace :is(h2[id],h3[id]),
+.certloom-settings-workspace :is(h2[id],h3[id]) { scroll-margin-top: 54px; }
+.certloom-admin-shell .certloom-settings-savebar {
+  position: sticky; bottom: 12px; z-index: 20;
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px;
+  margin-top: 24px; padding: 14px 20px;
+  border: 1px solid var(--cl-rule); border-radius: var(--cl-r-card);
+  background: var(--cl-surface); box-shadow: var(--cl-shadow-popover);
+}
+.certloom-admin-shell .certloom-settings-savebar [role="status"] { color: var(--cl-ink-soft); }
+.certloom-admin-shell .certloom-settings-savebar.has-changes { border-color: var(--cl-blue); }
+.certloom-admin-shell .certloom-settings-savebar.has-changes [role="status"] { color: var(--cl-blue-deep); font-weight: 600; }
+.certloom-admin-shell .certloom-studio-intro-panel { margin-bottom: 24px; }
+.certloom-admin-shell .certloom-studio-preset-catalog { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 12px; margin: 24px 0; }
+.certloom-admin-shell .certloom-studio-preset-summary { border: 1px solid var(--cl-rule); padding: 18px; border-radius: var(--cl-r-card); background: var(--cl-paper); }
+.certloom-admin-shell .certloom-studio-preset-summary.is-recommended { border-color: var(--cl-blue); background: var(--cl-blue-wash); }
+.certloom-admin-shell .certloom-studio-preset-summary h3 { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; font-size: 15px; }
+.certloom-admin-shell .certloom-studio-preset-summary h3 span,
+.certloom-admin-shell .certloom-studio-edition-status { display: inline-flex; align-items: center; padding: 4px 9px; border-radius: var(--cl-r-pill); background: var(--cl-surface); border: 1px solid var(--cl-rule); font-size: 12px; font-weight: 600; }
+.certloom-admin-shell .certloom-studio-preset-summary p { margin: 0; line-height: 1.65; }
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .certloom-admin-shell .certloom-metric-card { transition: border-color 120ms ease, box-shadow 120ms ease; }
+  .certloom-admin-shell .certloom-metric-card:hover { border-color: var(--cl-blue); box-shadow: var(--cl-shadow-soft); }
+  .certloom-admin-shell .certloom-product-subnav a { transition: color 120ms ease, background-color 120ms ease; }
+}
+@media (max-width: 1200px) { .certloom-admin-shell .certloom-studio-preset-catalog { grid-template-columns: repeat(3,minmax(0,1fr)); } }
+@media (max-width: 782px) {
+  .certloom-admin-shell .certloom-studio-preset-catalog { grid-template-columns: minmax(0,1fr); }
+  .certloom-admin-shell .certloom-product-subnav a,
+  .certloom-admin-shell .certloom-settings-local-nav a { min-height: 44px; }
+  .certloom-admin-shell .certloom-settings-savebar { bottom: 0; padding: 12px; }
+  .certloom-admin-shell .certloom-settings-savebar .button { min-height: 44px; }
+  .certloom-settings-workspace :is(h2[id],h3[id]) { scroll-margin-top: 60px; }
+}
+@media (forced-colors: active) { .certloom-admin-shell .certloom-settings-savebar { box-shadow: none; border-color: CanvasText; } }
+
+@media (max-width: 600px) {
+  .certloom-setup-v2.certloom-admin-shell .button,
+  .certloom-setup-v2.certloom-admin-shell .certloom-setup-v2-brand,
+  .certloom-setup-v2.certloom-admin-shell select,
+  .certloom-setup-v2.certloom-admin-shell input:not([type="hidden"]):not([type="radio"]):not([type="checkbox"]) { min-height: 44px; }
+  .certloom-setup-v2 .certloom-setup-v2-model-help > summary,
+  .certloom-setup-v2 .certloom-setup-v2-add-inline > summary,
+  .certloom-setup-v2 .certloom-setup-v2-optional > summary { min-height: 44px; box-sizing: border-box; padding-block: var(--cl-3); }
+  .certloom-setup-v2 .certloom-setup-v2-panel-head > a,
+  .certloom-setup-v2 .certloom-setup-v2-backend-note a,
+  .certloom-setup-v2 .certloom-setup-v2-design-link { display: inline-flex; align-items: center; min-height: 44px; }
 }

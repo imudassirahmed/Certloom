@@ -1,5 +1,7 @@
 <?php
 /** Alpha.4.79 live-search + compact REST issuance compatibility contract. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $root = dirname( __DIR__ );
 $search = file_get_contents( $root . '/src/Infrastructure/Admin/AdminSearchRest.php' );
 $issue_rest = file_get_contents( $root . '/src/Infrastructure/Admin/IssueCredentialRest.php' );

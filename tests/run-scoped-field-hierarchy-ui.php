@@ -1,5 +1,7 @@
 <?php
 /** Audit regression: Global → Issuer → Program → Batch rules are configurable, not backend-only. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define( 'ABSPATH', __DIR__ . '/' );
 $fail=0;$checks=0; function shui($ok,$label){global$fail,$checks;$checks++;echo($ok?'PASS  ':'FAIL  ').$label.PHP_EOL;if(!$ok)$fail++;}
 $domain=file_get_contents(dirname(__DIR__).'/src/Infrastructure/Admin/DomainAdmin.php');

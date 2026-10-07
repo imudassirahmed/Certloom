@@ -20,9 +20,11 @@ use Certloom\Infrastructure\Database\SchemaManager;
 final class DomainRestoreRowValidator {
 	/** @var PublicCredentialId */
 	private $public_ids;
+	private $account_proof;
 
-	public function __construct( ?PublicCredentialId $public_ids = null ) {
+	public function __construct( ?PublicCredentialId $public_ids = null, ?WholeStateAccountMappingProof $account_proof = null ) {
 		$this->public_ids = $public_ids ?: new PublicCredentialId();
+		$this->account_proof = $account_proof;
 	}
 
 	/** @return true|\WP_Error */
@@ -61,6 +63,9 @@ final class DomainRestoreRowValidator {
 				$dates = array( 'created_at' => 'datetime', 'updated_at' => 'datetime' );
 				break;
 			case 'recipients':
+				// Credential-only archives cannot establish target account ownership.
+				// Whole-state review supplies a typed, exact-row ownership proof.
+				if ( ! empty( $row['wp_user_id'] ) && ( ! $this->account_proof || ( ! $this->account_proof->permits_source( $row ) && ! $this->account_proof->permits_projected( $row ) ) ) ) { return self::unverified_account_links(); }
 				$recipient_name = trim( (string) $row['display_name'] );
 				if ( '' === $recipient_name || $this->length( $recipient_name ) > 255 ) {
 					return $this->invalid( 'recipient' );
@@ -74,6 +79,13 @@ final class DomainRestoreRowValidator {
 					return new \WP_Error( 'certloom_domain_restore_recipient_email_invalid', __( 'A recipient in the backup contains an invalid email address.', 'certloom' ) );
 				}
 				$json  = array( 'custom_fields', 'privacy_identity_hashes' );
+				if ( null !== $row['custom_fields'] && '' !== (string) $row['custom_fields'] ) {
+					$custom = json_decode( (string) $row['custom_fields'], true );
+					if ( is_array( $custom ) && array_key_exists( \Certloom\Application\Recipient\RecipientAccountLink::KEY, $custom ) ) {
+						$account = ( new \Certloom\Application\Recipient\RecipientAccountLink() )->normalize( $custom[ \Certloom\Application\Recipient\RecipientAccountLink::KEY ] );
+						if ( is_wp_error( $account ) ) { return $account; }
+					}
+				}
 				if ( null !== $row['privacy_identity_hashes'] && '' !== (string) $row['privacy_identity_hashes'] ) {
 					$privacy_hashes = json_decode( (string) $row['privacy_identity_hashes'], true );
 					if ( ! is_array( $privacy_hashes ) || count( $privacy_hashes ) > 64 || count( array_unique( array_map( 'strtolower', $privacy_hashes ) ) ) !== count( $privacy_hashes ) ) { return $this->invalid( 'recipient' ); }
@@ -182,6 +194,16 @@ final class DomainRestoreRowValidator {
 				$json  = array( 'old_state_json', 'new_state_json', 'meta_json' );
 				$dates = array( 'created_at' => 'datetime' );
 				break;
+			case 'program_registrations':
+			case 'field_submissions':
+			case 'issuance_requests':
+			case 'issuance_request_events':
+				$workflow = ( new RecipientWorkflowRowValidator() )->validate( $entity, $row );
+				if ( is_wp_error( $workflow ) ) { return $workflow; }
+				foreach ( array( 'created_at', 'updated_at', 'decided_at', 'next_attempt_at' ) as $field ) {
+					if ( array_key_exists( $field, $row ) ) { $dates[ $field ] = 'datetime'; }
+				}
+				break;
 		}
 
 		foreach ( $json as $field ) {
@@ -227,6 +249,11 @@ final class DomainRestoreRowValidator {
 	/** @return \WP_Error */
 	private function invalid( $type ) {
 		return new \WP_Error( 'certloom_domain_restore_' . sanitize_key( $type ) . '_invalid', __( 'A backup record contains invalid Certloom domain data.', 'certloom' ) );
+	}
+
+	/** Numeric IDs alone cannot authorize restoring account ownership. */
+	public static function unverified_account_links() {
+		return new \WP_Error( 'certloom_domain_restore_account_links_unverified', __( 'This credential backup contains WordPress account links that cannot be verified safely. Restore linked accounts using a full WordPress database-and-files backup. Credential-only restore requires a backup without account links.', 'certloom' ) );
 	}
 
 	private function length( $value ) { return function_exists( 'mb_strlen' ) ? mb_strlen( (string) $value, 'UTF-8' ) : strlen( (string) $value ); }

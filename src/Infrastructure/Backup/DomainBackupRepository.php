@@ -6,6 +6,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 use Certloom\Infrastructure\Data\DomainGeneration;
+use Certloom\Infrastructure\Data\DatabaseOptions;
 use Certloom\Infrastructure\Database\SchemaManager;
 
 /** Keyset read model for complete domain backups. Jobs and ephemeral locks are intentionally excluded. */
@@ -15,7 +16,7 @@ final class DomainBackupRepository {
 
 	/** @return array<int,string> */
 	public static function entity_types() {
-		return array( 'issuers', 'programs', 'recipients', 'signers', 'batches', 'batch_recipients', 'signer_assignments', 'templates', 'template_revisions', 'template_assignments', 'credential_series', 'credential_numbers', 'credential_versions', 'credential_events' );
+		return array_merge( array( 'issuers', 'programs', 'recipients', 'signers', 'batches', 'batch_recipients', 'signer_assignments', 'templates', 'template_revisions', 'template_assignments', 'credential_series', 'credential_numbers', 'credential_versions', 'credential_events' ), \Certloom\Domain\Recipient\RecipientWorkflowEntities::all() );
 	}
 
 	/** @return array<string,mixed>|\WP_Error */
@@ -33,8 +34,10 @@ final class DomainBackupRepository {
 		}
 		$config = $this->configuration_snapshot();
 		if ( is_wp_error( $config ) ) { return $config; }
+		$generation = ( new DomainGeneration() )->read_current();
+		if ( is_wp_error( $generation ) ) { return $generation; }
 		return array(
-			'generation' => ( new DomainGeneration() )->current(),
+			'generation' => $generation,
 			'entities' => $entities,
 			'configuration' => $config['values'],
 			'configuration_hash' => $config['hash'],
@@ -43,12 +46,8 @@ final class DomainBackupRepository {
 
 	/** @return array{values:array<string,mixed>,hash:string}|\WP_Error */
 	public function configuration_snapshot() {
-		$values = array();
-		foreach ( self::configuration_keys() as $key ) {
-			$sentinel = array( '__certloom_missing_option__' => $key );
-			$value = get_option( $key, $sentinel );
-			$values[ $key ] = $value === $sentinel ? array( 'exists' => false, 'value' => null ) : array( 'exists' => true, 'value' => $value );
-		}
+		$values = DatabaseOptions::read( self::configuration_keys() );
+		if ( is_wp_error( $values ) ) { return $values; }
 		$json = wp_json_encode( $values, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
 		if ( false === $json ) { return new \WP_Error( 'certloom_domain_backup_configuration_encode_failed', __( 'Certloom could not snapshot its configuration safely.', 'certloom' ) ); }
 		return array( 'values' => $values, 'hash' => hash( 'sha256', $json ) );

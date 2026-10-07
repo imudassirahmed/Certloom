@@ -130,6 +130,8 @@ class Ecapla_CertVerify_REST {
 				'actions'            => $presentation['actions'],
 				'labels'             => $presentation['labels'],
 				'secondary_proof'    => isset( $presentation['secondary_proof'] ) ? $presentation['secondary_proof'] : 'not_required',
+				'profile_html'       => isset( $presentation['profile_html'] ) ? (string) $presentation['profile_html'] : '',
+				'presentation_mode'  => isset( $presentation['presentation_mode'] ) ? (string) $presentation['presentation_mode'] : 'details_only',
 				'qr'                 => $qr,
 				'barcode'            => $barcode,
 			),

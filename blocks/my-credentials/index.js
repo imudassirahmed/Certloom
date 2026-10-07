@@ -48,7 +48,7 @@
 				),
 				el( 'div', blockProps,
 					el( Notice, { status: 'info', isDismissible: false, className: 'certloom-my-credentials-block-note' }, __( 'Each visitor sees their own credentials after signing in. The editor preview shows credentials linked to your account.', 'certloom' ) ),
-					el( ServerSideRender, { block: 'certloom/my-credentials', attributes: a } )
+					el( 'div', { inert: '', className: 'certloom-block-preview' }, el( ServerSideRender, { block: 'certloom/my-credentials', attributes: a } ) )
 				)
 			);
 		},

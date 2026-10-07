@@ -2,7 +2,7 @@
 namespace Certloom\Infrastructure\Repository;
 
 use Certloom\Infrastructure\Database\SchemaManager;
-use Certloom\Infrastructure\Serialization\SafeJson;
+use Certloom\Application\Data\SafeJson;
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
@@ -87,12 +87,11 @@ final class DestinationDeliveryRepository {
 			'created_at'           => $now,
 			'updated_at'           => $now,
 		);
-		$wpdb->last_error = '';
-		$ok = $wpdb->insert( SchemaManager::table( 'destination_deliveries' ), $row );
-		if ( false === $ok || '' !== (string) $wpdb->last_error ) {
+		$ok = ( new DeliveryWriteBoundary( 'destination_deliveries' ) )->insert( $row );
+		if ( is_wp_error( $ok ) ) {
 			/* A concurrent listener may have created the same deterministic delivery. */
 			$existing = $this->find_by_dedupe_key( $dedupe_key );
-			return is_array( $existing ) ? $existing : new \WP_Error( 'certloom_destination_delivery_create_failed', __( 'Certloom could not create the external publishing record safely.', 'certloom' ) );
+			return is_array( $existing ) ? $existing : $ok;
 		}
 		return $delivery_key;
 	}
@@ -145,38 +144,39 @@ final class DestinationDeliveryRepository {
 
 	/** @return true|\WP_Error */
 	private function finish( $delivery_key, $status, $failure_code, $external_reference, array $evidence ) {
-		$current = $this->find_delivery( $delivery_key );
-		if ( is_wp_error( $current ) ) { return $current; }
-		if ( ! is_array( $current ) ) { return new \WP_Error( 'certloom_destination_delivery_missing', __( 'The external publishing record no longer exists.', 'certloom' ) ); }
-		if ( self::STATUS_SUCCEEDED === (string) ( $current['status'] ?? '' ) ) {
-			return self::STATUS_SUCCEEDED === $status ? true : new \WP_Error( 'certloom_destination_already_succeeded', __( 'This credential has already been published to the external destination.', 'certloom' ) );
-		}
-		if ( self::STATUS_UNCERTAIN === (string) ( $current['status'] ?? '' ) ) {
-			return self::STATUS_UNCERTAIN === $status ? true : new \WP_Error( 'certloom_destination_uncertain', __( 'This external publishing attempt has an uncertain outcome and requires administrator review before another attempt.', 'certloom' ) );
-		}
-		$merged = is_array( $current['evidence'] ?? null ) ? $current['evidence'] : array();
-		$merged = array_merge( $merged, $evidence );
-		$encoded = ( new SafeJson() )->encode_array( $merged, 'certloom_destination_delivery_evidence_invalid', __( 'Certloom could not encode external publishing evidence safely.', 'certloom' ) );
-		if ( is_wp_error( $encoded ) ) { return $encoded; }
-		$now = current_time( 'mysql', true );
-		$changes = array( 'status' => $status, 'failure_code' => $failure_code ?: null, 'external_reference' => $external_reference, 'evidence_json' => $encoded, 'updated_at' => $now );
-		if ( self::STATUS_SUCCEEDED === $status ) { $changes['accepted_at'] = $now; $changes['failed_at'] = null; }
-		else { $changes['failed_at'] = $now; }
-		return $this->update_state( $delivery_key, $changes, array( self::STATUS_PREPARING, self::STATUS_QUEUED, self::STATUS_SENDING, self::STATUS_FAILED ) );
+		$delivery_key = self::key( $delivery_key );
+		if ( is_wp_error( $delivery_key ) ) { return $delivery_key; }
+		return ( new DeliveryWriteBoundary( 'destination_deliveries' ) )->change( $delivery_key, function ( array $row ) use ( $status, $failure_code, $external_reference, $evidence ) {
+			$current = $this->decode( $row );
+			if ( ! DeliveryWriteBoundary::attempt_matches( $current, $evidence ) ) { return new \WP_Error( 'certloom_destination_delivery_state_conflict', __( 'This result belongs to a different publishing attempt. Refresh the delivery status.', 'certloom' ) ); }
+			if ( self::STATUS_SUCCEEDED === (string) ( $current['status'] ?? '' ) ) {
+				return self::STATUS_SUCCEEDED === $status ? true : new \WP_Error( 'certloom_destination_already_succeeded', __( 'This credential has already been published to the external destination.', 'certloom' ) );
+			}
+			if ( self::STATUS_UNCERTAIN === (string) ( $current['status'] ?? '' ) ) {
+				return self::STATUS_UNCERTAIN === $status ? true : new \WP_Error( 'certloom_destination_uncertain', __( 'This external publishing attempt has an uncertain outcome and requires administrator review before another attempt.', 'certloom' ) );
+			}
+			$state = (string) $current['status'];
+			if ( ! in_array( $state, array( self::STATUS_PREPARING, self::STATUS_QUEUED, self::STATUS_SENDING, self::STATUS_FAILED ), true ) || ( self::STATUS_SUCCEEDED === $status && self::STATUS_SENDING !== $state ) ) { return new \WP_Error( 'certloom_destination_delivery_state_conflict', __( 'The publishing state changed before this result could be saved.', 'certloom' ) ); }
+			if ( self::STATUS_FAILED === $status && self::STATUS_FAILED === $state ) { return true; }
+			$merged = is_array( $current['evidence'] ?? null ) ? $current['evidence'] : array();
+			$merged = array_merge( $merged, $evidence );
+			$encoded = ( new SafeJson() )->encode_array( $merged, 'certloom_destination_delivery_evidence_invalid', __( 'Certloom could not encode external publishing evidence safely.', 'certloom' ) );
+			if ( is_wp_error( $encoded ) ) { return $encoded; }
+			$now = current_time( 'mysql', true );
+			$changes = array( 'status' => $status, 'failure_code' => $failure_code ?: null, 'external_reference' => $external_reference, 'evidence_json' => $encoded, 'updated_at' => $now );
+			if ( self::STATUS_SUCCEEDED === $status ) { $changes['accepted_at'] = $now; $changes['failed_at'] = null; }
+			else { $changes['failed_at'] = $now; }
+			return $changes;
+		} );
 	}
 
 	/** @return true|\WP_Error */
 	private function update_state( $delivery_key, array $changes, array $allowed ) {
-		global $wpdb;
 		$delivery_key = self::key( $delivery_key );
 		if ( is_wp_error( $delivery_key ) ) { return $delivery_key; }
-		$wpdb->last_error = '';
-		$current = $wpdb->get_var( $wpdb->prepare( 'SELECT status FROM %i WHERE delivery_key = %s', SchemaManager::table( 'destination_deliveries' ), $delivery_key ) );
-		if ( '' !== (string) $wpdb->last_error ) { return new \WP_Error( 'certloom_destination_delivery_read_failed', __( 'Certloom could not read the external publishing record.', 'certloom' ) ); }
-		if ( ! in_array( (string) $current, $allowed, true ) ) { return new \WP_Error( 'certloom_destination_delivery_state_conflict', __( 'The external publishing state changed before this operation could be saved.', 'certloom' ) ); }
-		$wpdb->last_error = '';
-		$ok = $wpdb->update( SchemaManager::table( 'destination_deliveries' ), $changes, array( 'delivery_key' => $delivery_key ) );
-		return '' === (string) $wpdb->last_error && ( 1 === (int) $ok || 0 === (int) $ok ) ? true : new \WP_Error( 'certloom_destination_delivery_update_failed', __( 'Certloom could not update the external publishing record.', 'certloom' ) );
+		return ( new DeliveryWriteBoundary( 'destination_deliveries' ) )->change( $delivery_key, static function ( array $current ) use ( $changes, $allowed ) {
+			return in_array( (string) $current['status'], $allowed, true ) ? $changes : new \WP_Error( 'certloom_destination_delivery_state_conflict', __( 'The external publishing state changed before this operation could be saved.', 'certloom' ) );
+		} );
 	}
 
 	/** @return array<string,mixed> */

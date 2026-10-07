@@ -31,7 +31,8 @@ final class JobQueue {
 		if ( is_wp_error( $scheduled ) ) {
 			return new \WP_Error(
 				'certloom_job_schedule_failed',
-				__( 'Certloom saved the background job but could not schedule its first worker slice. The watchdog will retry queued work.', 'certloom' )
+				__( 'Certloom saved the background job but could not schedule its first worker slice. The watchdog will retry queued work.', 'certloom' ),
+				array( 'job_key' => $job_key )
 			);
 		}
 		return $job_key;

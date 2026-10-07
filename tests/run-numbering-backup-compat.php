@@ -1,5 +1,7 @@
 <?php
 /** Backup-format compatibility checks for numbering-state introduction in complete backup v4. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define('ABSPATH',__DIR__.'/');
 define('MINUTE_IN_SECONDS',60);define('MB_IN_BYTES',1048576);
 class WP_Error{private $c;private $m;public function __construct($c,$m){$this->c=$c;$this->m=$m;}public function get_error_code(){return $this->c;}public function get_error_message(){return $this->m;}}
@@ -7,7 +9,15 @@ function is_wp_error($v){return $v instanceof WP_Error;}function __($v,$d=null){
 class Ecapla_CertVerify_Numbering{const STATE_OPTION='certverify_number_sequence_next';public static function validate_backup_state($state){if($state===null||$state==='')return null;if(is_bool($state)||is_array($state)||is_object($state)||!preg_match('/^[0-9]+$/D',(string)$state))return new WP_Error('bad','bad');$v=(int)$state;return $v>=1&&$v<=1000000000000?$v:new WP_Error('bad','bad');}public static function normalize_policy($settings){$mode=sanitize_key((string)($settings['numbering_mode']??'manual'));return in_array($mode,array('manual','sequential','random','uuid'),true)?array('numbering_mode'=>$mode):new WP_Error('bad-mode','bad mode');}}
 function bcheck($c,$m){global $bc;if(!$c)throw new RuntimeException($m);$bc++;echo "PASS  $m\n";}$bc=0;
 require dirname(__DIR__).'/includes/class-ecapla-certverify-backup.php';
-$method=new ReflectionMethod('Ecapla_CertVerify_Backup','validate_manifest');$method->setAccessible(true);
+require __DIR__ . '/support/option-database.php';
+require dirname( __DIR__ ) . '/src/Infrastructure/Data/DatabaseOptions.php';
+class Ecapla_CertVerify_Fields { const OPTION_KEY = 'certverify_fields'; const RETIRED_OPTION_KEY = 'certverify_retired_fields'; }
+class Ecapla_CertVerify_Settings { const OPTION_KEY = 'certverify_settings'; }
+class Ecapla_CertVerify_Database { public static function get_registry_snapshot() { return array( 'count' => 0, 'max_id' => 0 ); } }
+function maybe_serialize( $value ) { return serialize( $value ); }
+$options = array( Ecapla_CertVerify_Numbering::STATE_OPTION => '42' );
+$wpdb = new CertloomOptionDatabase( $options );
+$method=new ReflectionMethod('Ecapla_CertVerify_Backup','validate_manifest');if ( PHP_VERSION_ID < 80100 ) { $method->setAccessible(true); }
 $base=array('type'=>'manifest','format'=>'certverify-backup','generated_at'=>'2026-08-23T00:00:00Z','plugin_version'=>'1.6.10','schema_version'=>'7','fields'=>array(),'retired_fields'=>array(),'settings'=>array());
 $v2=$base;$v2['format_version']=2;bcheck(true===$method->invoke(null,$v2),'stream v2 backup remains accepted without numbering state');
 $v3=$base;$v3['format_version']=3;bcheck(true===$method->invoke(null,$v3),'stream v3 backup remains accepted without numbering state');
@@ -21,5 +31,10 @@ $v4['settings']=array('numbering_mode'=>'future-mode');$bad_policy=$method->invo
 $v5=$base;$v5['format_version']=5;$v5['numbering_state']=null;bcheck(is_wp_error($method->invoke(null,$v5)),'unknown future complete-backup version fails closed');
 $src=file_get_contents(dirname(__DIR__).'/includes/class-ecapla-certverify-backup.php');
 bcheck(false!==strpos($src,'self::LEGACY_STREAM_VERSION !== $stream_version'),'v2 keeps legacy no-manifest-hash stream semantics while v3/v4 hash the manifest');
-bcheck(false!==strpos($src,"'numbering_state' => get_option( Ecapla_CertVerify_Numbering::STATE_OPTION, null )"),'restore preview marker includes numbering cursor for stale-review detection');
+$capture = new ReflectionMethod( 'Ecapla_CertVerify_Backup', 'capture_state_marker' );
+if ( PHP_VERSION_ID < 80100 ) { $capture->setAccessible( true ); }
+$before = $capture->invoke( null );
+$options[ Ecapla_CertVerify_Numbering::STATE_OPTION ] = '43';
+$after = $capture->invoke( null );
+bcheck(is_array($before)&&is_array($after)&&$before['config_hash']!==$after['config_hash'],'restore preview marker freshly reads numbering cursor for stale-review detection');
 echo "\n{$bc} checks, 0 failures\n";

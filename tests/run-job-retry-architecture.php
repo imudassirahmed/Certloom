@@ -1,5 +1,7 @@
 <?php
 /** Static release guard for explicit failed-job retry orchestration. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $runtime = file_get_contents( dirname( __DIR__ ) . '/src/Infrastructure/Job/JobRuntime.php' );
 $admin   = file_get_contents( dirname( __DIR__ ) . '/src/Infrastructure/Admin/DomainDataToolsAdmin.php' );
 if ( false === $runtime || false === $admin ) { throw new RuntimeException( 'Could not read job retry implementation.' ); }

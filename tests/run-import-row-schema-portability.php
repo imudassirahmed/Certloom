@@ -1,5 +1,7 @@
 <?php
 /** Regression: import staging must avoid MariaDB ROW_NUMBER while preserving application row_number semantics. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define( 'ABSPATH', __DIR__ . '/fake-wp/' );
 define( 'ARRAY_A', 'ARRAY_A' );
 define( 'DAY_IN_SECONDS', 86400 );
@@ -53,7 +55,7 @@ irsp_check( false !== strpos( $repo, "'row_number' => absint( \$row['source_row_
 irsp_check( false !== strpos( $repo, 'ORDER BY source_row_number ASC' ), 'staged reads order by the portable persisted source row number' );
 
 $migrate = new ReflectionMethod( SchemaManager::class, 'migrate_import_source_row_number' );
-$migrate->setAccessible( true );
+if ( PHP_VERSION_ID < 80100 ) { $migrate->setAccessible( true ); }
 $GLOBALS['wpdb']->columns = array( array( 'Field' => 'id' ), array( 'Field' => 'row_number' ), array( 'Field' => 'source_row_number' ) );
 $result = $migrate->invoke( null );
 irsp_check( true === $result && 1 === count( $GLOBALS['wpdb']->queries ), 'schema compatibility copies legacy staged row numbers idempotently when both columns exist' );

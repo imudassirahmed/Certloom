@@ -1,5 +1,7 @@
 <?php
 /** Stable new hashes and bounded historical float-hash compatibility. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 if ( ! defined( 'ABSPATH' ) ) { define( 'ABSPATH', __DIR__ . '/fake-wp/' ); }
 require_once dirname( __DIR__ ) . '/src/Application/Rendering/CanonicalJson.php';
 

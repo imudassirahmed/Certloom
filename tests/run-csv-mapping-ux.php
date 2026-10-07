@@ -1,5 +1,7 @@
 <?php
 /** UX-C01B — complete truthful mapper + auto-mapping presentation contract. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $root=dirname(__DIR__);$pass=0;$fail=0;
 function cmx($ok,$label){global $pass,$fail;if($ok){$pass++;echo "PASS  $label\n";}else{$fail++;echo "FAIL  $label\n";}}
 function cms($root,$path){return file_get_contents($root.'/'.$path);}

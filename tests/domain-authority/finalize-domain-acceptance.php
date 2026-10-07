@@ -1,5 +1,7 @@
 <?php
 /** Create a reviewed external DBAUTH authority directory from genuine v5 acceptance evidence. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 require_once dirname(__DIR__).'/bootstrap-autoload.php';
 use Certloom\Application\Migration\DomainAcceptanceImporter;
 use Certloom\Application\Migration\DomainReleaseManifest;

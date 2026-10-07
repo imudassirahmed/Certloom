@@ -1,6 +1,8 @@
 <?php
 /** UX-CORE-04 — one Credentials registry adapter across current + historical storage. */
 namespace {
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
+
 	define( 'ABSPATH', __DIR__ . '/fake-wp/' );
 	class WP_Error {
 		private $code; private $message;

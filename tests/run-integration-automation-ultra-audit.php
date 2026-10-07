@@ -1,5 +1,7 @@
 <?php
 /** Cross-system ultra-audit contract for issuance provenance, integrations and automations. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $root=dirname(__DIR__);$pass=0;$fail=0;function ua($ok,$label){global$pass,$fail;if($ok){$pass++;echo"PASS  $label\n";}else{$fail++;echo"FAIL  $label\n";}}
 $read=function($f)use($root){return file_get_contents($root.'/'.$f);};
 $cred=$read('src/Infrastructure/Repository/CredentialRepository.php');$unified=$read('src/Infrastructure/Repository/UnifiedCredentialRegistry.php');$domain=$read('src/Infrastructure/Admin/DomainAdmin.php');$listener=$read('src/Infrastructure/Email/EmailAutomationListener.php');$rules=$read('src/Infrastructure/Email/EmailAutomationRuleRepository.php');$runs=$read('src/Infrastructure/Email/EmailAutomationRunRepository.php');$woo=$read('src/Infrastructure/Integration/WooCommerceBridge.php');$coord=$read('src/Application/Integration/IntegrationIssuanceCoordinator.php');$manual=$read('src/Application/Issuance/ManualIssuanceService.php');$integrations=$read('admin/views/integrations.php');$automations=$read('admin/views/automations.php');$admin=$read('admin/class-ecapla-certverify-admin.php');$credly=$read('src/Infrastructure/Integration/CredlyPublishingListener.php');$webhook=$read('src/Infrastructure/Integration/WebhookBridge.php');$coursera=$read('src/Infrastructure/Integration/CourseraXapiBridge.php');

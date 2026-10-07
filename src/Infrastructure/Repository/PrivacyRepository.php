@@ -3,6 +3,7 @@ namespace Certloom\Infrastructure\Repository;
 
 use Certloom\Application\Contract\PrivacyRepositoryInterface;
 use Certloom\Infrastructure\Data\DomainGeneration;
+use Certloom\Infrastructure\Database\Transaction;
 use Certloom\Infrastructure\Database\SchemaManager;
 use Certloom\Application\Data\SafeJson;
 use Certloom\Application\Privacy\IdentityDigest;
@@ -100,38 +101,51 @@ final class PrivacyRepository implements PrivacyRepositoryInterface {
 	}
 
 	public function anonymize_recipient( $recipient_id, $replacement_name, $expected_updated_at, array $identity_hashes = array() ) {
-		global $wpdb;
-		$recipient_id = absint( $recipient_id );
-		$replacement_name = trim( (string) $replacement_name );
-		if ( ! $recipient_id || '' === $replacement_name ) {
-			return new \WP_Error( 'certloom_privacy_anonymize_invalid', __( 'Certloom could not prepare the recipient anonymization safely.', 'certloom' ) );
-		}
-		$identity_hashes = ( new IdentityDigest() )->merge_email( $identity_hashes, null );
-		if ( ! ( new IdentityDigest() )->is_valid_history( $identity_hashes ) ) { return new \WP_Error( 'certloom_recipient_privacy_identity_limit', __( 'Recipient privacy identity history exceeds its safe bounded limit.', 'certloom' ) ); }
-		$encoded_hashes = ( new SafeJson() )->encode_array( $identity_hashes, 'certloom_recipient_privacy_identity_invalid', __( 'Recipient privacy identity data could not be encoded safely.', 'certloom' ) );
-		if ( is_wp_error( $encoded_hashes ) ) { return $encoded_hashes; }
-		$generation = ( new DomainGeneration() )->mark_before_mutation();
-		if ( is_wp_error( $generation ) ) { return $generation; }
-		$wpdb->last_error = '';
-		$changed = $wpdb->query(
-			$wpdb->prepare(
-				'UPDATE %i SET display_name = %s, first_name = NULL, middle_name = NULL, last_name = NULL, email = NULL, privacy_identity_hashes = %s, privacy_anonymized_at = %s, wp_user_id = NULL, external_id = NULL, custom_fields = NULL, updated_at = %s WHERE id = %d AND updated_at = %s',
-				SchemaManager::table( 'recipients' ),
-				$replacement_name,
-				$encoded_hashes,
-				current_time( 'mysql', true ),
-				current_time( 'mysql', true ),
-				$recipient_id,
-				(string) $expected_updated_at
-			)
-		);
-		if ( false === $changed || '' !== (string) $wpdb->last_error ) {
-			return new \WP_Error( 'certloom_privacy_anonymize_failed', __( 'Certloom could not anonymize the recipient safely.', 'certloom' ) );
-		}
-		if ( 1 !== (int) $changed ) {
-			return new \WP_Error( 'certloom_privacy_anonymize_stale', __( 'The recipient changed while the privacy request was being processed. No anonymization was committed.', 'certloom' ) );
-		}
-		return true;
+		return ( new Transaction() )->run( function () use ( $recipient_id, $replacement_name, $expected_updated_at, $identity_hashes ) {
+			global $wpdb;
+			$recipient_id = absint( $recipient_id );
+			$replacement_name = trim( (string) $replacement_name );
+			if ( ! $recipient_id || '' === $replacement_name ) {
+				return new \WP_Error( 'certloom_privacy_anonymize_invalid', __( 'Certloom could not prepare the recipient anonymization safely.', 'certloom' ) );
+			}
+			$identity_hashes = ( new IdentityDigest() )->merge_email( $identity_hashes, null );
+			if ( ! ( new IdentityDigest() )->is_valid_history( $identity_hashes ) ) { return new \WP_Error( 'certloom_recipient_privacy_identity_limit', __( 'Recipient privacy identity history exceeds its safe bounded limit.', 'certloom' ) ); }
+			$encoded_hashes = ( new SafeJson() )->encode_array( $identity_hashes, 'certloom_recipient_privacy_identity_invalid', __( 'Recipient privacy identity data could not be encoded safely.', 'certloom' ) );
+			if ( is_wp_error( $encoded_hashes ) ) { return $encoded_hashes; }
+			$generation = ( new DomainGeneration() )->mark_before_mutation();
+			if ( is_wp_error( $generation ) ) { return $generation; }
+			$wpdb->last_error = '';
+			$changed = $wpdb->query(
+				$wpdb->prepare(
+					'UPDATE %i SET display_name = %s, first_name = NULL, middle_name = NULL, last_name = NULL, email = NULL, privacy_identity_hashes = %s, privacy_anonymized_at = %s, wp_user_id = NULL, external_id = NULL, custom_fields = NULL, updated_at = %s WHERE id = %d AND updated_at = %s',
+					SchemaManager::table( 'recipients' ),
+					$replacement_name,
+					$encoded_hashes,
+					current_time( 'mysql', true ),
+					current_time( 'mysql', true ),
+					$recipient_id,
+					(string) $expected_updated_at
+				)
+			);
+			if ( false === $changed || '' !== (string) $wpdb->last_error ) {
+				return new \WP_Error( 'certloom_privacy_anonymize_failed', __( 'Certloom could not anonymize the recipient safely.', 'certloom' ) );
+			}
+			if ( 1 !== (int) $changed ) {
+				return new \WP_Error( 'certloom_privacy_anonymize_stale', __( 'The recipient changed while the privacy request was being processed. No anonymization was committed.', 'certloom' ) );
+			}
+			$workflow_queries = array(
+				array( 'UPDATE %i SET fields_json=NULL, source_ref=NULL, status=%s, revision=revision+1, updated_at=%s WHERE recipient_id=%d', array( SchemaManager::table( 'program_registrations' ), 'cancelled', current_time( 'mysql', true ), $recipient_id ) ),
+				array( 'UPDATE %i SET candidate_value=%s, submitted_by=NULL, decided_by=NULL, status=%s, open_slot=NULL, revision=revision+1, updated_at=%s WHERE recipient_id=%d', array( SchemaManager::table( 'field_submissions' ), '', 'cancelled', current_time( 'mysql', true ), $recipient_id ) ),
+				array( 'UPDATE %i SET intake_json=%s, evidence_json=NULL, source_ref=NULL, blockers_json=%s, review_sha256=NULL, mapping_sha256=NULL, restore_state=%s, next_attempt_at=NULL, status=CASE WHEN status=%s THEN status ELSE %s END, revision=revision+1, updated_at=%s WHERE recipient_id=%d', array( SchemaManager::table( 'issuance_requests' ), '{}', '[{"code":"privacy_erased"}]', 'paused', 'issued', 'cancelled', current_time( 'mysql', true ), $recipient_id ) ),
+				array( "UPDATE %i e INNER JOIN %i q ON q.id=e.request_id SET e.meta_json=NULL, e.actor_user_id=NULL, e.reason_code=CASE WHEN e.event_type='request.notice' THEN 'notice_erased' ELSE e.reason_code END, e.event_type=CASE WHEN e.event_type='request.notice' THEN 'request.notice_erased' ELSE e.event_type END WHERE q.recipient_id=%d", array( SchemaManager::table( 'issuance_request_events' ), SchemaManager::table( 'issuance_requests' ), $recipient_id ) ),
+			);
+			foreach ( $workflow_queries as $query ) {
+				$wpdb->last_error = '';
+				$result = $wpdb->query( $wpdb->prepare( $query[0], $query[1] ) );
+				if ( false === $result || '' !== (string) $wpdb->last_error ) { return new \WP_Error( 'certloom_privacy_workflow_erase_failed', __( 'Certloom could not erase mutable recipient workflow data. The anonymization was rolled back.', 'certloom' ) ); }
+			}
+			return true;
+		} );
 	}
 
 	public function export_series_for_identity( $email, $wp_user_id = 0, $offset = 0, $limit = 50 ) {
@@ -142,6 +156,31 @@ final class PrivacyRepository implements PrivacyRepositoryInterface {
 	}
 	public function export_events_for_identity( $email, $wp_user_id = 0, $offset = 0, $limit = 50 ) {
 		return $this->export_joined( 'events', $email, $wp_user_id, $offset, $limit );
+	}
+
+	public function export_workflow_for_identity( $entity, $email, $wp_user_id = 0, $offset = 0, $limit = 50 ) {
+		global $wpdb;
+		if ( ! in_array( $entity, \Certloom\Domain\Recipient\RecipientWorkflowEntities::all(), true ) ) { return new \WP_Error( 'certloom_privacy_workflow_export_invalid', __( 'The requested workflow export is invalid.', 'certloom' ) ); }
+		if ( ! $this->domain_storage_exists() ) { return array(); }
+		$email = sanitize_email( (string) $email ); $wp_user_id = absint( $wp_user_id );
+		if ( '' === $email && ! $wp_user_id ) { return array(); }
+		$identity = array(); $identity_args = array();
+		$digest = ( new IdentityDigest() )->email( $email );
+		if ( '' !== $email ) { $identity[] = 'r.email = %s'; $identity_args[] = $email; }
+		if ( null !== $digest ) { $identity[] = 'r.privacy_identity_hashes LIKE %s'; $identity_args[] = '%' . $wpdb->esc_like( $digest ) . '%'; }
+		if ( $wp_user_id ) { $identity[] = 'r.wp_user_id = %d'; $identity_args[] = $wp_user_id; }
+		if ( 'issuance_request_events' === $entity ) {
+			$sql = 'SELECT w.* FROM %i w INNER JOIN %i q ON q.id=w.request_id INNER JOIN %i r ON r.id=q.recipient_id';
+			$args = array( SchemaManager::table( $entity ), SchemaManager::table( 'issuance_requests' ), SchemaManager::table( 'recipients' ) );
+		} else {
+			$sql = 'SELECT w.* FROM %i w INNER JOIN %i r ON r.id=w.recipient_id';
+			$args = array( SchemaManager::table( $entity ), SchemaManager::table( 'recipients' ) );
+		}
+		$sql .= ' WHERE (' . implode( ' OR ', $identity ) . ') ORDER BY w.id ASC LIMIT %d OFFSET %d';
+		$args = array_merge( $args, $identity_args, array( max( 1, min( 100, absint( $limit ) ) ), absint( $offset ) ) );
+		$wpdb->last_error = '';
+		$rows = $wpdb->get_results( $wpdb->prepare( $sql, $args ), ARRAY_A );
+		return '' !== (string) $wpdb->last_error || ! is_array( $rows ) ? new \WP_Error( 'certloom_privacy_workflow_export_failed', __( 'Certloom could not export recipient workflow details.', 'certloom' ) ) : $rows;
 	}
 
 	public function export_signers_for_email( $email, $offset = 0, $limit = 50 ) {

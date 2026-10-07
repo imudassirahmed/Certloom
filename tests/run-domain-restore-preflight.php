@@ -1,5 +1,7 @@
 <?php
 /** Pure semantic restore-preflight tests over the versioned JSONL backup format. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $root=sys_get_temp_dir().'/certloom-restore-preflight-'.bin2hex(random_bytes(4));mkdir($root,0700,true);
 if(!class_exists('WP_Error')){class WP_Error{private $c,$m,$d;function __construct($c='',$m='',$d=null){$this->c=$c;$this->m=$m;$this->d=$d;}function get_error_code(){return $this->c;}function get_error_message(){return $this->m;}function get_error_data(){return $this->d;}}}
 function is_wp_error($v){return $v instanceof WP_Error;} function __($t){return $t;} function absint($v){return abs((int)$v);} function sanitize_key($k){return strtolower(preg_replace('/[^a-z0-9_\-]/','',(string)$k));} function wp_json_encode($v,$flags=0){return json_encode($v,$flags);}
@@ -25,4 +27,6 @@ $badprev=$entities;$badprev[5]['data']['previous_version_id']=999;$bad3=$root.'/
 $legacy=$root.'/legacy-v1.data';$legacy_entities=$entities;foreach($legacy_entities as &$legacy_entity){if('credential_series'===$legacy_entity['entity']){unset($legacy_entity['data']['batch_id']);}}unset($legacy_entity);rp_write($legacy,$legacy_entities,DomainBackupFormat::LEGACY_VERSION);$r=(new DomainRestorePreflightService())->analyze($legacy);rp_same(false,is_wp_error($r),'legacy v1');rp_same(true,$r['ready'],'legacy ready');rp_same(0,$r['counts']['signers'],'legacy signer default');rp_same(0,$r['counts']['batches'],'legacy batch default');echo "PASS  pre-1.6.4 v1 domain backups remain restorable with new entities synthesized empty\n";
 $unicode=$entities;$unicode[0]['data']['slug']='%e6%b5%8b%e8%af%95';$unicode_path=$root.'/unicode-issuer.data';rp_write($unicode_path,$unicode);$r=(new DomainRestorePreflightService())->analyze($unicode_path);rp_same(false,is_wp_error($r),'percent-encoded issuer slug');rp_same(true,$r['ready'],'unicode issuer ready');echo "PASS  canonical percent-encoded WordPress issuer slugs round-trip through restore preflight\n";
 $badslug=$entities;$badslug[0]['data']['slug']='%zz';$badslug_path=$root.'/bad-issuer-slug.data';rp_write($badslug_path,$badslug);$r=(new DomainRestorePreflightService())->analyze($badslug_path);rp_same(true,is_wp_error($r),'malformed issuer slug');echo "PASS  malformed percent-encoded issuer slugs fail closed before restore\n";
-foreach(glob($root.'/*') as $f)unlink($f);rmdir($root);echo "\n7 tests, 0 failures\n";
+foreach(array(1,999999999) as $account_id){$linked=$entities;$linked[2]['data']['wp_user_id']=$account_id;$linked_path=$root.'/linked-'.$account_id.'.data';rp_write($linked_path,$linked);$r=(new DomainRestorePreflightService())->analyze($linked_path);rp_same(true,is_wp_error($r),'unverified account link');rp_same('certloom_domain_restore_account_links_unverified',$r->get_error_code(),'account identity must be proven, not inferred from a numeric ID');}
+echo "PASS  account-linked backups fail closed for both plausible and nonexistent numeric WordPress IDs\n";
+foreach(glob($root.'/*') as $f)unlink($f);rmdir($root);echo "\n9 tests, 0 failures\n";

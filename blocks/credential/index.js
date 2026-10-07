@@ -43,7 +43,7 @@
 					)
 				),
 				el( 'div', blockProps,
-					a.number ? el( ServerSideRender, { block: 'certloom/credential', attributes: a } ) : el( Notice, { status: 'info', isDismissible: false }, __( 'Enter a certificate number in the block sidebar to preview the credential profile.', 'certloom' ) )
+					a.number ? el( 'div', { inert: '', className: 'certloom-block-preview' }, el( ServerSideRender, { block: 'certloom/credential', attributes: a } ) ) : el( Notice, { status: 'info', isDismissible: false }, __( 'Enter a certificate number in the block sidebar to preview the credential profile.', 'certloom' ) )
 				)
 			);
 		},

@@ -8,6 +8,9 @@ Thumbs.db
 # Local tooling and dependencies
 node_modules/
 vendor/
+# Exact, prefixed runtime libraries shipped with the certificate renderer.
+!resources/renderer/vendor/
+!resources/renderer/vendor/**
 __pycache__/
 *.pyc
 .phpunit.result.cache
@@ -32,3 +35,6 @@ wp-config.php
 /QA-NOT-FOR-PRODUCTION.txt
 /.playwright-cli/
 /output/
+
+# Locally supplied integration installers and browser download metadata.
+/Integrations/

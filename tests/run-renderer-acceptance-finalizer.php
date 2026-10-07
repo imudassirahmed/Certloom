@@ -1,5 +1,8 @@
 <?php
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 require_once __DIR__ . '/bootstrap-autoload.php';
+require_once __DIR__ . '/support/packaging-tools.php';
 require_once __DIR__ . '/renderer-candidate/finalize-lib.php';
 
 use Certloom\Application\Rendering\RendererAcceptanceContract;
@@ -52,6 +55,7 @@ $evidence=array(
 $verification_index=array('schema'=>'certloom-renderer-verification-index','version'=>1,'bundle_manifest_sha256'=>$report['bundle_manifest_sha256'],'verification_report_sha256'=>$report_hash,'verifier_environment_sha256'=>$env_hash);
 
 $base=sys_get_temp_dir().'/certloom-raf-'.bin2hex(random_bytes(5)); mkdir($base,0700,true);
+try {
 raf_write($base.'/evidence.json',$evidence); raf_write($base.'/report.json',$report); raf_write($base.'/environment.json',$environment); raf_write($base.'/verification-index.json',$verification_index);
 $finalizer=new CertloomProductionAcceptanceFinalizer(dirname(__DIR__));
 $result=$finalizer->finalize($base.'/evidence.json',$base.'/report.json',$base.'/environment.json',$base.'/verification-index.json',$base.'/out');
@@ -64,8 +68,10 @@ raf_check($runtime_payload===$result['release_manifest']['runtime_payload'],'Fin
 raf_check(2===$result['authority_index']['version']&&$runtime_payload===$result['authority_index']['runtime_payload'],'Authority index v2 must preserve the exact runtime-payload fingerprint.');
 raf_check(hash_equals((new RendererAcceptanceContract())->hash($evidence),$result['acceptance_sha256']),'Finalizer must preserve exact normalized acceptance identity.');
 raf_check(hash_equals((new RendererReleaseManifest())->hash($result['release_manifest']),$result['release_manifest_sha256']),'Finalizer must expose canonical release-manifest identity.');
+if('Windows'===PHP_OS_FAMILY){echo "SKIP  Two POSIX mode assertions are unavailable on Windows; authority uses the private temporary directory ACL.\n";}else{
 raf_check(0600===(fileperms($base.'/out/accepted.json')&0777),'Staged accepted.json must be owner-readable/writable only.');
 raf_check(0700===(fileperms($base.'/out')&0777),'Published authority staging directory must be owner-only.');
+}
 raf_check(hash_equals($report_hash,$report_contract->hash(json_decode(file_get_contents($base.'/out/verification-report.json'),true))),'Staged verification report must preserve canonical report identity.');
 raf_check(raf_throws(function()use($finalizer,$base){$finalizer->finalize($base.'/evidence.json',$base.'/report.json',$base.'/environment.json',$base.'/verification-index.json',$base.'/out');}),'Finalizer must reject a non-empty output directory.');
 mkdir($base.'/empty-out',0700);
@@ -80,9 +86,9 @@ $symlink_parent=$base.'/symlink-parent';
 if(function_exists('symlink')&&@symlink($base,$symlink_parent)){
 	raf_check(raf_throws(function()use($finalizer,$base,$symlink_parent){$finalizer->finalize($symlink_parent.'/evidence.json',$base.'/report.json',$base.'/environment.json',$base.'/verification-index.json',$base.'/symlink-input-out');}),'Finalizer must reject evidence paths containing symbolic parent components.');
 	raf_check(raf_throws(function()use($finalizer,$base,$symlink_parent){$finalizer->finalize($base.'/evidence.json',$base.'/report.json',$base.'/environment.json',$base.'/verification-index.json',$symlink_parent.'/authority-through-link');}),'Finalizer must reject output parents containing symbolic components.');
-}
+}else{echo "SKIP  Two symbolic-parent probes require local symlink permission.\n";}
 raf_check(is_file(__DIR__.'/renderer-candidate/finalize-production-acceptance.php'),'Canonical acceptance finalization CLI must be source-controlled.');
 raf_check(is_file(__DIR__.'/renderer-candidate/finalize-lib.php'),'Canonical source-only finalizer library must be source-controlled.');
 
-exec('rm -rf '.escapeshellarg($base));
+} finally { certloom_test_remove_fixture_tree($base,$base); }
 echo "PASS  PDF-04 finalizer cross-links imported evidence and stages release authority without mutating plugin runtime\n\n{$checks} checks, 0 failures\n";

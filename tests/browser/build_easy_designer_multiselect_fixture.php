@@ -1,5 +1,7 @@
 <?php
 /** Build a self-contained DSX-02B browser fixture on top of the frozen DSX-02A fixture. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 ob_start();
 require __DIR__ . '/build_easy_designer_fixture.php';
 $html = ob_get_clean();

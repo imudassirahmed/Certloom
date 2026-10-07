@@ -1,7 +1,12 @@
 <?php
 /** I18N-03D reviewed-language acceptance boundary regression. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
+require_once __DIR__ . '/support/python-process.php';
+require_once __DIR__ . '/support/packaging-tools.php';
 $root = dirname( __DIR__ );
 $checks = 0;
+$skips = 0;
 function lra_check( $condition, $message ) {
     global $checks;
     ++$checks;
@@ -10,15 +15,11 @@ function lra_check( $condition, $message ) {
         exit( 1 );
     }
 }
-function lra_exec( $command ) {
-    $out = array(); $rc = 0;
-    exec( $command . ' 2>&1', $out, $rc );
-    return array( $rc, implode( "\n", $out ) );
+function lra_exec( array $arguments, array $environment = array() ) {
+    return certloom_test_python( $arguments, $environment );
 }
 function lra_rm( $path ) {
-    if ( file_exists( $path ) || is_link( $path ) ) {
-        exec( 'rm -rf ' . escapeshellarg( $path ) );
-    }
+    certloom_test_remove_fixture_tree( $path, $path );
 }
 
 $accept = $root . '/tests/i18n/accept_language_review.py';
@@ -48,22 +49,18 @@ $manifest_before = hash_file( 'sha256', $manifest );
 // Produce an exact current review kit and a test-only technically complete return.
 $kit_dir = $base . '/kit-es';
 list( $kit_rc, $kit_out ) = lra_exec(
-    'SOURCE_DATE_EPOCH=1787356800 python3 ' . escapeshellarg( $review ) . ' ' . escapeshellarg( $root ) . ' es_ES --output ' . escapeshellarg( $kit_dir )
-);
+    array( $review, $root, 'es_ES', '--output', $kit_dir ), array( 'SOURCE_DATE_EPOCH' => '1787356800' ));
 lra_check( 0 === $kit_rc, 'current Spanish review kit is generated: ' . $kit_out );
 $kit_zip = $base . '/certloom-es_ES-review-kit.zip';
 lra_check( is_file( $kit_zip ), 'exact review-kit ZIP exists' );
 
 $full_po = $base . '/complete-qa-return.po';
-list( $qa_rc, $qa_out ) = lra_exec( 'python3 ' . escapeshellarg( $qa_return ) . ' ' . escapeshellarg( $root ) . ' es_ES ' . escapeshellarg( $full_po ) );
+list( $qa_rc, $qa_out ) = lra_exec( array( $qa_return, $root, 'es_ES', $full_po ), array());
 lra_check( 0 === $qa_rc && is_file( $full_po ), 'test-only complete PO return is generated' );
 
 $candidate_out = $base . '/candidate/es_ES';
 list( $stage_rc, $stage_out ) = lra_exec(
-    'SOURCE_DATE_EPOCH=1787356800 python3 ' . escapeshellarg( $stage ) . ' ' . escapeshellarg( $root ) . ' es_ES ' . escapeshellarg( $full_po )
-    . ' --review-kit ' . escapeshellarg( $kit_zip ) . ' --output ' . escapeshellarg( $candidate_out )
-    . ' --submitted-by ' . escapeshellarg( 'Certloom acceptance QA fixture' ) . ' --submitted-at 2026-08-28'
-);
+    array( $stage, $root, 'es_ES', $full_po, '--review-kit', $kit_zip, '--output', $candidate_out, '--submitted-by', 'Certloom acceptance QA fixture', '--submitted-at', '2026-08-28' ), array( 'SOURCE_DATE_EPOCH' => '1787356800' ));
 lra_check( 0 === $stage_rc, 'technically complete return stages through the frozen candidate intake: ' . $stage_out );
 $candidate_zip = $base . '/candidate/certloom-es_ES-candidate-intake.zip';
 lra_check( is_file( $candidate_zip ), 'complete candidate intake ZIP exists' );
@@ -90,10 +87,8 @@ $evidence_file = $base . '/review-evidence.json';
 file_put_contents( $evidence_file, json_encode( $evidence, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE ) . "\n" );
 
 $accepted1 = $base . '/accepted-a/es_ES';
-$command = 'SOURCE_DATE_EPOCH=1787356800 python3 ' . escapeshellarg( $accept ) . ' ' . escapeshellarg( $root ) . ' es_ES'
-    . ' --candidate-intake ' . escapeshellarg( $candidate_zip ) . ' --review-evidence ' . escapeshellarg( $evidence_file )
-    . ' --output ' . escapeshellarg( $accepted1 );
-list( $accept_rc, $accept_out ) = lra_exec( $command );
+$command = array( $accept, $root, 'es_ES', '--candidate-intake', $candidate_zip, '--review-evidence', $evidence_file, '--output', $accepted1 );
+list( $accept_rc, $accept_out ) = lra_exec( $command, array( 'SOURCE_DATE_EPOCH' => '1787356800' ) );
 lra_check( 0 === $accept_rc, 'complete candidate + exact human evidence reaches external reviewed acceptance: ' . $accept_out );
 $result = json_decode( $accept_out, true );
 lra_check( is_array( $result ) && 'reviewed-acceptance' === ( $result['status'] ?? '' ), 'acceptance result is explicitly reviewed-acceptance evidence' );
@@ -135,13 +130,13 @@ file_put_contents( $validate_root . '/languages/certloom-language-packs.json', j
 copy( $reviewed_po, $validate_root . '/languages/certloom-es_ES.po' );
 copy( $reviewed_mo, $validate_root . '/languages/certloom-es_ES.mo' );
 foreach ( $json_files as $file ) { copy( $file, $validate_root . '/languages/' . basename( $file ) ); }
-list( $validate_rc, $validate_out ) = lra_exec( 'python3 ' . escapeshellarg( $validator ) . ' ' . escapeshellarg( $validate_root ) . ' --manifest languages/certloom-language-packs.json' );
+list( $validate_rc, $validate_out ) = lra_exec( array( $validator, $validate_root, '--manifest', 'languages/certloom-language-packs.json' ), array());
 lra_check( 0 === $validate_rc, 'reviewed acceptance artifacts pass the frozen pack validator without recompilation: ' . $validate_out );
 
 // Determinism for the same candidate + exact evidence.
 $accepted2 = $base . '/accepted-b/es_ES';
-$command2 = str_replace( escapeshellarg( $accepted1 ), escapeshellarg( $accepted2 ), $command );
-list( $accept2_rc, $accept2_out ) = lra_exec( $command2 );
+$command2 = array_map( static function ( $argument ) use ( $accepted1, $accepted2 ) { return $argument === $accepted1 ? $accepted2 : $argument; }, $command );
+list( $accept2_rc, $accept2_out ) = lra_exec( $command2, array( 'SOURCE_DATE_EPOCH' => '1787356800' ) );
 lra_check( 0 === $accept2_rc, 'second independent reviewed acceptance succeeds: ' . $accept2_out );
 $zip1 = $base . '/accepted-a/certloom-es_ES-reviewed-acceptance.zip';
 $zip2 = $base . '/accepted-b/certloom-es_ES-reviewed-acceptance.zip';
@@ -152,30 +147,21 @@ $bad_evidence = $evidence; $bad_evidence['candidate_po_sha256'] = str_repeat( '0
 $bad_evidence_file = $base . '/bad-evidence.json';
 file_put_contents( $bad_evidence_file, json_encode( $bad_evidence ) . "\n" );
 list( $bad_bind_rc, $bad_bind_out ) = lra_exec(
-    'SOURCE_DATE_EPOCH=1787356800 python3 ' . escapeshellarg( $accept ) . ' ' . escapeshellarg( $root ) . ' es_ES'
-    . ' --candidate-intake ' . escapeshellarg( $candidate_zip ) . ' --review-evidence ' . escapeshellarg( $bad_evidence_file )
-    . ' --output ' . escapeshellarg( $base . '/bad-bind' )
-);
+    array( $accept, $root, 'es_ES', '--candidate-intake', $candidate_zip, '--review-evidence', $bad_evidence_file, '--output', $base . '/bad-bind' ), array( 'SOURCE_DATE_EPOCH' => '1787356800' ));
 lra_check( 0 !== $bad_bind_rc && false !== strpos( $bad_bind_out, 'does not bind the exact candidate/source' ), 'review evidence must bind exact candidate bytes' );
 
 $bad_zip_evidence = $evidence; $bad_zip_evidence['candidate_intake_zip_sha256'] = str_repeat( 'f', 64 );
 $bad_zip_file = $base . '/bad-zip-evidence.json';
 file_put_contents( $bad_zip_file, json_encode( $bad_zip_evidence ) . "\n" );
 list( $bad_zip_rc, $bad_zip_out ) = lra_exec(
-    'SOURCE_DATE_EPOCH=1787356800 python3 ' . escapeshellarg( $accept ) . ' ' . escapeshellarg( $root ) . ' es_ES'
-    . ' --candidate-intake ' . escapeshellarg( $candidate_zip ) . ' --review-evidence ' . escapeshellarg( $bad_zip_file )
-    . ' --output ' . escapeshellarg( $base . '/bad-zip-bind' )
-);
+    array( $accept, $root, 'es_ES', '--candidate-intake', $candidate_zip, '--review-evidence', $bad_zip_file, '--output', $base . '/bad-zip-bind' ), array( 'SOURCE_DATE_EPOCH' => '1787356800' ));
 lra_check( 0 !== $bad_zip_rc && false !== strpos( $bad_zip_out, 'candidate_intake_zip_sha256' ), 'review evidence cannot be reused for a different candidate intake archive' );
 
 // Negative: technical candidate completeness is not optional.
 $partial_fixture = $root . '/tests/i18n/fixtures/certloom-es_ES-candidate.po';
 $partial_out = $base . '/partial/es_ES';
 list( $partial_stage_rc, $partial_stage_out ) = lra_exec(
-    'SOURCE_DATE_EPOCH=1787356800 python3 ' . escapeshellarg( $stage ) . ' ' . escapeshellarg( $root ) . ' es_ES ' . escapeshellarg( $partial_fixture )
-    . ' --review-kit ' . escapeshellarg( $kit_zip ) . ' --output ' . escapeshellarg( $partial_out )
-    . ' --submitted-by QA --submitted-at 2026-08-28'
-);
+    array( $stage, $root, 'es_ES', $partial_fixture, '--review-kit', $kit_zip, '--output', $partial_out, '--submitted-by', 'QA', '--submitted-at', '2026-08-28' ), array( 'SOURCE_DATE_EPOCH' => '1787356800' ));
 lra_check( 0 === $partial_stage_rc, 'partial candidate fixture stages for negative acceptance test' );
 $partial_report = json_decode( file_get_contents( $partial_out . '/candidate-report.json' ), true );
 $partial_evidence = $evidence;
@@ -187,20 +173,14 @@ $partial_evidence_file = $base . '/partial-evidence.json';
 file_put_contents( $partial_evidence_file, json_encode( $partial_evidence ) . "\n" );
 $partial_zip = $base . '/partial/certloom-es_ES-candidate-intake.zip';
 list( $partial_rc, $partial_out_text ) = lra_exec(
-    'SOURCE_DATE_EPOCH=1787356800 python3 ' . escapeshellarg( $accept ) . ' ' . escapeshellarg( $root ) . ' es_ES'
-    . ' --candidate-intake ' . escapeshellarg( $partial_zip ) . ' --review-evidence ' . escapeshellarg( $partial_evidence_file )
-    . ' --output ' . escapeshellarg( $base . '/partial-accept' )
-);
+    array( $accept, $root, 'es_ES', '--candidate-intake', $partial_zip, '--review-evidence', $partial_evidence_file, '--output', $base . '/partial-accept' ), array( 'SOURCE_DATE_EPOCH' => '1787356800' ));
 lra_check( 0 !== $partial_rc && false !== strpos( $partial_out_text, '100% translated coverage' ), 'partial candidate cannot be promoted by attestation alone' );
 
 // Negative: review date cannot predate candidate submission.
 $old_evidence = $evidence; $old_evidence['reviewed_at'] = '2026-08-27';
 $old_file = $base . '/old-review.json'; file_put_contents( $old_file, json_encode( $old_evidence ) . "\n" );
 list( $old_rc, $old_out ) = lra_exec(
-    'SOURCE_DATE_EPOCH=1787356800 python3 ' . escapeshellarg( $accept ) . ' ' . escapeshellarg( $root ) . ' es_ES'
-    . ' --candidate-intake ' . escapeshellarg( $candidate_zip ) . ' --review-evidence ' . escapeshellarg( $old_file )
-    . ' --output ' . escapeshellarg( $base . '/old-review-out' )
-);
+    array( $accept, $root, 'es_ES', '--candidate-intake', $candidate_zip, '--review-evidence', $old_file, '--output', $base . '/old-review-out' ), array( 'SOURCE_DATE_EPOCH' => '1787356800' ));
 lra_check( 0 !== $old_rc && false !== strpos( $old_out, 'may not precede' ), 'review chronology rejects a review date before submission' );
 
 // Negative: duplicate JSON keys are ambiguous and rejected.
@@ -208,20 +188,14 @@ $duplicate_file = $base . '/duplicate-review.json';
 $duplicate_json = str_replace( '"locale": "es_ES",', "\"locale\": \"es_ES\",\n  \"locale\": \"es_ES\",", file_get_contents( $evidence_file ) );
 file_put_contents( $duplicate_file, $duplicate_json );
 list( $dup_rc, $dup_out ) = lra_exec(
-    'SOURCE_DATE_EPOCH=1787356800 python3 ' . escapeshellarg( $accept ) . ' ' . escapeshellarg( $root ) . ' es_ES'
-    . ' --candidate-intake ' . escapeshellarg( $candidate_zip ) . ' --review-evidence ' . escapeshellarg( $duplicate_file )
-    . ' --output ' . escapeshellarg( $base . '/dup-out' )
-);
+    array( $accept, $root, 'es_ES', '--candidate-intake', $candidate_zip, '--review-evidence', $duplicate_file, '--output', $base . '/dup-out' ), array( 'SOURCE_DATE_EPOCH' => '1787356800' ));
 lra_check( 0 !== $dup_rc && false !== strpos( $dup_out, 'duplicate key' ), 'duplicate review-evidence JSON keys fail closed' );
 
 // Negative: required human-review attestations cannot be omitted.
 $missing = $evidence; unset( $missing['browser_review_complete'] );
 $missing_file = $base . '/missing-review.json'; file_put_contents( $missing_file, json_encode( $missing ) . "\n" );
 list( $missing_rc, $missing_out ) = lra_exec(
-    'SOURCE_DATE_EPOCH=1787356800 python3 ' . escapeshellarg( $accept ) . ' ' . escapeshellarg( $root ) . ' es_ES'
-    . ' --candidate-intake ' . escapeshellarg( $candidate_zip ) . ' --review-evidence ' . escapeshellarg( $missing_file )
-    . ' --output ' . escapeshellarg( $base . '/missing-out' )
-);
+    array( $accept, $root, 'es_ES', '--candidate-intake', $candidate_zip, '--review-evidence', $missing_file, '--output', $base . '/missing-out' ), array( 'SOURCE_DATE_EPOCH' => '1787356800' ));
 lra_check( 0 !== $missing_rc && false !== strpos( $missing_out, 'browser_review_complete=true' ), 'browser-review attestation is mandatory' );
 
 // Negative: RTL acceptance requires mixed-direction review evidence even when other review fields are true.
@@ -240,50 +214,39 @@ except ValueError as exc:
  print(exc); raise SystemExit(0)
 raise SystemExit(1)
 PY;
-list( $rtl_rc, $rtl_out ) = lra_exec( 'python3 -c ' . escapeshellarg( $rtl_py ) . ' ' . escapeshellarg( $root . '/tests/i18n' ) );
+list( $rtl_rc, $rtl_out ) = lra_exec( array( '-c', $rtl_py, $root . '/tests/i18n' ), array());
 lra_check( 0 === $rtl_rc && false !== strpos( $rtl_out, 'rtl_mixed_direction_review_complete=true' ), 'RTL reviewed acceptance explicitly requires mixed-direction evidence' );
 
 // Negative: no in-tree acceptance artifact and no overwrite of prior evidence.
 $inside = $root . '/tests/i18n/.review-acceptance-negative'; lra_rm( $inside );
 list( $inside_rc, $inside_out ) = lra_exec(
-    'SOURCE_DATE_EPOCH=1787356800 python3 ' . escapeshellarg( $accept ) . ' ' . escapeshellarg( $root ) . ' es_ES'
-    . ' --candidate-intake ' . escapeshellarg( $candidate_zip ) . ' --review-evidence ' . escapeshellarg( $evidence_file )
-    . ' --output ' . escapeshellarg( $inside )
-);
+    array( $accept, $root, 'es_ES', '--candidate-intake', $candidate_zip, '--review-evidence', $evidence_file, '--output', $inside ), array( 'SOURCE_DATE_EPOCH' => '1787356800' ));
 lra_check( 0 !== $inside_rc && ! file_exists( $inside ), 'plugin-tree reviewed acceptance output is rejected without leaving artifacts' );
 $existing_parent = $base . '/existing'; mkdir( $existing_parent );
 file_put_contents( $existing_parent . '/certloom-es_ES-reviewed-acceptance.zip', 'preserve me' );
 list( $existing_rc, $existing_out ) = lra_exec(
-    'SOURCE_DATE_EPOCH=1787356800 python3 ' . escapeshellarg( $accept ) . ' ' . escapeshellarg( $root ) . ' es_ES'
-    . ' --candidate-intake ' . escapeshellarg( $candidate_zip ) . ' --review-evidence ' . escapeshellarg( $evidence_file )
-    . ' --output ' . escapeshellarg( $existing_parent . '/es_ES' )
-);
+    array( $accept, $root, 'es_ES', '--candidate-intake', $candidate_zip, '--review-evidence', $evidence_file, '--output', $existing_parent . '/es_ES' ), array( 'SOURCE_DATE_EPOCH' => '1787356800' ));
 lra_check( 0 !== $existing_rc && 'preserve me' === file_get_contents( $existing_parent . '/certloom-es_ES-reviewed-acceptance.zip' ), 'existing review-acceptance ZIP is never overwritten' );
 
 $empty_output = $base . '/precreated-empty';
 mkdir( $empty_output );
 list( $empty_rc, $empty_out ) = lra_exec(
-    'SOURCE_DATE_EPOCH=1787356800 python3 ' . escapeshellarg( $accept ) . ' ' . escapeshellarg( $root ) . ' es_ES'
-    . ' --candidate-intake ' . escapeshellarg( $candidate_zip ) . ' --review-evidence ' . escapeshellarg( $evidence_file )
-    . ' --output ' . escapeshellarg( $empty_output )
-);
+    array( $accept, $root, 'es_ES', '--candidate-intake', $candidate_zip, '--review-evidence', $evidence_file, '--output', $empty_output ), array( 'SOURCE_DATE_EPOCH' => '1787356800' ));
 lra_check( 0 !== $empty_rc && is_dir( $empty_output ) && array() === array_values( array_diff( scandir( $empty_output ), array( '.', '..' ) ) ), 'pre-created output directory is rejected without deleting or populating operator state' );
 
 $candidate_link = $base . '/candidate-link.zip';
-symlink( $candidate_zip, $candidate_link );
-list( $link_rc, $link_out ) = lra_exec(
-    'SOURCE_DATE_EPOCH=1787356800 python3 ' . escapeshellarg( $accept ) . ' ' . escapeshellarg( $root ) . ' es_ES'
-    . ' --candidate-intake ' . escapeshellarg( $candidate_link ) . ' --review-evidence ' . escapeshellarg( $evidence_file )
-    . ' --output ' . escapeshellarg( $base . '/link-out' )
-);
-lra_check( 0 !== $link_rc && false !== strpos( $link_out, 'symbolic link' ), 'candidate intake symlink ambiguity fails closed before path resolution' );
+if ( @symlink( $candidate_zip, $candidate_link ) ) {
+	list( $link_rc, $link_out ) = lra_exec(
+    array( $accept, $root, 'es_ES', '--candidate-intake', $candidate_link, '--review-evidence', $evidence_file, '--output', $base . '/link-out' ), array( 'SOURCE_DATE_EPOCH' => '1787356800' ));
+	lra_check( 0 !== $link_rc && false !== strpos( $link_out, 'symbolic link' ), 'candidate intake symlink ambiguity fails closed before path resolution' );
+} else {
+	++$skips;
+	fwrite( STDERR, "SKIP: host does not permit creating the candidate symlink fixture.\n" );
+}
 
 list( $epoch_rc, $epoch_out ) = lra_exec(
-    'env -u SOURCE_DATE_EPOCH python3 ' . escapeshellarg( $accept ) . ' ' . escapeshellarg( $root ) . ' es_ES'
-    . ' --candidate-intake ' . escapeshellarg( $candidate_zip ) . ' --review-evidence ' . escapeshellarg( $evidence_file )
-    . ' --output ' . escapeshellarg( $base . '/no-epoch' )
-);
+    array( $accept, $root, 'es_ES', '--candidate-intake', $candidate_zip, '--review-evidence', $evidence_file, '--output', $base . '/no-epoch' ), array( 'SOURCE_DATE_EPOCH' => null ));
 lra_check( 0 !== $epoch_rc && false !== strpos( $epoch_out, 'SOURCE_DATE_EPOCH' ), 'review-acceptance ZIP requires explicit deterministic epoch' );
 
 lra_rm( $base );
-printf( "Language review acceptance: %d/%d checks passed.\n", $checks, $checks );
+printf( "Language review acceptance: %d/%d checks passed; %d platform checks skipped.\n", $checks, $checks, $skips );

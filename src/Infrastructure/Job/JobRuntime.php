@@ -23,6 +23,9 @@ use Certloom\Application\Issuance\BulkIssuanceCommitJobHandler;
 use Certloom\Application\Email\EmailDeliveryCoordinator;
 use Certloom\Application\Email\EmailDeliveryJobHandler;
 use Certloom\Application\Integration\CredlyPublishJobHandler;
+use Certloom\Application\Issuance\PendingIssuanceJobHandler;
+use Certloom\Application\Issuance\PendingConfigurationJobHandler;
+use Certloom\Infrastructure\Recipient\PendingWorkflowCoordinator;
 use Certloom\Infrastructure\Issuance\BulkIssuanceCsvReader;
 use Certloom\Infrastructure\Issuance\BulkIssuancePlanStore;
 use Certloom\Application\Restore\DomainRestoreJobHandler;
@@ -81,6 +84,8 @@ final class JobRuntime {
 		$bulk_plans = new BulkIssuancePlanStore( $private_files );
 
 		$handlers = array(
+			JobTypes::WHOLE_RESTORE => new \Certloom\Application\Restore\WholeStateRestoreJobHandler(),
+			JobTypes::WHOLE_BACKUP => new \Certloom\Application\Backup\WholeStateBackupJobHandler(),
 			JobTypes::DOMAIN_BACKUP => new DomainBackupJobHandler(
 				new DomainBackupBuilder(),
 				defined( 'CERTLOOM_VERSION' ) ? CERTLOOM_VERSION : ''
@@ -109,6 +114,10 @@ final class JobRuntime {
 			JobTypes::BULK_ISSUANCE_COMMIT => new BulkIssuanceCommitJobHandler( $this->repository, $bulk_plans, null, null, $private_files ),
 			JobTypes::EMAIL_DELIVERY => new EmailDeliveryJobHandler(),
 			JobTypes::CREDLY_PUBLISH => new CredlyPublishJobHandler(),
+			JobTypes::PENDING_REASSESSMENT => new PendingIssuanceJobHandler(),
+			JobTypes::PENDING_CONFIGURATION => new PendingConfigurationJobHandler(),
+			JobTypes::PENDING_LIFECYCLE => new \Certloom\Application\Issuance\PendingLifecycleJobHandler(),
+			JobTypes::RECIPIENT_NOTICE => new \Certloom\Application\Recipient\RecipientNoticeJobHandler(),
 		);
 
 		$runner           = new JobRunner( $this->service, $this->repository, $handlers );
@@ -130,6 +139,14 @@ final class JobRuntime {
 
 	public function register() {
 		$this->dispatcher->register();
+		add_action( JobDispatcher::WATCHDOG_HOOK, array( new \Certloom\Infrastructure\Restore\WholeStateRestoreUploadSession(), 'prune_expired' ) );
+		( new PendingWorkflowCoordinator( $this->service, $this->dispatcher ) )->register();
+		( new \Certloom\Infrastructure\Recipient\PendingLifecycleCoordinator( $this->service, $this->dispatcher ) )->register();
+	}
+	/** Recovery uses the existing job table without starting ordinary workflows. */
+	public function register_recovery() {
+		$this->dispatcher->register();
+		add_action( JobDispatcher::WATCHDOG_HOOK, array( new \Certloom\Infrastructure\Restore\WholeStateRestoreUploadSession(), 'prune_expired' ) );
 	}
 
 	/** @return JobQueue */
@@ -141,6 +158,9 @@ final class JobRuntime {
 	public function service() {
 		return $this->service;
 	}
+	/** Shared scheduler composition for explicit pending-work repair; no hooks registered. */
+	public function pending_requests() { return new PendingWorkflowCoordinator( $this->service, $this->dispatcher ); }
+	public function dispatcher() { return $this->dispatcher; }
 
 	/** @return DomainImportJobCoordinator */
 	public function imports() {

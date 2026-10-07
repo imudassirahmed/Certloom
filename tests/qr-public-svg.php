@@ -1,4 +1,6 @@
 <?php
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 if ( $argc < 2 ) { fwrite( STDERR, "usage: php qr-public-svg.php <url>\n" ); exit(2); }
 define( 'ABSPATH', __DIR__ . '/' );
 class WP_Error { private $c; private $m; public function __construct($c,$m){$this->c=$c;$this->m=$m;} public function get_error_code(){return $this->c;} public function get_error_message(){return $this->m;} }

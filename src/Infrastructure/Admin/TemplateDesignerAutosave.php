@@ -55,9 +55,18 @@ final class TemplateDesignerAutosave {
 		if ( ! $template_id || ! $user_id || ! $expected_revision_id || ! preg_match( '/\A[a-f0-9]{64}\z/', $expected_revision_sha256 ) || ! preg_match( '/\A[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\z/', $session_id ) ) {
 			return new \WP_Error( 'certloom_designer_autosave_review_required', __( 'Autosave requires the exact Template revision, SHA-256 and browser editing session that were opened in Designer.', 'certloom' ) );
 		}
+		return $this->with_lock( $template_id, $user_id, function () use ( $template_id, $user_id, $expected_revision_id, $expected_revision_sha256, $session_id, $layout, $designer_state ) {
+			return $this->save_owned( $template_id, $user_id, $expected_revision_id, $expected_revision_sha256, $session_id, $layout, $designer_state );
+		} );
+	}
+
+	private function save_owned( $template_id, $user_id, $expected_revision_id, $expected_revision_sha256, $session_id, $layout, $designer_state ) {
 		$base = $this->current_base( $template_id, $expected_revision_id, $expected_revision_sha256 );
 		if ( is_wp_error( $base ) ) { return $base; }
 		$existing_raw = get_user_meta( $user_id, self::meta_key( $template_id ), true );
+		if ( '' !== $existing_raw && ! is_string( $existing_raw ) ) {
+			return new \WP_Error( 'certloom_designer_autosave_session_conflict', __( 'The recovery checkpoint could not be read safely. Certloom kept the existing data. Manual save remains available.', 'certloom' ) );
+		}
 		if ( is_string( $existing_raw ) && '' !== trim( $existing_raw ) ) {
 			$existing = json_decode( $existing_raw, true );
 			$existing_session = is_array( $existing ) ? strtolower( trim( (string) ( $existing['session_id'] ?? '' ) ) ) : '';
@@ -89,6 +98,7 @@ final class TemplateDesignerAutosave {
 		// WordPress strips slashes before storing meta. Preserve the exact JSON
 		// bytes so nested layout_json and its recovery hash survive a round trip.
 		update_user_meta( $user_id, self::meta_key( $template_id ), wp_slash( $encoded ) );
+		wp_cache_delete( $user_id, 'user_meta' );
 		$stored = get_user_meta( $user_id, self::meta_key( $template_id ), true );
 		if ( ! is_string( $stored ) || ! hash_equals( hash( 'sha256', $encoded ), hash( 'sha256', $stored ) ) ) {
 			return new \WP_Error( 'certloom_designer_autosave_store_failed', __( 'Designer autosave could not verify the stored recovery checkpoint.', 'certloom' ) );
@@ -149,6 +159,13 @@ final class TemplateDesignerAutosave {
 	 * @return array<string,mixed>
 	 */
 	public function prepare_for_editor( $template_id, $user_id ) {
+		$result = $this->with_lock( $template_id, $user_id, function () use ( $template_id, $user_id ) {
+			return $this->prepare_owned( $template_id, $user_id );
+		} );
+		return is_wp_error( $result ) ? array( 'status' => 'cleanup_failed', 'error' => $result ) : $result;
+	}
+
+	private function prepare_owned( $template_id, $user_id ) {
 		$inspection = $this->inspect( $template_id, $user_id );
 		$status = (string) ( $inspection['status'] ?? 'none' );
 		if ( ! in_array( $status, array( 'stale', 'invalid' ), true ) ) { return $inspection; }
@@ -163,6 +180,18 @@ final class TemplateDesignerAutosave {
 	public function retire_active( $template_id, $user_id, $reason = 'stale' ) {
 		$template_id = absint( $template_id ); $user_id = absint( $user_id ); $reason = sanitize_key( (string) $reason );
 		if ( ! $template_id || ! $user_id ) { return new \WP_Error( 'certloom_designer_autosave_retire_invalid', __( 'A valid Template and user are required to retire Designer recovery state.', 'certloom' ) ); }
+		return $this->with_lock( $template_id, $user_id, function () use ( $template_id, $user_id, $reason ) {
+			return $this->retire_owned( $template_id, $user_id, $reason );
+		} );
+	}
+
+	private function retire_owned( $template_id, $user_id, $reason ) {
+		$status = (string) ( $this->inspect( $template_id, $user_id )['status'] ?? 'invalid' );
+		if ( 'none' === $status ) { return true; }
+		if ( ! in_array( $status, array( 'stale', 'invalid' ), true ) ) {
+			return new \WP_Error( 'certloom_designer_autosave_session_conflict', __( 'This recovery checkpoint is still usable. Certloom kept it for its owning Studio session.', 'certloom' ) );
+		}
+		$reason = $status;
 		$key = self::meta_key( $template_id );
 		$raw = get_user_meta( $user_id, $key, true );
 		if ( ! is_string( $raw ) || '' === trim( $raw ) ) { return true; }
@@ -191,6 +220,7 @@ final class TemplateDesignerAutosave {
 		// independently from best-effort diagnostic preservation so a harmless
 		// logging failure can never keep Studio trapped in a stale-recovery loop.
 		delete_user_meta( $user_id, $key );
+		wp_cache_delete( $user_id, 'user_meta' );
 		$remaining = get_user_meta( $user_id, $key, true );
 		if ( is_string( $remaining ) && '' !== trim( $remaining ) ) {
 			return new \WP_Error( 'certloom_designer_autosave_retire_delete_failed', __( 'Certloom could not clear the obsolete Designer recovery checkpoint.', 'certloom' ) );
@@ -207,6 +237,12 @@ final class TemplateDesignerAutosave {
 	public function discard( $template_id, $user_id, $session_id = '' ) {
 		$template_id = absint( $template_id ); $user_id = absint( $user_id ); $session_id = strtolower( trim( (string) $session_id ) );
 		if ( ! $template_id || ! $user_id ) { return new \WP_Error( 'certloom_designer_autosave_discard_invalid', __( 'A valid Template and user are required to discard Designer recovery state.', 'certloom' ) ); }
+		return $this->with_lock( $template_id, $user_id, function () use ( $template_id, $user_id, $session_id ) {
+			return $this->discard_owned( $template_id, $user_id, $session_id );
+		} );
+	}
+
+	private function discard_owned( $template_id, $user_id, $session_id ) {
 		$raw = get_user_meta( $user_id, self::meta_key( $template_id ), true );
 		if ( ! is_string( $raw ) || '' === trim( $raw ) ) { return true; }
 
@@ -225,9 +261,36 @@ final class TemplateDesignerAutosave {
 		$record = json_decode( $raw, true ); $stored_session = is_array( $record ) ? strtolower( trim( (string) ( $record['session_id'] ?? '' ) ) ) : '';
 		if ( '' === $stored_session || ! hash_equals( $stored_session, $session_id ) ) { return new \WP_Error( 'certloom_designer_autosave_session_conflict', __( 'Another Designer session owns this recovery checkpoint, so Certloom did not discard it.', 'certloom' ) ); }
 		delete_user_meta( $user_id, self::meta_key( $template_id ) );
+		wp_cache_delete( $user_id, 'user_meta' );
 		$remaining = get_user_meta( $user_id, self::meta_key( $template_id ), true );
 		if ( is_string( $remaining ) && '' !== trim( $remaining ) ) { return new \WP_Error( 'certloom_designer_autosave_discard_failed', __( 'Certloom could not clear the Designer recovery checkpoint.', 'certloom' ) ); }
 		return true;
+	}
+
+	/** Serialize ownership checks and writes, including cleanup, across requests. */
+	private function with_lock( $template_id, $user_id, callable $callback ) {
+		global $wpdb;
+		if ( ! absint( $template_id ) || ! absint( $user_id ) || ! is_object( $wpdb ) || empty( $wpdb->usermeta ) ) {
+			return new \WP_Error( 'certloom_designer_autosave_unavailable', __( 'Recovery autosave is temporarily unavailable. Manual save remains available.', 'certloom' ) );
+		}
+		return \Certloom\Infrastructure\Database\DatabaseSession::run( static function () use ( $wpdb, $template_id, $user_id, $callback ) {
+			$name = 'certloom-studio-' . substr( hash( 'sha256', ( defined( 'DB_NAME' ) ? DB_NAME : '' ) . '|' . $wpdb->usermeta . '|' . self::meta_key( $template_id ) . '|' . absint( $user_id ) ), 0, 48 );
+			$wpdb->last_error = '';
+			$held = $wpdb->get_var( $wpdb->prepare( 'SELECT GET_LOCK(%s, 0)', $name ) );
+			if ( '1' !== (string) $held || '' !== (string) $wpdb->last_error ) {
+				return new \WP_Error( 'certloom_designer_autosave_busy', __( 'Another Studio tab is updating this recovery checkpoint. Your edits are still on this page. Try again shortly.', 'certloom' ) );
+			}
+			try {
+				wp_cache_delete( absint( $user_id ), 'user_meta' );
+				$result = $callback();
+			} finally {
+				$wpdb->last_error = '';
+				$released = $wpdb->get_var( $wpdb->prepare( 'SELECT RELEASE_LOCK(%s)', $name ) );
+			}
+			return '1' === (string) $released && '' === (string) $wpdb->last_error
+				? $result
+				: new \WP_Error( 'certloom_designer_autosave_lock_release_failed', __( 'Certloom could not confirm the recovery save safely. Keep this page open and check the saved draft before retrying.', 'certloom' ) );
+		} );
 	}
 
 	/** @return array<string,mixed>|\WP_Error */

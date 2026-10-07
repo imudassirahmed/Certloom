@@ -1,5 +1,7 @@
 <?php
 /** Alpha.4.35 Designer/publication staging corrections source contract. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define( 'ABSPATH', __DIR__ . '/' );
 $root = dirname( __DIR__ );
 $admin = file_get_contents( $root . '/src/Infrastructure/Admin/TemplateAdmin.php' );

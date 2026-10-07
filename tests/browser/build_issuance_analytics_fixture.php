@@ -1,5 +1,7 @@
 <?php
 /** Browser-only ANL-02 issuance analytics fixture using production view/CSS. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define( 'ABSPATH', __DIR__ . '/' );
 class WP_Error { private $message; public function __construct($c,$m){$this->message=$m;} public function get_error_message(){return $this->message;} }
 function is_wp_error($v){return $v instanceof WP_Error;} function __($v,$d=null){return $v;} function esc_html__($v,$d=null){return $v;} function esc_attr__($v,$d=null){return $v;}

@@ -1,5 +1,7 @@
 <?php
 /** Phase 1C structural regression for acceptance-gated Recipient / Program administration. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $root = dirname( __DIR__ );
 $admin = file_get_contents( $root . '/src/Infrastructure/Admin/DomainAdmin.php' );
 $recipients = file_get_contents( $root . '/src/Infrastructure/Repository/RecipientRepository.php' );

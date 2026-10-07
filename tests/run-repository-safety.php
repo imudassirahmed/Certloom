@@ -1,5 +1,7 @@
 <?php
 /** Structural regression for repository mutation ordering and fail-closed structured data. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $root = dirname( __DIR__ );
 
 function rs_source( $relative ) {

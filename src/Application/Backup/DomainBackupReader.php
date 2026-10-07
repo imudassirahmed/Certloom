@@ -30,7 +30,7 @@ final class DomainBackupReader {
 			}
 			$item = json_decode( trim( $line ), true );
 			if ( ! is_array( $item ) ) { fclose($handle); return new \WP_Error( 'certloom_domain_backup_json_invalid', sprintf( /* translators: %d: line number. */ __( 'The Certloom domain backup contains invalid JSON on line %d.', 'certloom' ), $line_no ) ); }
-			$type = (string) ( $item['type'] ?? '' );
+			$type = $item['type'] ?? null;
 			if ( 1 === $line_no ) {
 				$normalized = $this->format->normalize_manifest( $item );
 				if ( is_wp_error( $normalized ) ) { fclose( $handle ); return $normalized; }
@@ -39,18 +39,19 @@ final class DomainBackupReader {
 				$manifest = $normalized; $hash = $this->format->next_hash( '', $line, $format_version ); continue;
 			}
 			if ( 'integrity' === $type ) { $integrity = $item; $after_integrity = true; continue; }
-			if ( 'entity' !== $type || empty( $item['entity'] ) || ! is_array( $item['data'] ?? null ) ) { fclose($handle); return new \WP_Error( 'certloom_domain_backup_record_invalid', sprintf( /* translators: %d: line number. */ __( 'The Certloom domain backup contains an unsupported record on line %d.', 'certloom' ), $line_no ) ); }
+			if ( 'entity' !== $type || ! is_string( $item['entity'] ?? null ) || ! is_array( $item['data'] ?? null ) ) { fclose($handle); return new \WP_Error( 'certloom_domain_backup_record_invalid', sprintf( /* translators: %d: line number. */ __( 'The Certloom domain backup contains an unsupported record on line %d.', 'certloom' ), $line_no ) ); }
 			$records++; if ( $records > absint( $max_records ) ) { fclose($handle); return new \WP_Error( 'certloom_domain_backup_limit', __( 'The Certloom domain backup exceeds the configured record safety limit.', 'certloom' ) ); }
-			$entity = sanitize_key( (string) $item['entity'] );
+			$entity = $item['entity'];
 			if ( ! in_array( $entity, $allowed_entities, true ) ) { fclose( $handle ); return new \WP_Error( 'certloom_domain_backup_entity_unsupported', __( 'The Certloom domain backup contains an unsupported entity type.', 'certloom' ) ); }
 			$counts[$entity] = absint($counts[$entity] ?? 0)+1;
 			$hash = $this->format->next_hash( $hash, $line, $format_version );
 		}
 		fclose( $handle );
-		if ( ! is_array( $manifest ) || ! is_array( $integrity ) || $records !== absint( $integrity['records'] ?? -1 ) || ! hash_equals( $hash, (string) ( $integrity['chain_sha256'] ?? '' ) ) ) {
+		if ( ! is_array( $manifest ) || ! is_array( $integrity ) || ! $this->format->valid_integrity( $integrity, $records, $hash ) ) {
 			return new \WP_Error( 'certloom_domain_backup_integrity_failed', __( 'The Certloom domain backup is incomplete or failed its integrity check.', 'certloom' ) );
 		}
-		$configuration = (array) ( $manifest['configuration'] ?? array() );
+		if ( ! is_array( $manifest['configuration'] ?? null ) || ! is_string( $manifest['configuration_hash'] ?? null ) ) { return new \WP_Error( 'certloom_domain_backup_configuration_hash_invalid', __( 'The Certloom domain backup configuration metadata is inconsistent.', 'certloom' ) ); }
+		$configuration = $manifest['configuration'];
 		$config_json = wp_json_encode( $configuration, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
 		$config_hash = strtolower( (string) ( $manifest['configuration_hash'] ?? '' ) );
 		if ( false === $config_json || ! preg_match( '/^[a-f0-9]{64}$/', $config_hash ) || ! hash_equals( $config_hash, hash( 'sha256', $config_json ) ) ) {

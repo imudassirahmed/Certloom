@@ -40,8 +40,8 @@ final class DesignRulesAdmin {
 		$context_pages = array( DomainAdmin::PROGRAMS_PAGE, DomainAdmin::ISSUERS_PAGE, DomainStructureAdmin::BATCHES_PAGE );
 		if ( self::PAGE !== $page && ! in_array( $page, $context_pages, true ) ) { return; }
 		wp_enqueue_style( 'certloom-design-rules', CERTLOOM_URL . 'admin/assets/design-rules.css', array( 'ecapla-certverify-admin' ), CERTLOOM_VERSION );
-		if ( self::PAGE === $page ) { wp_enqueue_script( 'certloom-design-rules', CERTLOOM_URL . 'admin/assets/design-rules.js', array(), CERTLOOM_VERSION, true ); }
-		else { wp_enqueue_script( 'certloom-design-rule-context', CERTLOOM_URL . 'admin/assets/design-rule-context.js', array(), CERTLOOM_VERSION, true ); }
+		if ( self::PAGE === $page ) { wp_enqueue_script( 'certloom-design-rules', CERTLOOM_URL . 'admin/assets/design-rules.js', array( 'certloom-template-text-fit' ), CERTLOOM_VERSION, true ); }
+		else { wp_enqueue_script( 'certloom-design-rule-context', CERTLOOM_URL . 'admin/assets/design-rule-context.js', array( 'certloom-template-text-fit' ), CERTLOOM_VERSION, true ); }
 		$catalog = new EmailTemplateCatalogRepository();
 		$catalog->ensure_factory_presets();
 		$email_designs = array();

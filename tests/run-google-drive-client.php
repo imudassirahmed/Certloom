@@ -1,4 +1,6 @@
 <?php
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 error_reporting(E_ALL);$root=dirname(__DIR__);$tmp=sys_get_temp_dir().'/certloom-gdclient-'.bin2hex(random_bytes(4));@mkdir($tmp,0777,true);define('MINUTE_IN_SECONDS',60);
 class WP_Error{private $c,$m;function __construct($c='',$m=''){$this->c=$c;$this->m=$m;}function get_error_code(){return $this->c;}function get_error_message(){return $this->m;}}
 function is_wp_error($v){return $v instanceof WP_Error;}function __($t,$d=null){return $t;}function sanitize_key($v){return preg_replace('/[^a-z0-9_\-]/','',strtolower((string)$v));}function sanitize_text_field($v){return trim(strip_tags((string)$v));}function sanitize_file_name($v){return preg_replace('/[^A-Za-z0-9._-]/','-',basename((string)$v));}function absint($v){return abs((int)$v);}function wp_json_encode($v,$o=0){return json_encode($v,$o);}function wp_parse_url($u){return parse_url($u);}function admin_url($p=''){return 'https://example.test/wp-admin/'.$p;}function get_current_user_id(){return 1;}function wp_salt($s='auth'){return str_repeat($s.'-salt-',16);}function wp_tempnam($n=''){return tempnam(sys_get_temp_dir(),'gdc-');}

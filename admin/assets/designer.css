@@ -1930,7 +1930,7 @@
 .certloom-studio-insert-item .dashicons { flex: 0 0 16px; width: 16px; height: 16px; font-size: 16px; color: var(--cl-ink-soft); }
 .certloom-studio-insert-item span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-.certloom-template-designer-layers-primary {
+.certloom-template-designer-v2.is-pro-mode .certloom-template-designer-layers-primary {
 	display: flex;
 	flex: 1 1 auto;
 	flex-direction: column;
@@ -1941,10 +1941,11 @@
 	border-top: 1px solid var(--studio-line);
 	background: transparent;
 }
-.certloom-template-designer-layers-head { display: flex; align-items: center; justify-content: space-between; padding: 0 3px 7px; }
+.certloom-template-designer-layers-head { display: flex; flex: 0 0 auto; align-items: center; justify-content: space-between; padding: 0 3px 7px; }
 .certloom-template-designer-layers-head h4 { margin: 0; font-size: 12px; }
 .certloom-template-designer-layers-head span { color: var(--cl-rule-firm); font-size: 9px; }
-.certloom-studio-layer-list { min-height: 0; overflow: auto; overscroll-behavior: contain; scrollbar-width: thin; padding-right: 2px; }
+.certloom-template-designer-v2 .certloom-studio-layer-list { flex: 1 1 auto; min-height: 0; overflow-x: hidden; overflow-y: scroll; overscroll-behavior: contain; scrollbar-width: auto; scrollbar-gutter: stable; padding-right: 2px; }
+.certloom-studio-layer-list:focus-visible { outline: 2px solid var(--studio-blue); outline-offset: -2px; }
 .certloom-template-designer-layer {
 	display: grid;
 	grid-template-columns: 16px minmax(0,1fr) auto;
@@ -2658,7 +2659,7 @@
 		grid-template-columns: 286px minmax(420px, 1fr) 302px;
 	}
 	.is-designer-workspace .certloom-studio-layer-list {
-		scrollbar-gutter: auto;
+		scrollbar-gutter: stable;
 		padding-right: 0;
 	}
 }
@@ -2917,9 +2918,8 @@
 		min-height: 0;
 		overflow: hidden;
 	}
-	/* The rail itself must never own a hidden scrollbar gutter. Insert and Layers
-	 * own their own scrolling; the Layers scrollbar sits at the same optical inset
-	 * as the left edge instead of reserving an extra right-side column. */
+	/* Insert and Layers scroll independently; reserve the Layers scrollbar so its
+	 * controls stay reachable and the scroll affordance remains visible. */
 	.is-designer-workspace .certloom-template-designer-v2.is-pro-mode .certloom-studio-left {
 		overflow: hidden;
 		scrollbar-gutter: auto;
@@ -2936,9 +2936,9 @@
 		max-height: none;
 		min-height: 0;
 		padding-right: 0;
-		overflow-y: auto;
+		overflow-y: scroll;
 		overflow-x: hidden;
-		scrollbar-gutter: auto;
+		scrollbar-gutter: stable;
 	}
 	.is-designer-workspace .certloom-template-designer-inspector {
 		min-width: 0;

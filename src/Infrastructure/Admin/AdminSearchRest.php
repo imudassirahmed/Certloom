@@ -16,6 +16,7 @@ final class AdminSearchRest {
 	/** @return void */
 	public function register() {
 		add_action( 'rest_api_init', array( $this, 'routes' ) );
+		add_filter( 'rest_post_dispatch', array( $this, 'private_context_headers' ), 10, 3 );
 	}
 
 	/** @return void */
@@ -112,7 +113,17 @@ final class AdminSearchRest {
 			(string) $request->get_param( 'program_status' )
 		);
 		if ( is_wp_error( $choices ) ) { return $choices; }
-		return rest_ensure_response( array( 'choices' => $choices, 'limit' => 20 ) );
+		return $this->private_context_headers( rest_ensure_response( array( 'choices' => $choices, 'limit' => 20 ) ), null, $request );
+	}
+
+	/** Product/course choices can include unpublished titles; also keep denied responses private. */
+	public function private_context_headers( $response, $server, $request ) {
+		if ( '/certloom/v1/admin/context' === $request->get_route() && $response instanceof \WP_HTTP_Response ) {
+			$response->header( 'Cache-Control', 'private, no-store, max-age=0' );
+			$response->header( 'Vary', 'Cookie', false );
+			$response->header( 'X-Robots-Tag', 'noindex' );
+		}
+		return $response;
 	}
 
 

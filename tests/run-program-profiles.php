@@ -1,5 +1,7 @@
 <?php
 /** PRG-02 Program Profile canonical configuration + issuance-design contract. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define( 'ABSPATH', __DIR__ . '/' );
 if ( ! class_exists( 'WP_Error' ) ) { class WP_Error { private $c,$m; public function __construct($c='',$m=''){ $this->c=$c;$this->m=$m; } public function get_error_code(){return $this->c;} public function get_error_message(){return $this->m;} } }
 function is_wp_error($v){return $v instanceof WP_Error;} function __($v){return $v;} function absint($v){return abs((int)$v);} function sanitize_key($v){return strtolower(preg_replace('/[^a-z0-9_\-]/','',(string)$v));} function sanitize_text_field($v){$v=(string)$v;$v=preg_replace('/[\r\n\t]+/',' ',$v);return trim(strip_tags($v));}
@@ -56,7 +58,7 @@ pp(false!==strpos($adminjs,'function initProgramProfile()')&&false!==strpos($adm
 pp(false!==strpos($assignment,'resolve_published_assignment_details')&&false!==strpos($assignment,'resolve_published_assignment_details'),'existing assignment hierarchy remains canonical design source');
 pp(false!==strpos($svc,'resolve_published_template_for_context')&&false!==strpos($svc,'certloom_manual_issue_program_design_missing'),'Manual Issuance resolves Program + optional Batch design context and fails closed if no published design exists');
 pp(false!==strpos($svc,"'resolution_scope'")&&false!==strpos($svc,"'profile'=>isset(\$p['profile'])"),'issued snapshots freeze Program Profile and design-resolution provenance');
-pp(false!==strpos($manual,'Use inherited design')&&false!==strpos($manual,'Assign for this credential')&&false!==strpos($manual,"__( '%1\$s is inherited from the selected %2\$s. Choose a %3\$s only when this credential needs one.', 'certloom' )")&&false!==strpos($manual,'Managed on the selected %s; issuance cannot contradict it.'),'Manual Issuance keeps canonical hierarchy resolution while Program-owned authority and optional signer selection remain distinct');
+pp(false!==strpos($manual,'Use inherited design')&&false!==strpos($manual,'Assign for this credential')&&false!==strpos($manual,'data-inherited-issuer')&&false!==strpos($manual,'Add a %3$s only when needed.')&&false!==strpos($manual,'Managed on the selected %s; issuance cannot contradict it.'),'Manual Issuance keeps canonical hierarchy resolution while Program-owned authority and optional signer selection remain distinct');
 pp(false!==strpos($bulk,'Global → Issuer → Program → Batch')&&false!==strpos($bulk,'one-off design override'),'Bulk Issuance defaults to canonical hierarchy resolution and keeps explicit one-off override separate');
 pp(false!==strpos($admin,'Credential lifecycle')&&false!==strpos($admin,'Repeat issuance')&&false!==strpos($admin,'ProgramLifecyclePolicy::repeat_labels'),'Program admin presents validity, renewal and repeat issuance as one lifecycle contract');
 pp(false!==strpos($svc,'ProgramLifecyclePolicy')&&false!==strpos($svc,'find_existing_series_for_batch')&&false!==strpos($svc,'REPEAT_SEPARATE'),'Manual Issuance enforces the Program repeat policy instead of hard-coding Recipient + Program uniqueness');

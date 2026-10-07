@@ -16,8 +16,8 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
  * factory revisions or their permanent reference evidence.
  */
 final class CuratedPresetCatalog {
-	const CATALOG_VERSION = 1;
-	const PRESET_VERSION  = 1;
+	const CATALOG_VERSION = 2;
+	const PRESET_VERSION  = 2;
 	const KEY_PREFIX      = 'curated-';
 
 	/** @return array<string,array<string,mixed>> */
@@ -153,24 +153,25 @@ final class CuratedPresetCatalog {
 	/** @return array<string,mixed>|null */
 	public function get( $preset_key, $version = self::PRESET_VERSION ) {
 		$preset_key = sanitize_key( (string) $preset_key );
-		if ( self::PRESET_VERSION !== absint( $version ) || 0 !== strpos( $preset_key, self::KEY_PREFIX ) ) { return null; }
+		$version = absint( $version );
+		if ( $version < 1 || $version > self::PRESET_VERSION || 0 !== strpos( $preset_key, self::KEY_PREFIX ) ) { return null; }
 		$concept_key = substr( $preset_key, strlen( self::KEY_PREFIX ) );
 		$concepts = self::concepts();
-		return isset( $concepts[ $concept_key ] ) ? $this->build_definition( $concept_key, $concepts[ $concept_key ] ) : null;
+		return isset( $concepts[ $concept_key ] ) ? $this->build_definition( $concept_key, $concepts[ $concept_key ], $version ) : null;
 	}
 
 	/** @return array<string,mixed> */
-	private function build_definition( $concept_key, array $concept ) {
+	private function build_definition( $concept_key, array $concept, $version = self::PRESET_VERSION ) {
 		$dimensions = LayoutSchema::page_dimensions();
 		$size = (string) $concept['size'];
 		$orientation = (string) $concept['orientation'];
 		list( $width, $height ) = $dimensions[ $size ][ $orientation ];
 		$preset_key = self::KEY_PREFIX . $concept_key;
-		$layout = $this->layout( $concept_key, $preset_key, $size, $orientation, (float) $width, (float) $height );
+		$layout = $this->layout( $concept_key, $preset_key, $size, $orientation, (float) $width, (float) $height, $version );
 		$layout = ( new LayoutValidator() )->normalize( $layout );
 		return array(
 			'preset_key' => $preset_key,
-			'preset_version' => self::PRESET_VERSION,
+			'preset_version' => $version,
 			'family_key' => $preset_key,
 			'family_name' => (string) $concept['name'],
 			'variant_key' => strtolower( $size ) . '-' . $orientation,
@@ -189,7 +190,7 @@ final class CuratedPresetCatalog {
 	}
 
 	/** @return array<string,mixed> */
-	private function layout( $concept, $seed, $size, $orientation, $w, $h ) {
+	private function layout( $concept, $seed, $size, $orientation, $w, $h, $version ) {
 		$landscape = LayoutSchema::ORIENTATION_LANDSCAPE === $orientation;
 		$elements = array(); $z = 0; $p = $this->palette( $concept );
 		$margin = $landscape ? 14.0 : 13.0; $content_x = $margin + ( $landscape ? 15.0 : 12.0 ); $content_w = $w - ( 2 * $content_x );
@@ -413,14 +414,38 @@ final class CuratedPresetCatalog {
 
 		// Shared factual area; still one credential identity and one verification QR.
 		$qr = $landscape ? 21.0 : 23.0;
-		$footer_y = $h - ( $landscape ? 39.0 : 48.0 );
+		$footer_y = $h - ( $landscape ? ( $version >= 2 ? 49.0 : 39.0 ) : 48.0 );
 		$details_x = $content_x; $details_w = $landscape ? min( 108.0, $content_w * 0.45 ) : max( 65.0, $content_w - $qr - 18.0 );
-		$add_text('id-label',$details_x,$footer_y,$details_w,6,'CREDENTIAL ID',6,700,$p['muted'],'left',0.8);
-		$add_merge('display-number',$details_x,$footer_y+6,$details_w,8,'credential.display_number',8,600,$p['primary'],'left');
-		$add_text('date-label',$details_x,$footer_y+15,$details_w,6,'ISSUED',6,700,$p['muted'],'left',0.8);
-		$add_merge('issue-date',$details_x,$footer_y+21,$details_w,8,'credential.issue_date',8,500,$p['primary'],'left');
-		$qr_x=$w-$margin-$qr-5;$qr_y=$h-$margin-$qr-5;$add_qr('verification-qr',$qr_x,$qr_y,$qr);
-		$add_text('verify-label',$qr_x-7,$qr_y+$qr+1,$qr+14,5.5,'SCAN TO VERIFY',5.5,700,$p['muted']);
+		// Keep facts in the main content column, clear of decorative side rails.
+		if ( $version >= 2 ) {
+			if ( 'executive' === $concept ) { $details_x = $margin + 60.0; }
+			elseif ( 'folio' === $concept ) { $details_x = $margin + 43.0; $details_w = $w - $details_x - $margin - $qr - 20.0; }
+			elseif ( 'signal' === $concept ) { $details_x = $margin + 34.0; }
+		}
+		$footer_ink = $version >= 2 && 'horizon' === $concept ? '#FFFFFF' : $p['primary'];
+		$footer_label = $version >= 2 && 'horizon' === $concept ? '#FFFFFF' : $p['muted'];
+		// Horizon's band starts below the standard footer. Fit both facts inside it.
+		$compact_footer = $version >= 2 && 'horizon' === $concept;
+		if ( $compact_footer ) { $footer_y = $h - $margin - 32.0; }
+		$add_text('id-label',$details_x,$footer_y,$details_w,6,'CREDENTIAL ID',6,700,$footer_label,'left',0.8);
+		$add_merge('display-number',$details_x,$footer_y+6,$details_w,8,'credential.display_number',8,600,$footer_ink,'left');
+		$add_text('date-label',$details_x,$footer_y+15,$details_w,6,'ISSUED',6,700,$footer_label,'left',0.8);
+		$add_merge('issue-date',$details_x,$footer_y+21,$details_w,8,'credential.issue_date',8,500,$footer_ink,'left');
+		$qr_x=$w-$margin-$qr-( $version >= 2 ? 11.0 : 5.0 );$qr_y=$h-$margin-$qr-( $version >= 2 ? 12.0 : 5.0 );$add_qr('verification-qr',$qr_x,$qr_y,$qr);
+		$add_text('verify-label',$qr_x-7,$qr_y+$qr+1,$qr+14,5.5,'SCAN TO VERIFY',5.5,700,$footer_label);
+		if ( $version >= 2 ) {
+			foreach ( $elements as &$element ) {
+				if ( 'merge' === $element['type'] && 'program.name' === $element['token'] ) {
+					$element['style']['overflow'] = 'wrap';
+					$element['style']['font_size_pt'] = 12.0;
+				} elseif ( 'merge' === $element['type'] && 'issuer.name' === $element['token'] && in_array( $concept, array( 'executive', 'gallery' ), true ) ) {
+					$element['style']['overflow'] = 'wrap';
+				} elseif ( 'text' === $element['type'] && 'EXECUTIVE CREDENTIAL' === $element['text'] ) {
+					$element['style']['overflow'] = 'wrap';
+				}
+			}
+			unset( $element );
+		}
 
 		return array(
 			'_meta'=>array('schema'=>LayoutSchema::NAME,'schema_version'=>LayoutSchema::VERSION_V1),

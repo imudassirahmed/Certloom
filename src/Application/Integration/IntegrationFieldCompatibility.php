@@ -27,14 +27,16 @@ final class IntegrationFieldCompatibility {
 	 * @param array<string,mixed>|null $batch
 	 * @return true|\WP_Error
 	 */
-	public function validate_context( array $program, ?array $batch, array $catalog ) {
-		$contract = ( new ScopedFieldContract() )->resolve(
+	public function validate_context( array $program, ?array $batch, array $catalog, ?array $global_contract = null, ?array $issuer_contract = null ) {
+		$contract = ( new ScopedFieldContract() )->resolve_hierarchy(
+			$global_contract,
+			$issuer_contract,
 			is_array( $program['field_contract'] ?? null ) ? $program['field_contract'] : ScopedFieldContract::empty_program(),
 			is_array( $batch ) && is_array( $batch['field_contract'] ?? null ) ? $batch['field_contract'] : null,
 			$catalog
 		);
 		if ( is_wp_error( $contract ) ) { return $contract; }
-		if ( empty( $contract['_meta']['configured'] ) ) { return true; }
+		if ( empty( $contract['_meta']['configured'] ) && empty( $contract['_meta']['global_configured'] ) && empty( $contract['_meta']['issuer_configured'] ) && empty( $contract['_meta']['batch_configured'] ) ) { return true; }
 
 		$unsupported = array();
 		foreach ( (array) ( $contract['fields'] ?? array() ) as $row ) {
@@ -48,7 +50,7 @@ final class IntegrationFieldCompatibility {
 			'certloom_integration_required_fields_unmapped',
 			sprintf(
 				/* translators: %s: comma-separated credential field labels. */
-				__( 'Automatic integration issuance cannot supply these required Program/Batch fields yet: %s. Make them optional, collect them from the Recipient, or issue through Manual/Bulk Issuance until an explicit integration field mapping is configured.', 'certloom' ),
+				__( 'Automatic issuance needs a configured source for these required fields: %s. Configure where each value comes from, or use Manual/Bulk Issuance until the required source is available.', 'certloom' ),
 				implode( ', ', $unsupported )
 			)
 		);

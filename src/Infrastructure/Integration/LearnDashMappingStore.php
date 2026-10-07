@@ -8,6 +8,9 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 /** Server-owned LearnDash course → Certloom Program/Batch mappings. */
 final class LearnDashMappingStore implements IntegrationMappingResolverInterface {
+	public function validate_recovery_value( $value ) {
+		return \Certloom\Application\Restore\WholeStateOptionRows::validate( $value, self::SCHEMA_VERSION, 'mappings', self::MAX_MAPPINGS, function ( array $row ) { return $this->normalize_row( $row, false ); }, array( 'course_id' ), 'course_id' );
+	}
 	const OPTION = 'certloom_learndash_mappings';
 	const SCHEMA_VERSION = 1;
 	const MAX_MAPPINGS = 500;
@@ -122,8 +125,6 @@ final class LearnDashMappingStore implements IntegrationMappingResolverInterface
 	/** @return true|\WP_Error */
 	private function persist( array $mappings ) {
 		$payload = array( 'schema_version' => self::SCHEMA_VERSION, 'mappings' => $mappings );
-		$saved = update_option( self::OPTION, $payload, false );
-		if ( ! $saved && $payload !== get_option( self::OPTION, null ) ) { return new \WP_Error( 'certloom_learndash_mapping_save_failed', __( 'Certloom could not save the LearnDash mapping safely.', 'certloom' ) ); }
-		return true;
+		return ( new \Certloom\Infrastructure\Data\DurableOptionMutation() )->set( self::OPTION, $payload );
 	}
 }

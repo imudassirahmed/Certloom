@@ -20,6 +20,8 @@ interface PrivacyRepositoryInterface {
 	/** @return array<int,array<string,mixed>>|\WP_Error */
 	public function export_events_for_identity( $email, $wp_user_id = 0, $offset = 0, $limit = 50 );
 	/** @return array<int,array<string,mixed>>|\WP_Error */
+	public function export_workflow_for_identity( $entity, $email, $wp_user_id = 0, $offset = 0, $limit = 50 );
+	/** @return array<int,array<string,mixed>>|\WP_Error */
 	public function export_signers_for_email( $email, $offset = 0, $limit = 50 );
 	/** @return array<int,array<string,mixed>>|\WP_Error */
 	public function export_issuers_for_email( $email, $offset = 0, $limit = 50 );

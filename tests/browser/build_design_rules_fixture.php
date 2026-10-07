@@ -1,5 +1,7 @@
 <?php
 /** DRUX-01 Design Rules browser fixture using production CSS/JS. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $css = file_get_contents( dirname( __DIR__, 2 ) . '/admin/assets/design-rules.css' );
 $js  = file_get_contents( dirname( __DIR__, 2 ) . '/admin/assets/design-rules.js' );
 function target_row( $key, $name, $meta, $cert = 'Inherited', $email = 'Inherited' ) {

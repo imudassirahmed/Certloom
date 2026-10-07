@@ -8,6 +8,9 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 /** Server-owned WooCommerce product → Certloom Program/Batch mappings. */
 final class WooCommerceMappingStore implements IntegrationMappingResolverInterface {
+	public function validate_recovery_value( $value ) {
+		return \Certloom\Application\Restore\WholeStateOptionRows::validate( $value, self::SCHEMA_VERSION, 'mappings', self::MAX_MAPPINGS, function ( array $row ) { return $this->normalize_row( $row, false ); }, array( 'product_id' ), 'product_id' );
+	}
 	const OPTION         = 'certloom_woocommerce_mappings';
 	const SCHEMA_VERSION = 1;
 	const MAX_MAPPINGS   = 500;
@@ -115,8 +118,6 @@ final class WooCommerceMappingStore implements IntegrationMappingResolverInterfa
 	/** @return true|\WP_Error */
 	private function persist( array $mappings ) {
 		$payload = array( 'schema_version' => self::SCHEMA_VERSION, 'mappings' => $mappings );
-		$saved = update_option( self::OPTION, $payload, false );
-		if ( ! $saved && $payload !== get_option( self::OPTION, null ) ) { return new \WP_Error( 'certloom_woocommerce_mapping_save_failed', __( 'Certloom could not save the WooCommerce mapping safely.', 'certloom' ) ); }
-		return true;
+		return ( new \Certloom\Infrastructure\Data\DurableOptionMutation() )->set( self::OPTION, $payload );
 	}
 }

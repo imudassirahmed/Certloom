@@ -1,5 +1,7 @@
 <?php
 /** Current Issue Credential REST application contract, evolved from alpha.4.79. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $root = dirname( __DIR__ );
 $admin = file_get_contents( $root . '/src/Infrastructure/Admin/ManualIssuanceAdmin.php' );
 $rest = file_get_contents( $root . '/src/Infrastructure/Admin/IssueCredentialRest.php' );
@@ -26,7 +28,7 @@ i479( false !== strpos( $admin, 'data-field="credential_title"' ), 'credential t
 i479( false !== strpos( $admin, 'data-step-key="details"' ) && false !== strpos( $admin, 'data-design-required-fields' ) && false !== strpos( $admin, 'data-oneoff-fields' ) && false === strpos( $admin, 'data-step-key="data"' ), 'credential data is merged into Details while design-required and one-off surfaces remain distinct' );
 i479( false !== strpos( $admin, 'data-preview-stage' ) && false !== strpos( $admin, 'data-preview-status' ) && false !== strpos( $admin, "render_async_picker( 'signer'" ), 'certificate step owns live preview and signer selection' );
 i479( false !== strpos( $admin, 'data-email-mode="review"' ) && false !== strpos( $admin, 'data-email-mode="later"' ), 'Email is an explicit post-issuance decision' );
-i479( false !== strpos( $admin, 'Existing automation rules run separately and may send an email.' ) && false !== strpos( $admin, 'Skip manual email review' ), 'Email copy distinguishes manual follow-up from configured automations' );
+i479( false !== strpos( $admin, 'Existing automation rules run separately and may send an email.' ) && false !== strpos( $admin, 'Prepare a manual email later' ), 'Email copy distinguishes manual follow-up from configured automations' );
 i479( false !== strpos( $admin, 'data-review-technical' ), 'technical evidence remains available without cluttering primary review' );
 i479( false !== strpos( $admin, 'type="button" data-quick-close' ) && false !== strpos( $js, "querySelectorAll('[data-quick-close]')" ), 'quick-create dialogs have non-submitting close controls' );
 

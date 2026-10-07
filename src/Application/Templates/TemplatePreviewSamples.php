@@ -37,9 +37,10 @@ final class TemplatePreviewSamples {
 	}
 
 	/** @return array<string,mixed> */
-	public function snapshot_for_layout( array $layout, $profile = self::STANDARD ) {
+	public function snapshot_for_layout( array $layout, $profile = self::STANDARD, $usage_profile = '' ) {
 		$profile = in_array( (string) $profile, self::profiles(), true ) ? (string) $profile : self::STANDARD;
 		$known = $this->known_values( $profile );
+		if ( self::STANDARD === $profile && '' !== (string) $usage_profile ) { $known = array_replace( $known, ( new \Certloom\Application\Setup\ProfileStarterBundle() )->sample_values( $usage_profile ) ); }
 		$snapshot = array();
 		foreach ( isset( $layout['elements'] ) && is_array( $layout['elements'] ) ? $layout['elements'] : array() as $element ) {
 			if ( ! is_array( $element ) ) { continue; }

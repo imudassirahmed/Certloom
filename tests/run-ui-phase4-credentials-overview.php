@@ -1,5 +1,7 @@
 <?php
 /** Alpha.4.27 Credentials overview hierarchy, compact filters, and sorting contract. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $root = dirname( __DIR__ );
 $nav = file_get_contents( $root . '/src/Infrastructure/Admin/AdminProductNavigation.php' );
 $domain = file_get_contents( $root . '/src/Infrastructure/Admin/DomainAdmin.php' );

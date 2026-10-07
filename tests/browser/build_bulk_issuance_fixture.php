@@ -1,5 +1,7 @@
 <?php
 /** Browser-only Bulk Issuance administration layout fixture. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $state = getenv( 'CERTLOOM_BULK_ISSUANCE_STATE' );
 if ( ! in_array( $state, array( 'upload', 'review', 'progress', 'results' ), true ) ) { $state = 'upload'; }
 $css = file_get_contents( dirname( __DIR__, 2 ) . '/assets/css/certloom-tokens.css' ) . "\n" . file_get_contents( dirname( __DIR__, 2 ) . '/admin/assets/admin.css' ) . "\n" . file_get_contents( dirname( __DIR__, 2 ) . '/admin/assets/certloom-foundation.css' );

@@ -1,5 +1,7 @@
 <?php
 /** Phase 4 Gamma-02R compact Layers organization contract. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $root=dirname(__DIR__);$php=file_get_contents($root.'/src/Infrastructure/Admin/TemplateAdmin.php');$css=file_get_contents($root.'/admin/assets/designer.css');$js=file_get_contents($root.'/admin/assets/designer.js');$state=file_get_contents($root.'/src/Application/Templates/TemplateDesignerState.php');
 $c=0;function sl($ok,$m){global$c;$c++;if(!$ok){fwrite(STDERR,"FAIL  $m\n");exit(1);}}function slh($h,$n,$m){sl(false!==strpos($h,$n),$m);}function sln($h,$n,$m){sl(false===strpos($h,$n),$m);}
 slh($state,"'hidden_ids'",'editor-only hidden state remains');slh($state,"'layer_labels'",'layer labels remain bounded authoring state');slh($state,'MAX_LAYER_LABEL_LENGTH = 80','layer labels retain explicit limit');

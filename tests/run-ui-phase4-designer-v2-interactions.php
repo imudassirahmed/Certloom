@@ -1,5 +1,7 @@
 <?php
 /** Phase 4 Gamma-02R Studio interaction contract. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $root=dirname(__DIR__);$php=file_get_contents($root.'/src/Infrastructure/Admin/TemplateAdmin.php');$js=file_get_contents($root.'/admin/assets/designer.js');$css=file_get_contents($root.'/admin/assets/designer.css');
 $c=0;function si($ok,$m){global$c;$c++;if(!$ok){fwrite(STDERR,"FAIL  $m\n");exit(1);}}function sih($h,$n,$m){si(false!==strpos($h,$n),$m);}function si_not($h,$n,$m){si(false===strpos($h,$n),$m);}
 sih($php,'Undo (Ctrl/Cmd+Z)','Undo tooltip documents shortcut');sih($php,'Redo (Ctrl/Cmd+Shift+Z)','Redo tooltip documents shortcut');sih($php,'Restore last saved state','Restore is explicit and separate from history');

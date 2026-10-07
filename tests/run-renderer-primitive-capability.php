@@ -1,5 +1,7 @@
 <?php
 /** 1.6.28 permanent renderer primitive-capability acceptance regression. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 require_once __DIR__ . '/bootstrap-autoload.php';
 require_once __DIR__ . '/render-plan-reference/reference_lib.php';
 

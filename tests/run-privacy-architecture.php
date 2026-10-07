@@ -1,5 +1,7 @@
 <?php
 /** Static acceptance checks for Certloom PRV-02 implementation boundaries. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $root = dirname( __DIR__ );
 $files = array(
 	'privacy'        => file_get_contents( $root . '/includes/class-ecapla-certverify-privacy.php' ),
@@ -13,7 +15,7 @@ $files = array(
 	'settings'       => file_get_contents( $root . '/admin/views/settings-manager.php' ),
 	'controller'     => file_get_contents( $root . '/admin/class-ecapla-certverify-admin.php' ),
 	'settings_model' => file_get_contents( $root . '/includes/class-ecapla-certverify-settings.php' ),
-	'contract'       => file_get_contents( $root . '/docs/privacy-data-lifecycle-contract.md' ),
+	'contract'       => file_get_contents( $root . '/tests/acceptance-contract.md' ),
 );
 foreach ( $files as $name => $source ) {
 	if ( ! is_string( $source ) || '' === $source ) { throw new RuntimeException( 'Missing privacy acceptance source: ' . $name ); }
@@ -46,10 +48,10 @@ $tests = array(
 	'privacy digest is domain-separated SHA-256 pseudonymous data' => fn() => qa( false !== strpos( $files['digest'], "PREFIX = 'certloom-email-v1:'" ) && false !== strpos( $files['digest'], "hash( 'sha256'" ), 'digest' ),
 	'privacy identity history is hard bounded without silent trimming' => fn() => qa( false !== strpos( $files['digest'], 'MAX_HASHES = 64' ) && false !== strpos( $files['digest'], 'is_valid_history' ) && false !== strpos( $files['recipient_repo'], 'certloom_recipient_privacy_identity_limit' ), 'digest bound' ),
 	'recipient email changes preserve prior identity digests' => fn() => qa( false !== strpos( $files['recipient_repo'], 'identity_hashes_for_update' ) && false !== strpos( $files['recipient_repo'], 'merge_email' ), 'digest history' ),
-	'privacy identity storage remains present in schema v19' => fn() => qa( false !== strpos( $files['schema'], "const SCHEMA_VERSION         = '19'" ) && false !== strpos( $files['schema'], 'privacy_identity_hashes LONGTEXT NULL' ) && false !== strpos( $files['schema'], 'privacy_anonymized_at DATETIME NULL' ), 'schema v19' ),
-	'privacy-aware backup v4 retains v1/v2/v3 compatibility' => fn() => qa( false !== strpos( $files['backup_fmt'], 'const VERSION = 4' ) && false !== strpos( $files['backup_fmt'], 'const STRUCTURE_VERSION = 2' ) && false !== strpos( $files['backup_fmt'], 'const LEGACY_VERSION = 1' ), 'backup v4 versions' ),
+	'privacy identity storage remains present in workflow schema v20' => fn() => qa( false !== strpos( $files['schema'], "const SCHEMA_VERSION         = '20'" ) && false !== strpos( $files['schema'], 'privacy_identity_hashes LONGTEXT NULL' ) && false !== strpos( $files['schema'], 'privacy_anonymized_at DATETIME NULL' ), 'schema v20' ),
+	'workflow backup v5 retains v1/v2/v3/v4 compatibility' => fn() => qa( false !== strpos( $files['backup_fmt'], 'const VERSION = 5' ) && false !== strpos( $files['backup_fmt'], 'const ARTWORK_VERSION = 4' ) && false !== strpos( $files['backup_fmt'], 'const STRUCTURE_VERSION = 2' ) && false !== strpos( $files['backup_fmt'], 'const LEGACY_VERSION = 1' ), 'backup v5 versions' ),
 	'backup v3 has independent chained-hash seed' => fn() => qa( false !== strpos( $files['backup_fmt'], "HASH_SEED_V3 = 'certloom-domain-backup-v3'" ), 'v3 seed' ),
-	'older backups synthesize private identity field in memory' => fn() => qa( false !== strpos( $files['backup_fmt'], "'privacy_identity_hashes'" ) && false !== strpos( $files['backup_fmt'], '$version < self::VERSION' ), 'backup normalization' ),
+	'pre-privacy backups synthesize private identity field in memory' => fn() => qa( false !== strpos( $files['backup_fmt'], "'privacy_identity_hashes'" ) && false !== strpos( $files['backup_fmt'], '$version < self::PRIVACY_VERSION' ), 'backup normalization' ),
 	'privacy contract retains immutable versions' => fn() => qa( false !== stripos( $files['contract'], 'never silently rewrite' ), 'contract' ),
 	'public visibility and erasure remain separate' => fn() => qa( false !== strpos( $files['contract'], 'Public visibility and personal-data erasure are separate' ), 'separate' ),
 );

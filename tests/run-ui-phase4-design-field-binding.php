@@ -1,5 +1,7 @@
 <?php
 /** Alpha.4.37 design-required credential field binding source contract. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $root = dirname( __DIR__ );
 $manual = file_get_contents( $root . '/src/Infrastructure/Admin/ManualIssuanceAdmin.php' );
 $service = file_get_contents( $root . '/src/Application/Issuance/ManualIssuanceService.php' );
@@ -26,8 +28,7 @@ a437( false !== strpos( $service, 'design_field_alias_map' ) && false !== strpos
 a437( false !== strpos( $service, "'design_field_aliases' => \$request['design_field_aliases']") && false !== strpos( $service, "'design_field_aliases' => \$review['request']['design_field_aliases']" ), 'review fingerprint inputs and immutable issuance snapshot retain mapping provenance' );
 a437( false !== strpos( $service, 'array_key_exists( $target, $out )' ) && false !== strpos( $service, '$out[ $target ] = (string) $out[ $source ]' ), 'mapping cannot overwrite an explicitly supplied target value' );
 a437( false !== strpos( $service, '$base_count = count( $rows )' ) && false !== strpos( $service, "\$contract['_meta']['one_off'] = true" ), 'issued-only field contract records one-off extension without mutating reusable Program/Batch configuration' );
-a437( false !== strpos( $issue_css, '.certloom-design-required-row' ) && false !== strpos( $issue_css, 'grid-template-columns: minmax(0, 1fr) auto auto' ) && false !== strpos( $issue_css, '.certloom-design-required-row {
-    grid-template-columns: 1fr;' ), 'design-required field actions have a dedicated responsive presentation contract' );
+a437( false !== strpos( $issue_css, '.certloom-design-required-row' ) && false !== strpos( $issue_css, 'grid-template-columns: minmax(0, 1fr) auto auto' ) && 1 === preg_match( '/\.certloom-design-required-row\s*\{\s*grid-template-columns:\s*1fr;/', $issue_css ), 'design-required field actions have a dedicated responsive presentation contract' );
 a437( false !== strpos( $js, 'credentialDetailMappingCandidates( field._safeFieldKey )' ) && false !== strpos( $js, 'key === targetKey' ) && false !== strpos( $js, 'renderIndependentField( sourceKey, true' ), 'Assign existing detail excludes self-mapping and exposes/focuses catalog, scoped and already-added credential details' );
 
 a437( false !== strpos( $manual, 'data-design-required-fields') && false !== strpos( $manual, 'Additional one-off credential data') && strpos( $manual, 'data-design-required-fields') < strpos( $manual, 'Additional one-off credential data'), 'design-required suggestions remain visible before the collapsed one-off credential-detail editor' );

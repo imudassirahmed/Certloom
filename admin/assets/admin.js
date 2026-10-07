@@ -155,11 +155,29 @@
 		row.querySelector( '.ecapla-certverify-field-label' ).focus();
 	}
 
+	function syncCollection( control ) {
+		var writer = control.querySelector( '[data-certloom-collection-writer]' );
+		var lifetime = control.querySelector( '[data-certloom-collection-lifetime]' );
+		var timing = control.querySelector( '[data-certloom-collection-timing]' );
+		if ( ! writer || ! lifetime || ! timing ) { return; }
+		var customer = 'recipient' === writer.value;
+		control.querySelectorAll( '[data-certloom-collection-customer]' ).forEach( function ( element ) { element.hidden = ! customer; } );
+		Array.from( lifetime.options ).forEach( function ( option ) { option.disabled = customer && [ 'recipient', 'registration' ].indexOf( option.value ) < 0; } );
+		if ( customer && [ 'recipient', 'registration' ].indexOf( lifetime.value ) < 0 ) { lifetime.value = 'recipient'; }
+		Array.from( timing.options ).forEach( function ( option ) { option.disabled = customer && ( 'never' === option.value || ( 'registration' === lifetime.value && 'profile' === option.value ) ); } );
+		if ( customer && ( 'never' === timing.value || ( 'registration' === lifetime.value && 'profile' === timing.value ) ) ) { timing.value = 'registration' === lifetime.value ? 'registration' : 'profile'; }
+	}
+
 	function initFields() {
 		var list = document.getElementById( 'ecapla-certloom-fields-list' );
 		if ( ! list ) {
 			return;
 		}
+		list.querySelectorAll( '[data-certloom-collection]' ).forEach( syncCollection );
+		list.addEventListener( 'change', function ( event ) {
+			var control = event.target.closest( '[data-certloom-collection]' );
+			if ( control ) { syncCollection( control ); }
+		} );
 		var dragged = null;
 		list.addEventListener( 'dragstart', function ( event ) {
 			var row = event.target.closest( '.ecapla-certverify-field-row' );
@@ -479,6 +497,19 @@
 		var workspace = document.querySelector( '.certloom-settings-workspace' );
 		var input = document.getElementById( 'certloom-settings-search' );
 		var results = document.getElementById( 'certloom-settings-search-results' );
+		var saveState = workspace && workspace.querySelector( '[data-certloom-settings-save-state]' );
+		var saveForm = saveState && saveState.closest( 'form' );
+		if ( saveForm ) {
+			var snapshotSettings = function () { return JSON.stringify( Array.from( new FormData( saveForm ).entries() ) ); };
+			var initialSettings = snapshotSettings();
+			var updateSaveState = function () {
+				var dirty = snapshotSettings() !== initialSettings;
+				saveState.textContent = saveState.getAttribute( dirty ? 'data-unsaved-text' : 'data-saved-text' );
+				saveState.parentElement.classList.toggle( 'has-changes', dirty );
+			};
+			saveForm.addEventListener( 'input', updateSaveState );
+			saveForm.addEventListener( 'change', updateSaveState );
+		}
 		if ( ! workspace || ! input || ! results ) { return; }
 		var headings = Array.prototype.slice.call( workspace.querySelectorAll( 'h2[id], h3[id]' ) );
 		function update() {
@@ -530,7 +561,7 @@
 			if ( '1' === select.getAttribute( 'data-certloom-context-ready' ) ) { return; }
 			var kind = select.getAttribute( 'data-certloom-context-lookup' );
 			var nonce = select.getAttribute( 'data-certloom-context-nonce' ) || '';
-			if ( [ 'recipient', 'program', 'batch', 'template', 'issuer', 'signer', 'signer_scope', 'wp_user', 'tutor_course', 'learndash_course' ].indexOf( kind ) === -1 || ! nonce || ( ! certloomL10n.restContextUrl && 'undefined' === typeof window.ajaxurl ) ) { return; }
+			if ( [ 'recipient', 'program', 'batch', 'template', 'issuer', 'signer', 'signer_scope', 'wp_user', 'tutor_course', 'learndash_course', 'woocommerce_product' ].indexOf( kind ) === -1 || ! nonce || ( ! certloomL10n.restContextUrl && 'undefined' === typeof window.ajaxurl ) ) { return; }
 			select.setAttribute( 'data-certloom-context-ready', '1' );
 			// Inserting a search input before an implicitly labelled select would
 			// transfer its label to the search field and leave the choice unnamed.
@@ -671,7 +702,7 @@
 					if ( 'program' === kind ) { restUrl.searchParams.set( 'program_status', programStatus ); }
 					if ( 'batch' === kind ) { restUrl.searchParams.set( 'program_id', String( programId() ) ); }
 					requestPromise = fetch( restUrl.toString(), {
-						method: 'GET', credentials: 'same-origin', headers: certloomL10n.restNonce ? { 'X-WP-Nonce': certloomL10n.restNonce } : {}
+						method: 'GET', credentials: 'same-origin', cache: 'no-store', headers: certloomL10n.restNonce ? { 'X-WP-Nonce': certloomL10n.restNonce } : {}
 					} ).then( function ( response ) { return response.json().then( function ( payload ) { if ( ! response.ok ) { throw new Error( payload && payload.message ? payload.message : certloomText( 'contextSearchFailed', 'Search failed.' ) ); } return payload; } ); } );
 				} else {
 					var body = new FormData();
@@ -978,7 +1009,13 @@
 					heading.appendChild( meta );
 					row.appendChild( heading );
 
-					if ( 'recipient' === field.value_source ) {
+					var policy = field.collection_policy;
+					if ( policy && ( 'achievement' !== policy.lifetime || 'staff' !== policy.writer ) ) {
+						var authority = document.createElement( 'p' );
+						authority.className = 'description';
+						authority.textContent = certloomText( 'managedFieldSource', 'Complete this value in customer account details, its Program default or the connected source. An issuance-only value cannot replace it.' );
+						row.appendChild( authority );
+					} else if ( 'recipient' === field.value_source ) {
 						var source = document.createElement( 'p' );
 						source.className = 'description';
 						source.textContent = certloomText( 'recipientValueFrozen', 'Value comes from the Recipient profile and is frozen into the issued credential.' );
@@ -1018,7 +1055,9 @@
 				var fields = Array.isArray( payload.fields ) ? payload.fields : [];
 				var html = '<code>recipient_id</code> <em>' + escapeHtml( certloomText( 'bulkOr', 'or' ) ) + '</em> <code>display_name</code> + <code>email</code>/<code>external_id</code>, <code>first_name</code>, <code>middle_name</code>, <code>last_name</code>, <code>certificate_number</code>';
 				var extras = [];
+				var schema = payload.bulk_csv_schema;
 				fields.forEach( function ( field ) {
+					if ( schema && Object.prototype.hasOwnProperty.call( schema.managed || {}, field.key ) ) { return; }
 					if ( 'recipient' === field.value_source ) { return; }
 					var column = 'grade' === field.key ? 'grade' : 'custom:' + field.key;
 					extras.push( '<code>' + escapeHtml( column ) + '</code>' + ( field.required ? ' <strong>(' + escapeHtml( certloomText( 'bulkRequired', 'required' ) ) + ')</strong>' : '' ) );
@@ -1080,12 +1119,40 @@
 		if ( ! root ) { return; }
 
 		var wizardForm = root.querySelector( '#certloom-wizard-step-form' );
+		var progress = root.querySelector( '.certloom-setup-v2-progress' );
+		var currentStep = progress && progress.querySelector( '[aria-current="step"]' );
+		if ( currentStep ) { progress.scrollLeft = Math.max( 0, currentStep.offsetLeft - progress.offsetLeft - ( progress.clientWidth - currentStep.clientWidth ) / 2 ); }
+		var emailDesign = root.querySelector( '[data-certloom-setup-email-design]' );
+		if ( emailDesign ) {
+			function syncEmailChoice() {
+				var chosen = root.querySelector( '[name="setup_email_mode"]:checked' );
+				var useSelected = chosen && chosen.value === 'selected';
+				emailDesign.required = !!useSelected;
+				var previewId = useSelected ? emailDesign.value : emailDesign.getAttribute( 'data-current-email-design' );
+				root.querySelectorAll( '[data-certloom-email-preview]' ).forEach( function ( preview ) { preview.hidden = preview.getAttribute( 'data-certloom-email-preview' ) !== previewId; } );
+			}
+			emailDesign.addEventListener( 'change', function () {
+				var chooseEmail = root.querySelector( '[name="setup_email_mode"][value="selected"]' );
+				if ( chooseEmail && emailDesign.value ) { chooseEmail.checked = true; }
+				syncEmailChoice();
+			} );
+			root.querySelectorAll( '[name="setup_email_mode"]' ).forEach( function ( choice ) { choice.addEventListener( 'change', syncEmailChoice ); } );
+			syncEmailChoice();
+		}
 		var draftStatus = root.querySelector( '[data-certloom-draft-status]' );
 		var dirty = false;
 		var autosaveTimer = null;
 		var autosaveFailed = false;
 		var autosaveInFlight = null;
-		function setDirty( value ) { dirty = !!value; root.setAttribute( 'data-certloom-dirty', dirty ? '1' : '0' ); }
+		var draftEditRevision = 0;
+		var draftSaveSequence = 0;
+		var draftClientRevision = 0;
+		var submittingSavedDraft = false;
+		function setDirty( value ) {
+			dirty = !!value;
+			if ( dirty ) { draftEditRevision++; }
+			root.setAttribute( 'data-certloom-dirty', dirty ? '1' : '0' );
+		}
 		function setDraftStatus( message, state ) {
 			if ( ! draftStatus ) { return; }
 			draftStatus.textContent = message || '';
@@ -1100,7 +1167,10 @@
 			body.delete( 'wizard_finish_later' );
 			body.set( 'action', 'certloom_setup_draft_autosave' );
 			body.set( 'wizard_step', root.getAttribute( 'data-certloom-step' ) || body.get( 'wizard_step' ) || '' );
-			body.set( 'certloom_draft_revision', String( Date.now() ) );
+			draftClientRevision = Math.max( Date.now(), draftClientRevision + 1 );
+			body.set( 'certloom_draft_revision', String( draftClientRevision ) );
+			body.set( 'certloom_draft_run', root.getAttribute( 'data-certloom-draft-run' ) || '' );
+			body.set( 'certloom_draft_base_revision', root.getAttribute( 'data-certloom-draft-revision' ) || '0' );
 			return body;
 		}
 		function saveSetupDraft( keepalive ) {
@@ -1108,19 +1178,39 @@
 			if ( autosaveTimer ) { window.clearTimeout( autosaveTimer ); autosaveTimer = null; }
 			var body = setupDraftBody();
 			if ( ! body ) { return Promise.resolve( true ); }
+			var editRevision = draftEditRevision;
+			var sequence = ++draftSaveSequence;
+			var previous = autosaveInFlight || Promise.resolve( true );
+			function isCurrent() { return sequence === draftSaveSequence && editRevision === draftEditRevision; }
 			setDraftStatus( certloomText( 'setupDraftSaving', 'Saving draft…' ), 'saving' );
-			autosaveInFlight = window.fetch( window.ajaxurl || '/wp-admin/admin-ajax.php', { method: 'POST', credentials: 'same-origin', body: body, keepalive: !!keepalive } )
-				.then( function ( response ) { if ( ! response.ok ) { throw new Error( 'HTTP ' + response.status ); } return response.json(); } )
+			// One page must not send competing full-workspace writes. Keep each
+			// captured edit in order, and let only the latest edit change feedback.
+			var request = previous.then( function () {
+				// Read the acknowledged server base after the preceding queued save.
+				body.set( 'certloom_draft_run', root.getAttribute( 'data-certloom-draft-run' ) || '' );
+				body.set( 'certloom_draft_base_revision', root.getAttribute( 'data-certloom-draft-revision' ) || '0' );
+				return window.fetch( window.ajaxurl || '/wp-admin/admin-ajax.php', { method: 'POST', credentials: 'same-origin', body: body, keepalive: !!keepalive } );
+			} )
+				.then( function ( response ) { return response.json(); } )
 				.then( function ( response ) {
 					if ( ! response || ! response.success ) { throw new Error( response && response.data && response.data.message ? response.data.message : 'Draft save failed' ); }
+					if ( ! response.data || String( response.data.client_revision ) !== body.get( 'certloom_draft_revision' ) ) { throw new Error( 'Draft save was superseded' ); }
+					if ( response.data.run_id ) { root.setAttribute( 'data-certloom-draft-run', response.data.run_id ); }
+					root.setAttribute( 'data-certloom-draft-revision', String( response.data.revision ) );
+					root.querySelectorAll( 'input[name="certloom_draft_run"]' ).forEach( function ( input ) { input.value = response.data.run_id; } );
+					root.querySelectorAll( 'input[name="certloom_draft_base_revision"]' ).forEach( function ( input ) { input.value = String( response.data.revision ); } );
+					if ( ! isCurrent() ) { return false; }
 					autosaveFailed = false; setDirty( false );
-					if ( response.data && response.data.run_id ) { root.setAttribute( 'data-certloom-draft-run', response.data.run_id ); }
 					setDraftStatus( response.data && response.data.message ? response.data.message : certloomText( 'setupDraftSaved', 'Draft saved' ), 'saved' );
 					return true;
 				} )
-				.catch( function () { autosaveFailed = true; setDraftStatus( certloomText( 'setupDraftFailed', 'Draft could not be saved. Keep this page open and try again.' ), 'error' ); return false; } )
-				.then( function ( result ) { autosaveInFlight = null; return result; } );
-			return autosaveInFlight;
+				.catch( function ( error ) {
+					if ( isCurrent() ) { autosaveFailed = true; setDraftStatus( error && error.message && error.message !== 'Draft save failed' ? error.message : certloomText( 'setupDraftFailed', 'Draft could not be saved. Keep this page open and try again.' ), 'error' ); }
+					return false;
+				} )
+				.then( function ( result ) { if ( autosaveInFlight === request ) { autosaveInFlight = null; } return result; } );
+			autosaveInFlight = request;
+			return request;
 		}
 		function scheduleSetupDraftSave() {
 			if ( autosaveTimer ) { window.clearTimeout( autosaveTimer ); }
@@ -1129,7 +1219,24 @@
 		if ( wizardForm ) {
 			wizardForm.addEventListener( 'input', function ( event ) { if ( event.target && event.target.name ) { setDirty( true ); event.target.removeAttribute( 'aria-invalid' ); scheduleSetupDraftSave(); } } );
 			wizardForm.addEventListener( 'change', function ( event ) { if ( event.target && event.target.name ) { setDirty( true ); event.target.removeAttribute( 'aria-invalid' ); saveSetupDraft( false ); } } );
-			wizardForm.addEventListener( 'submit', function () { if ( autosaveTimer ) { window.clearTimeout( autosaveTimer ); autosaveTimer = null; } setDirty( false ); } );
+			wizardForm.addEventListener( 'submit', function ( event ) {
+				if ( submittingSavedDraft || ( ! dirty && ! autosaveInFlight && ! autosaveTimer ) ) {
+					if ( autosaveTimer ) { window.clearTimeout( autosaveTimer ); autosaveTimer = null; }
+					setDirty( false ); return;
+				}
+				event.preventDefault();
+				var submitter = event.submitter;
+				saveSetupDraft( true ).then( function ( saved ) {
+					if ( ! saved ) { return; }
+					submittingSavedDraft = true;
+					if ( wizardForm.requestSubmit ) { wizardForm.requestSubmit( submitter || undefined ); }
+					else {
+						if ( submitter && submitter.name ) { var action = document.createElement( 'input' ); action.type = 'hidden'; action.name = submitter.name; action.value = submitter.value; wizardForm.appendChild( action ); }
+						wizardForm.submit();
+					}
+					submittingSavedDraft = false;
+				} );
+			} );
 			wizardForm.addEventListener( 'invalid', function ( event ) {
 				var control = event.target;
 				if ( control && control.setAttribute ) { control.setAttribute( 'aria-invalid', 'true' ); window.setTimeout( function () { if ( control.focus ) { control.focus(); } }, 0 ); }
@@ -1140,7 +1247,7 @@
 				var href = link.getAttribute( 'href' ) || '';
 				if ( ! href || '#' === href.charAt( 0 ) || 0 === href.indexOf( 'javascript:' ) ) { return; }
 				event.preventDefault();
-				saveSetupDraft( true ).then( function () { window.location.assign( link.href ); } );
+				saveSetupDraft( true ).then( function ( saved ) { if ( saved ) { window.location.assign( link.href ); } } );
 			} );
 			window.addEventListener( 'pagehide', function () {
 				if ( ! dirty || ! window.navigator || ! window.navigator.sendBeacon ) { return; }
@@ -1151,6 +1258,47 @@
 		}
 		var setupError = root.querySelector( '.certloom-setup-v2-notices .notice-error' );
 		if ( setupError ) { setupError.setAttribute( 'tabindex', '-1' ); window.setTimeout( function () { setupError.focus(); }, 0 ); }
+
+		var checkButton = root.querySelector( '[data-certloom-setup-check]' );
+		var checkResult = root.querySelector( '[data-certloom-setup-check-result]' );
+		function clearSetupCheckResult() {
+			var oldPreview = checkResult.querySelector( '.certloom-wizard-template-preview' );
+			var oldObserver = oldPreview && wizardPreviewObservers ? wizardPreviewObservers.get( oldPreview ) : null;
+			if ( oldObserver ) { oldObserver.disconnect(); wizardPreviewObservers.delete( oldPreview ); }
+			checkResult.replaceChildren();
+		}
+		if ( checkButton && checkResult ) {
+			checkButton.addEventListener( 'click', function () {
+				if ( !certloomL10n.restSetupReadinessUrl ) { return; }
+				checkButton.disabled = true; checkResult.setAttribute( 'aria-busy', 'true' );
+				clearSetupCheckResult();
+				checkResult.textContent = certloomText( 'setupCheckingReadiness', 'Checking setup and preparing an example...' );
+				var url = new URL( certloomL10n.restSetupReadinessUrl );
+				url.searchParams.set( 'run_id', root.getAttribute( 'data-certloom-draft-run' ) || '' );
+				url.searchParams.set( 'revision', root.getAttribute( 'data-certloom-draft-revision' ) || '0' );
+				fetch( url.toString(), { credentials: 'same-origin', cache: 'no-store', headers: { 'X-WP-Nonce': certloomL10n.restNonce || '' } } )
+					.then( function ( response ) { return response.json().then( function ( data ) { if ( !response.ok ) { throw new Error( data.message || certloomText( 'setupCheckFailed', 'The check could not finish. Review your field and design choices.' ) ); } return data; } ); } )
+					.then( function ( data ) {
+						if ( data.run_id !== root.getAttribute( 'data-certloom-draft-run' ) || String( data.revision ) !== root.getAttribute( 'data-certloom-draft-revision' ) ) { throw new Error( certloomText( 'setupCheckChanged', 'Setup changed during the check. Run it again to review your saved choices.' ) ); }
+						clearSetupCheckResult(); var message = document.createElement( 'p' ); message.textContent = data.message; checkResult.appendChild( message );
+						var sections = document.createElement( 'ul' ); sections.className = 'certloom-setup-readiness-list';
+						( data.sections || [] ).forEach( function ( row ) {
+							var item = document.createElement( 'li' ); var label = document.createElement( 'strong' ); var status = document.createElement( 'span' ); var detail = document.createElement( 'p' );
+							label.textContent = row.label;
+							status.className = 'certloom-setup-readiness-status is-' + ( [ 'ready', 'blocked', 'next_step' ].indexOf( row.status ) >= 0 ? row.status : 'next_step' );
+							status.textContent = row.status === 'ready' ? certloomText( 'setupStatusReady', 'Checked' ) : ( row.status === 'blocked' ? certloomText( 'setupStatusBlocked', 'Needs attention' ) : certloomText( 'setupStatusNext', 'Next step' ) );
+							detail.textContent = row.message; item.appendChild( label ); item.appendChild( status ); item.appendChild( detail );
+							if ( [ 'organization', 'context', 'fields', 'appearance', 'email' ].indexOf( row.step ) >= 0 ) { var link = document.createElement( 'a' ); var stepUrl = new URL( window.location.href ); stepUrl.searchParams.set( 'step', row.step ); link.href = stepUrl.toString(); link.textContent = certloomText( 'setupReviewStep', 'Review this step' ); item.appendChild( link ); }
+							sections.appendChild( item );
+						} ); checkResult.appendChild( sections );
+						var list = document.createElement( 'ul' ); ( data.checks || [] ).forEach( function ( text ) { var item = document.createElement( 'li' ); item.textContent = text; list.appendChild( item ); } );
+						( data.next_steps || [] ).forEach( function ( row ) { var item = document.createElement( 'li' ); var label = document.createElement( 'strong' ); label.textContent = row.label + ': '; item.appendChild( label ); item.appendChild( document.createTextNode( row.message ) ); list.appendChild( item ); } ); checkResult.appendChild( list );
+						if ( data.preview && data.preview.example_only === true ) { var preview = document.createElement( 'div' ); preview.className = 'certloom-wizard-template-preview'; var caption = document.createElement( 'p' ); caption.textContent = data.preview.caption; preview.appendChild( caption ); var canvas = document.createElement( 'div' ); canvas.className = 'certloom-wizard-template-preview-canvas'; canvas.setAttribute( 'data-certloom-template-preview-canvas', '' ); canvas.innerHTML = data.preview.html || ''; preview.appendChild( canvas ); checkResult.appendChild( preview ); observeWizardTemplatePreview( preview ); }
+					} )
+					.catch( function ( error ) { checkResult.textContent = error.message || certloomText( 'setupCheckFailed', 'The check could not finish. Review your field and design choices.' ); } )
+					.finally( function () { checkButton.disabled = false; checkResult.setAttribute( 'aria-busy', 'false' ); } );
+			} );
+		}
 
 		var profileForm = root.querySelector( '[data-certloom-profile-form]' );
 		if ( profileForm ) {
@@ -1172,21 +1320,45 @@
 
 		var fieldsForm = root.querySelector( '[data-certloom-fields-form]' );
 		if ( fieldsForm ) {
-			var list = fieldsForm.querySelector( '[data-certloom-custom-field-list]' );
-			var fresh = fieldsForm.querySelector( '[data-certloom-custom-field-new]' );
-			var add = fieldsForm.querySelector( '[data-certloom-custom-field-add]' );
-			function addCustomField() {
-				if ( ! list || ! fresh ) { return; }
-				var value = String( fresh.value || '' ).trim();
-				if ( ! value ) { fresh.focus(); return; }
-				var row = document.createElement( 'div' ); row.className = 'certloom-setup-v2-custom-field';
-				var input = document.createElement( 'input' ); input.type = 'text'; input.name = 'custom_fields[]'; input.maxLength = 100; input.value = value;
-				var remove = document.createElement( 'button' ); remove.type = 'button'; remove.className = 'button-link'; remove.setAttribute( 'data-certloom-custom-field-remove', '' ); remove.textContent = certloomText( 'remove', 'Remove' );
-				row.appendChild( input ); row.appendChild( remove ); list.appendChild( row ); fresh.value = ''; input.focus(); setDirty( true ); saveSetupDraft( false );
+			var fieldList = fieldsForm.querySelector( '[data-certloom-setup-field-list]' );
+			var fieldTemplate = fieldsForm.querySelector( '[data-certloom-setup-field-template]' );
+			var nextFieldIndex = fieldList ? fieldList.children.length : 0;
+			function syncSetupField( row ) {
+				var enabled = row.querySelector( '[data-certloom-setup-field-enabled]' );
+				row.toggleAttribute( 'data-enabled', !!enabled && enabled.checked );
+				var settings = row.querySelector( '[data-certloom-setup-field-settings]' );
+				if ( settings ) { settings.disabled = !enabled || !enabled.checked; }
+				var collection = row.querySelector( '[data-certloom-collection]' );
+				if ( collection ) { syncCollection( collection ); }
+				var sourceWriter = row.querySelector( '[data-certloom-collection-writer]' );
+				var sourceLifetime = row.querySelector( '[data-certloom-collection-lifetime]' );
+				if ( sourceWriter && sourceLifetime && sourceWriter.value === 'source' ) { sourceLifetime.value = 'achievement'; Array.from( sourceLifetime.options ).forEach( function ( option ) { option.disabled = option.value !== 'achievement'; } ); }
+				var writer = row.querySelector( '[data-certloom-collection-writer]' );
+				var lifetime = row.querySelector( '[data-certloom-collection-lifetime]' );
+				var shared = row.querySelector( '[data-certloom-setup-default]' );
+				if ( shared ) { shared.hidden = !( writer && lifetime && writer.value === 'staff' && lifetime.value === 'program' ); }
 			}
-			if ( add ) { add.addEventListener( 'click', addCustomField ); }
-			if ( fresh ) { fresh.addEventListener( 'keydown', function ( event ) { if ( 'Enter' === event.key ) { event.preventDefault(); addCustomField(); } } ); }
-			fieldsForm.addEventListener( 'click', function ( event ) { var remove = event.target.closest( '[data-certloom-custom-field-remove]' ); if ( remove ) { var row = remove.closest( '.certloom-setup-v2-custom-field' ); if ( row ) { row.remove(); if ( fresh ) { fresh.focus(); } setDirty( true ); saveSetupDraft( false ); } } } );
+			fieldsForm.querySelectorAll( '[data-certloom-setup-field]' ).forEach( syncSetupField );
+			fieldsForm.addEventListener( 'change', function ( event ) { var row = event.target.closest( '[data-certloom-setup-field]' ); if ( row ) { syncSetupField( row ); } }, true );
+			fieldsForm.addEventListener( 'click', function ( event ) {
+				if ( event.target.closest( '[data-certloom-setup-field-add]' ) && fieldList && fieldTemplate ) {
+					var fragment = fieldTemplate.content.cloneNode( true );
+					fragment.querySelectorAll( '[name]' ).forEach( function ( control ) { control.name = control.name.replace( '__ROW__', String( nextFieldIndex ) ); } );
+					nextFieldIndex++;
+					var row = fragment.querySelector( '[data-certloom-setup-field]' ); fieldList.appendChild( fragment ); syncSetupField( row );
+					var details = row.querySelector( 'details' ); if ( details ) { details.open = true; }
+					row.querySelector( '[data-certloom-setup-field-label]' ).focus(); setDirty( true ); scheduleSetupDraftSave();
+				}
+				var remove = event.target.closest( '[data-certloom-setup-field-remove]' );
+				if ( remove ) { remove.closest( '[data-certloom-setup-field]' ).remove(); fieldsForm.querySelector( '[data-certloom-setup-field-add]' ).focus(); setDirty( true ); scheduleSetupDraftSave(); }
+			} );
+			fieldsForm.addEventListener( 'input', function ( event ) {
+				if ( !event.target.matches( '[data-certloom-setup-field-label]' ) ) { return; }
+				var row = event.target.closest( '[data-certloom-setup-field]' ); var key = row.querySelector( '[data-certloom-setup-field-key]' );
+				row.querySelector( '[data-certloom-setup-field-title]' ).textContent = event.target.value.trim() || certloomText( 'newCustomField', 'New custom field' );
+				if ( key && !key.dataset.edited ) { key.value = event.target.value.toLowerCase().replace( /[^a-z0-9]+/g, '_' ).replace( /^_+|_+$/g, '' ).slice( 0, 64 ); }
+			} );
+			fieldsForm.addEventListener( 'input', function ( event ) { if ( event.target.matches( '[data-certloom-setup-field-key]' ) ) { event.target.dataset.edited = '1'; } } );
 		}
 
 		var appearanceForm = root.querySelector( '[data-certloom-appearance-form]' );
@@ -1300,6 +1472,7 @@
 		var naturalWidth = parseFloat( scroll.getAttribute( 'data-certloom-preview-width' ) || '' ) || parseFloat( page.style.width || '' );
 		var naturalHeight = parseFloat( scroll.getAttribute( 'data-certloom-preview-height' ) || '' ) || parseFloat( page.style.height || '' );
 		if ( ! naturalWidth || ! naturalHeight ) { return; }
+		canvas.style.aspectRatio = naturalWidth + ' / ' + naturalHeight;
 		var stage = page.parentNode && page.parentNode.classList && page.parentNode.classList.contains( 'certloom-wizard-template-preview-stage' ) ? page.parentNode : null;
 		if ( ! stage ) {
 			stage = document.createElement( 'div' );
@@ -1319,6 +1492,7 @@
 		stage.style.height = Math.max( 1, naturalHeight * scale ) + 'px';
 		stage.style.margin = 'auto';
 		scroll.setAttribute( 'data-certloom-preview-fitted', '1' );
+		if ( window.CertloomTextFit ) { window.CertloomTextFit.refresh( page ); }
 	}
 
 	function observeWizardTemplatePreview( panel ) {
@@ -1358,6 +1532,11 @@
 				if ( name ) { name.textContent = response.data.name || certloomText( 'noDefaultDesign', 'No default design selected' ); }
 				if ( description ) { description.textContent = response.data.description || ''; }
 				if ( canvas ) { canvas.innerHTML = response.data.html || ''; }
+				var coverageRows = document.querySelector( '[data-certloom-design-coverage-rows]' );
+				if ( coverageRows && response.data.coverage && Array.isArray( response.data.coverage.rows ) ) {
+					coverageRows.replaceChildren();
+					response.data.coverage.rows.forEach( function ( row ) { var item = document.createElement( 'li' ); var label = document.createElement( 'strong' ); var message = document.createElement( 'span' ); label.textContent = row.label; message.textContent = row.message; item.appendChild( label ); item.appendChild( message ); coverageRows.appendChild( item ); } );
+				}
 				panel.setAttribute( 'aria-busy', 'false' );
 				window.requestAnimationFrame( function () { fitWizardTemplatePreview( panel ); } );
 			} ).catch( function ( error ) {
@@ -1954,6 +2133,15 @@
 		} );
 		Array.prototype.forEach.call( dialog.querySelectorAll( '[data-certloom-dialog-close]' ), function ( button ) { button.addEventListener( 'click', function () { if ( dialog.open ) { dialog.close(); } } ); } );
 		dialog.addEventListener( 'click', function ( event ) { if ( event.target === dialog ) { dialog.close(); } } );
+		dialog.addEventListener( 'keydown', function ( event ) {
+			if ( 'Tab' !== event.key || ! dialog.open || event.ctrlKey || event.altKey || event.metaKey ) { return; }
+			var fields = Array.prototype.filter.call( dialog.querySelectorAll( 'a[href], button, input:not([type="hidden"]), select, textarea, [tabindex]' ), function ( field ) {
+				return ! field.disabled && field.tabIndex >= 0 && field.getClientRects().length > 0 && ( 'radio' !== field.type || field.checked );
+			} );
+			var first = fields[0], last = fields[fields.length - 1];
+			if ( first && event.shiftKey && document.activeElement === first ) { event.preventDefault(); last.focus(); }
+			else if ( last && ! event.shiftKey && document.activeElement === last ) { event.preventDefault(); first.focus(); }
+		} );
 	}
 
 
@@ -2075,6 +2263,37 @@
 		nav.classList.add( 'is-below-hero' );
 	}
 
+	function initProductNoticePlacement() {
+		var shell = document.querySelector( '.ecapla-certverify-admin-wrap.certloom-admin-shell, .certloom-admin-shell' );
+		if ( ! shell ) { return; }
+		var hero = shell.querySelector( ':scope > .certloom-page-hero, :scope > .certloom-dashboard-hero, :scope > .certloom-workspace-hero' );
+		if ( ! hero ) { return; }
+		var boundary = shell.querySelector( ':scope > .wp-header-end' );
+		if ( ! boundary ) {
+			boundary = document.createElement( 'hr' );
+			boundary.className = 'wp-header-end';
+			boundary.setAttribute( 'aria-hidden', 'true' );
+			hero.insertAdjacentElement( 'afterend', boundary );
+		}
+		function moveHeaderNotices() {
+			var anchor = boundary.nextSibling;
+			var notices = Array.prototype.filter.call( hero.querySelectorAll( '.notice:not(.inline), div.updated:not(.inline), div.error:not(.inline)' ), function ( notice ) {
+				var parentNotice = notice.parentElement.closest( '.notice, div.updated, div.error' );
+				return ! notice.closest( '.inline' ) && ( ! parentNotice || ! hero.contains( parentNotice ) );
+			} );
+			notices.forEach( function ( notice ) {
+				boundary.parentNode.insertBefore( notice, anchor );
+			} );
+		}
+		// WordPress moves notices after its first heading unless a header boundary
+		// exists. Preserve notice nodes and their handlers outside our nested hero.
+		moveHeaderNotices();
+		if ( window.jQuery ) {
+			window.jQuery( moveHeaderNotices );
+			window.jQuery( document ).on( 'wp-notice-added.certloomHeader', moveHeaderNotices );
+		}
+	}
+
 	function initDescriptionAssociations() {
 		var descriptions = document.querySelectorAll( '.ecapla-certverify-admin-wrap p.description, .certloom-admin-shell p.description' );
 		var serial = 0;
@@ -2118,6 +2337,7 @@
 		initUsageProfilePresentation();
 		initCopyBlocks();
 		initProductSubnavPlacement();
+		initProductNoticePlacement();
 		initDescriptionAssociations();
 		initCertloomWordPressMenuState();
 		initHumanFormValidation();

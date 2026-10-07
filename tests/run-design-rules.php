@@ -1,5 +1,7 @@
 <?php
 /** Shared Design Rules manager safety and bulk-mutation contract tests. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define( 'ABSPATH', __DIR__ . '/' );
 if ( ! class_exists( 'WP_Error' ) ) {
 	class WP_Error {
@@ -83,7 +85,7 @@ function dr_manager( DRTemplates $templates, DREmails $emails, DREmailRules $rul
 		'guard' => $guard,
 	);
 	$reflection = new ReflectionClass( $manager );
-	foreach ( $props as $name => $value ) { $property = $reflection->getProperty( $name ); $property->setAccessible( true ); $property->setValue( $manager, $value ); }
+	foreach ( $props as $name => $value ) { $property = $reflection->getProperty( $name ); if ( PHP_VERSION_ID < 80100 ) { $property->setAccessible( true ); } $property->setValue( $manager, $value ); }
 	return $manager;
 }
 

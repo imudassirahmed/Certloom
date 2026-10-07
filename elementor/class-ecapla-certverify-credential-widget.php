@@ -29,6 +29,6 @@ class Ecapla_CertVerify_Elementor_Credential_Widget extends \Elementor\Widget_Ba
 		}
 		$heading_tag = isset( $settings['heading_tag'] ) ? sanitize_key( (string) $settings['heading_tag'] ) : 'h2';
 		if ( ! in_array( $heading_tag, array( 'h2', 'h3', 'h4', 'h5', 'h6' ), true ) ) { $heading_tag = 'h2'; }
-		echo Ecapla_CertVerify_Render::credential_profile( $number, array( 'heading' => $settings['heading'] ?? '', 'heading_tag' => $heading_tag, 'notfound_text' => $settings['notfound_text'] ?? '' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		echo Ecapla_CertVerify_Render::scoped_markup_html( Ecapla_CertVerify_Render::credential_profile( $number, array( 'heading' => $settings['heading'] ?? '', 'heading_tag' => $heading_tag, 'notfound_text' => $settings['notfound_text'] ?? '' ) ), 'certloom-elementor-' . str_replace( '-', '', wp_generate_uuid4() ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 	}
 }

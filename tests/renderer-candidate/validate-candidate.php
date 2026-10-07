@@ -1,5 +1,7 @@
 <?php
 /** Normalize one production renderer candidate manifest and print its canonical SHA-256. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 require_once dirname( __DIR__ ) . '/bootstrap-autoload.php';
 
 use Certloom\Application\Rendering\RendererCandidateManifest;

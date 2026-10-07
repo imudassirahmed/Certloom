@@ -237,6 +237,10 @@ final class EmailDesignAdmin {
 			'normal' => __( 'Normal', 'certloom' ), 'italic' => __( 'Italic', 'certloom' ), 'fontFile' => __( 'Font file', 'certloom' ),
 			'upload' => __( 'Upload font', 'certloom' ), 'uploading' => __( 'Uploading…', 'certloom' ),
 			'uploadIncomplete' => __( 'Choose a font file and enter its family name.', 'certloom' ), 'uploadFailed' => __( 'Custom font upload failed.', 'certloom' ),
+			'uploadHelp' => __( 'Upload a Unicode TTF or OTF file under 8 MB. Use a font you have permission to publish. Email apps that do not support custom fonts use the fallback font.', 'certloom' ),
+			'previewFailed' => __( 'The font could not be loaded for preview. Your previous selection is unchanged; check the font file and retry.', 'certloom' ),
+			'fontResults' => __( '%s fonts available.', 'certloom' ),
+			'noFonts' => __( 'No fonts found. Try another search or upload a custom font.', 'certloom' ),
 		);
 	}
 

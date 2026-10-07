@@ -1,5 +1,7 @@
 <?php
 /** Self-contained Phase 4.5 canvas-interaction fixture over the user-approved sticky workspace. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 ob_start();
 require __DIR__ . '/build_ui_phase4_sticky_workspace_fixture.php';
 $html = ob_get_clean();

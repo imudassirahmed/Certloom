@@ -29,6 +29,10 @@ class Ecapla_CertVerify_Backup {
 
 	/** @var bool Allows the restore commit itself to persist protected configuration. */
 	private static $internal_restore_write = false;
+	/** @var int Only the serialized restore coordinator may mutate private restore tables. */
+	private static $restore_operation_depth = 0;
+
+	public static function owns_restore_operation() { return self::$restore_operation_depth > 0; }
 
 	/**
 	 * Prevents normal Certloom writes while a complete restore is being built.
@@ -64,14 +68,28 @@ class Ecapla_CertVerify_Backup {
 	}
 
 	public static function current_generation() {
-		return (string) get_option( self::GENERATION_OPTION, '0' );
+		$value = self::read_current_generation();
+		return is_wp_error( $value ) ? '' : $value;
+	}
+
+	/** A consistency decision must distinguish missing data from failed/corrupt reads. */
+	public static function read_current_generation() {
+		$values = \Certloom\Infrastructure\Data\DatabaseOptions::read( array( self::GENERATION_OPTION ) );
+		if ( is_wp_error( $values ) ) { return $values; }
+		$entry = $values[ self::GENERATION_OPTION ];
+		if ( ! $entry['exists'] ) { return '0'; }
+		return is_string( $entry['value'] ) && '' !== $entry['value']
+			? $entry['value']
+			: new WP_Error( 'ecapla_certverify_generation_read_failed', __( 'Certloom could not read its registry change marker safely. Retry after database storage is healthy.', 'certloom' ) );
 	}
 
 	/** Marks a successful live registry or configuration mutation. */
 	public static function mark_mutation() {
 		$value = sprintf( '%.6F|%s', microtime( true ), wp_generate_password( 20, false, false ) );
-		$saved = update_option( self::GENERATION_OPTION, $value, false );
-		return $saved || $value === (string) get_option( self::GENERATION_OPTION, '0' );
+		\Certloom\Infrastructure\Data\DatabaseOptions::invalidate( array( self::GENERATION_OPTION ) );
+		self::update_state( self::GENERATION_OPTION, $value, false );
+		$current = self::read_current_generation();
+		return ! is_wp_error( $current ) && hash_equals( $value, $current );
 	}
 
 	/**
@@ -107,6 +125,13 @@ class Ecapla_CertVerify_Backup {
 	 * @return array<string,mixed>|WP_Error
 	 */
 	public static function create_export_file() {
+		// Cron and CLI load WordPress without the admin-only file helpers.
+		if ( ! function_exists( 'wp_tempnam' ) ) { require_once ABSPATH . 'wp-admin/includes/file.php'; }
+		// Bracket configuration collection as well as registry streaming.
+		$state_marker = self::capture_state_marker();
+		if ( is_wp_error( $state_marker ) ) { return $state_marker; }
+		\Certloom\Infrastructure\Data\DatabaseOptions::invalidate( self::configuration_keys() );
+		if ( method_exists( 'Ecapla_CertVerify_Fields', 'reset_runtime_cache' ) ) { Ecapla_CertVerify_Fields::reset_runtime_cache(); }
 		$temp = wp_tempnam( 'certloom-backup-' . gmdate( 'Y-m-d-His' ) . '.cvbackup' );
 		if ( ! $temp ) {
 			return new WP_Error( 'ecapla_certverify_backup_temp_failed', __( 'Certloom could not create a temporary backup file.', 'certloom' ) );
@@ -118,38 +143,9 @@ class Ecapla_CertVerify_Backup {
 			return new WP_Error( 'ecapla_certverify_backup_open_failed', __( 'Certloom could not open its temporary backup file.', 'certloom' ) );
 		}
 
-		$fields           = Ecapla_CertVerify_Fields::get_fields();
-		$retired_fields  = Ecapla_CertVerify_Fields::get_retired_fields();
-		$settings        = Ecapla_CertVerify_Settings::get_all();
-		$numbering_policy = Ecapla_CertVerify_Numbering::normalize_policy( $settings );
-		if ( is_wp_error( $numbering_policy ) ) {
-			return self::abort_export_file( $handle, $temp, new WP_Error( 'ecapla_certverify_backup_numbering_policy', __( 'Certloom cannot create a complete backup while the certificate-numbering policy is invalid. Repair Settings → Certificate numbering and try again.', 'certloom' ) ) );
-		}
-		$settings = array_merge( $settings, $numbering_policy );
-
-		$numbering_state = Ecapla_CertVerify_Numbering::export_state();
-		if ( is_wp_error( $numbering_state ) ) {
-			return self::abort_export_file( $handle, $temp, $numbering_state );
-		}
-
-		$state_marker = self::capture_state_marker();
-		if ( is_wp_error( $state_marker ) ) {
-			return self::abort_export_file( $handle, $temp, $state_marker );
-		}
-
-		$generated_at = gmdate( 'c' );
-		$manifest     = array(
-			'type'            => 'manifest',
-			'format'          => self::FORMAT,
-			'format_version'  => self::FORMAT_VERSION,
-			'plugin_version'  => ECAPLA_CERTVERIFY_VERSION,
-			'schema_version'  => ECAPLA_CERTVERIFY_SCHEMA_VERSION,
-			'generated_at'    => $generated_at,
-			'fields'          => $fields,
-			'retired_fields'  => $retired_fields,
-			'settings'        => $settings,
-			'numbering_state' => $numbering_state,
-		);
+		$manifest = self::export_manifest();
+		if ( is_wp_error( $manifest ) ) { return self::abort_export_file( $handle, $temp, $manifest ); }
+		$generated_at = $manifest['generated_at'];
 
 		$manifest_json = wp_json_encode( $manifest );
 		$hash          = hash_init( 'sha256' );
@@ -351,13 +347,26 @@ class Ecapla_CertVerify_Backup {
 	 * @return true|WP_Error
 	 */
 	public static function recover_interrupted_restore() {
+		return self::maintenance_call( static function () { return self::recover_interrupted_restore_locked(  ); } );
+	}
+
+	private static function recover_interrupted_restore_locked() {
+		if ( ( new \Certloom\Infrastructure\Data\DomainMaintenanceLock() )->active() ) { return new WP_Error( 'certloom_domain_maintenance_write_locked', __( 'Certloom maintenance is in progress. Credential and configuration changes are temporarily paused.', 'certloom' ) ); }
+		$lease = self::read_state( self::MAINTENANCE_LOCK_OPTION, array() );
+		$pending_journal = self::read_state( self::JOURNAL_OPTION, array() );
+		if ( $pending_journal && ! self::valid_recovery_journal( $pending_journal ) ) { return new WP_Error( 'ecapla_certverify_restore_state_corrupt', __( 'Stored registry recovery state is invalid. Recovery is paused for administrator review.', 'certloom' ) ); }
+		if ( ! is_array( $lease ) || ( ! empty( $lease['expires_at'] ) && absint( $lease['expires_at'] ) > time() && 'committed' !== ( $pending_journal['state'] ?? '' ) ) ) {
+			return new WP_Error( 'ecapla_certverify_restore_maintenance_locked', __( 'A registry restore is still active. Resume it or wait for its lease to expire before recovering it.', 'certloom' ) );
+		}
+
 		$cleanup = self::cleanup_stale_restore_builds();
 		if ( is_wp_error( $cleanup ) ) {
 			return $cleanup;
 		}
-		$journal = get_option( self::JOURNAL_OPTION, array() );
+		$journal = self::read_state( self::JOURNAL_OPTION, array() );
 		if ( ! is_array( $journal ) || empty( $journal['suffix'] ) ) {
-			self::get_active_maintenance_lock();
+			$builds = self::read_state( 'certverify_restore_builds', array() );
+			if ( ! $builds && ! empty( $lease['token_hash'] ) && ! self::delete_maintenance_lock_if_owner( (string) $lease['token_hash'] ) ) { return new WP_Error( 'ecapla_certverify_restore_cleanup_failed', __( 'Certloom could not release an expired registry restore lease safely. Recovery remains paused.', 'certloom' ) ); }
 			return true;
 		}
 		$suffix   = sanitize_key( (string) $journal['suffix'] );
@@ -398,7 +407,7 @@ class Ecapla_CertVerify_Backup {
 		$options_ok = self::restore_option( Ecapla_CertVerify_Fields::OPTION_KEY, $journal['old_fields'] ?? null )
 			&& self::restore_option( Ecapla_CertVerify_Fields::RETIRED_OPTION_KEY, $journal['old_retired'] ?? null )
 			&& self::restore_option( Ecapla_CertVerify_Settings::OPTION_KEY, $journal['old_settings'] ?? null )
-			&& self::restore_option( Ecapla_CertVerify_Numbering::STATE_OPTION, $journal['old_numbering_state'] ?? null );
+			&& ( ! array_key_exists( 'old_numbering_state', $journal ) || self::restore_option( Ecapla_CertVerify_Numbering::STATE_OPTION, $journal['old_numbering_state'] ) );
 		if ( ! $options_ok ) {
 			return new WP_Error( 'ecapla_certverify_restore_recovery_failed', __( 'Certloom reactivated the original registry but could not restore all previous configuration.', 'certloom' ) );
 		}
@@ -435,6 +444,13 @@ class Ecapla_CertVerify_Backup {
 	}
 
 	public static function start_restore( $token, $conflict_policy, $restore_mode = 'replace' ) {
+		self::clear_session_cache( $token );
+		return self::maintenance_call( static function () use ( $token, $conflict_policy, $restore_mode ) { return self::start_restore_locked( $token, $conflict_policy, $restore_mode ); } );
+	}
+
+	private static function start_restore_locked( $token, $conflict_policy, $restore_mode = 'replace' ) {
+		$allowed = ( new \Certloom\Application\Migration\LegacyRegistryWriteGuard() )->assert_allowed();
+		if ( is_wp_error( $allowed ) ) { return $allowed; }
 		$manifest = self::get_manifest( $token );
 		if ( ! $manifest ) {
 			return new WP_Error( 'ecapla_certverify_backup_expired', __( 'That backup review session expired. Upload the backup again.', 'certloom' ) );
@@ -523,6 +539,13 @@ class Ecapla_CertVerify_Backup {
 	 * @return array|WP_Error Progress or completed results.
 	 */
 	public static function continue_restore( $token ) {
+		self::clear_session_cache( $token );
+		return self::maintenance_call( static function () use ( $token ) { return self::continue_restore_locked( $token ); } );
+	}
+
+	private static function continue_restore_locked( $token ) {
+		$allowed = ( new \Certloom\Application\Migration\LegacyRegistryWriteGuard() )->assert_allowed();
+		if ( is_wp_error( $allowed ) ) { return $allowed; }
 		$manifest = self::get_manifest( $token );
 		if ( ! $manifest || empty( $manifest['restore_process'] ) || ! is_array( $manifest['restore_process'] ) ) {
 			$released = self::release_restore_maintenance_lock( $token );
@@ -649,10 +672,10 @@ class Ecapla_CertVerify_Backup {
 			return is_wp_error( $cleanup ) ? self::cleanup_error_with_operation( $operation_error, 'abandon', $cleanup->get_error_message(), $cleanup ) : $operation_error;
 		}
 
-		$old_fields   = get_option( Ecapla_CertVerify_Fields::OPTION_KEY, null );
-		$old_retired  = get_option( Ecapla_CertVerify_Fields::RETIRED_OPTION_KEY, null );
-		$old_settings = get_option( Ecapla_CertVerify_Settings::OPTION_KEY, null );
-		$old_numbering_state = get_option( Ecapla_CertVerify_Numbering::STATE_OPTION, null );
+		$old_fields   = self::read_state( Ecapla_CertVerify_Fields::OPTION_KEY, null );
+		$old_retired  = self::read_state( Ecapla_CertVerify_Fields::RETIRED_OPTION_KEY, null );
+		$old_settings = self::read_state( Ecapla_CertVerify_Settings::OPTION_KEY, null );
+		$old_numbering_state = self::read_state( Ecapla_CertVerify_Numbering::STATE_OPTION, null );
 		$journal      = array(
 			'state'        => 'prepared',
 			'suffix'       => $suffix,
@@ -758,13 +781,15 @@ class Ecapla_CertVerify_Backup {
 			return new WP_Error( 'ecapla_certverify_restore_generation_marker_failed', __( 'The registry restore was committed, but Certloom could not refresh its mutation marker. Writes remain paused and the recovery journal was preserved.', 'certloom' ) );
 		}
 		if ( ! Ecapla_CertVerify_Database::drop_restore_table( $rollback ) ) {
-			update_option( 'certverify_restore_cleanup_needed', $rollback, false );
+			self::update_state( 'certverify_restore_cleanup_needed', $rollback, false );
 			return new WP_Error( 'ecapla_certverify_restore_cleanup_failed', __( 'The registry restore was committed, but Certloom could not remove its rollback table. Writes remain paused and recovery can retry cleanup safely.', 'certloom' ) );
 		}
-		delete_option( 'certverify_restore_cleanup_needed' );
-		$review_count = Ecapla_CertVerify_Database::refresh_legacy_expired_review_count();
+		self::delete_state( 'certverify_restore_cleanup_needed' );
+		self::$internal_restore_write = true;
+		try { $review_count = Ecapla_CertVerify_Database::refresh_legacy_expired_review_count(); }
+		finally { self::$internal_restore_write = false; }
 		if ( is_wp_error( $review_count ) ) {
-			update_option( 'certverify_legacy_review_refresh_needed', 1, false );
+			self::update_state( 'certverify_legacy_review_refresh_needed', 1, false );
 		}
 		if ( ! self::release_restore_maintenance_lock( $token ) ) {
 			return new WP_Error( 'ecapla_certverify_restore_cleanup_failed', __( 'The registry restore was committed, but Certloom could not release its maintenance lock safely. The recovery journal was preserved and normal writes remain paused until cleanup succeeds.', 'certloom' ) );
@@ -885,28 +910,90 @@ class Ecapla_CertVerify_Backup {
 		return substr( hash( 'sha256', sanitize_text_field( $token ) ), 0, 40 );
 	}
 
+	private static function maintenance_call( callable $callback ) {
+		try {
+			return \Certloom\Infrastructure\Data\MaintenanceMutex::run( static function () use ( $callback ) {
+				self::$restore_operation_depth++;
+				try { return $callback(); }
+				finally { self::$restore_operation_depth--; }
+			} );
+		} catch ( \Certloom\Infrastructure\Data\LegacyStateReadException $error ) { return $error->failure(); }
+	}
+
+	private static function clear_session_cache( $token ) {
+		wp_cache_delete( $token, 'transient' );
+		\Certloom\Infrastructure\Data\DatabaseOptions::invalidate( array( '_transient_' . $token, '_transient_timeout_' . $token ) );
+	}
+
+	private static function read_state( $key, $default = false ) {
+		$stored = \Certloom\Infrastructure\Data\DatabaseOptions::read( array( $key ) );
+		if ( is_wp_error( $stored ) ) { throw new \Certloom\Infrastructure\Data\LegacyStateReadException( $stored ); }
+		$entry = $stored[ $key ];
+		if ( ! $entry['exists'] ) { return $default; }
+		if ( in_array( $key, array( self::JOURNAL_OPTION, 'certverify_restore_builds' ), true ) && ! is_array( $entry['value'] ) ) {
+			throw new \Certloom\Infrastructure\Data\LegacyStateReadException( new WP_Error( 'ecapla_certverify_restore_state_corrupt', __( 'Stored registry recovery state is invalid. Recovery is paused for administrator review.', 'certloom' ) ) );
+		}
+		return $entry['value'];
+	}
+
+	private static function valid_recovery_journal( array $journal ) {
+		global $wpdb;
+		$suffix = $journal['suffix'] ?? '';
+		if ( ! is_string( $suffix ) || ! preg_match( '/^[a-z0-9]{1,12}$/D', $suffix ) || ! in_array( $journal['state'] ?? '', array( 'prepared', 'swapped', 'committed', 'staging' ), true ) || ! preg_match( '/^[a-f0-9]{40,64}$/D', (string) ( $journal['lock_hash'] ?? '' ) ) ) { return false; }
+		foreach ( array( 'staging' => 'stage', 'rollback' => 'rollback' ) as $key => $kind ) {
+			if ( ! array_key_exists( $key, $journal ) || ( '' !== $journal[ $key ] && $wpdb->prefix . 'certverify_' . $kind . '_' . $suffix !== $journal[ $key ] ) ) { return false; }
+		}
+		if ( self::MAINTENANCE_LOCK_OPTION === $key && ( ! is_array( $entry['value'] ) || ! preg_match( '/^[a-f0-9]{40,64}$/D', (string) ( $entry['value']['token_hash'] ?? '' ) ) || ! is_numeric( $entry['value']['expires_at'] ?? null ) || (int) $entry['value']['expires_at'] < 1 ) ) {
+			throw new \Certloom\Infrastructure\Data\LegacyStateReadException( new WP_Error( 'ecapla_certverify_restore_state_corrupt', __( 'Stored registry recovery state is invalid. Recovery is paused for administrator review.', 'certloom' ) ) );
+		}
+		if ( 'committed' !== $journal['state'] ) {
+			foreach ( array( 'old_fields', 'old_retired', 'old_settings' ) as $key ) { if ( ! array_key_exists( $key, $journal ) || ( null !== $journal[ $key ] && ! is_array( $journal[ $key ] ) ) ) { return false; } }
+		}
+		return true;
+	}
+
+	private static function update_state( $key, $value, $autoload = null ) {
+		\Certloom\Infrastructure\Data\DatabaseOptions::invalidate( array( $key ) );
+		return update_option( $key, $value, $autoload );
+	}
+
+	private static function delete_state( $key ) {
+		\Certloom\Infrastructure\Data\DatabaseOptions::invalidate( array( $key ) );
+		return delete_option( $key );
+	}
+
 	private static function get_active_maintenance_lock() {
-		$missing = new stdClass();
-		$lock    = get_option( self::MAINTENANCE_LOCK_OPTION, $missing );
-		if ( $missing === $lock || false === $lock || '' === $lock || array() === $lock ) {
-			return false;
-		}
-		if ( ! is_array( $lock ) || empty( $lock['token_hash'] ) || empty( $lock['expires_at'] ) ) {
-			// A non-empty/corrupt maintenance option must fail closed for normal
-			// writes. acquire_restore_maintenance_lock() can repair it later with
-			// an atomic compare-and-swap owned by a real maintenance request.
-			return array( 'corrupt' => true );
-		}
-		if ( absint( $lock['expires_at'] ) > time() ) {
-			return $lock;
-		}
-		if ( ! self::delete_maintenance_lock_if_owner( sanitize_text_field( (string) $lock['token_hash'] ) ) ) {
-			return array( 'corrupt' => true );
-		}
-		return false;
+		try {
+			$journal = self::read_state( self::JOURNAL_OPTION, array() );
+			$builds = self::read_state( 'certverify_restore_builds', array() );
+			if ( $journal || $builds ) { return array( 'recovery_required' => true ); }
+			$missing = new stdClass();
+			$lock = self::read_state( self::MAINTENANCE_LOCK_OPTION, $missing );
+			if ( $missing === $lock ) { return false; }
+			if ( ! is_array( $lock ) || empty( $lock['token_hash'] ) || empty( $lock['expires_at'] ) ) { return array( 'corrupt' => true ); }
+			if ( absint( $lock['expires_at'] ) > time() ) { return $lock; }
+			// Expired ownership is reclaimed only by a serialized recovery worker.
+			return array( 'recovery_required' => true );
+		} catch ( \Certloom\Infrastructure\Data\LegacyStateReadException $error ) { return array( 'corrupt' => true ); }
 	}
 
 	private static function acquire_restore_maintenance_lock( $token ) {
+		$previous = self::$internal_restore_write;
+		self::$internal_restore_write = true;
+		try {
+			return \Certloom\Infrastructure\Data\DomainWriteFence::exclusive( static function () use ( $token ) {
+				if ( ( new \Certloom\Infrastructure\Data\DomainMaintenanceLock() )->active() ) { return new WP_Error( 'certloom_domain_maintenance_write_locked', __( 'Certloom maintenance is in progress. Credential and configuration changes are temporarily paused.', 'certloom' ) ); }
+				$journal = self::read_state( self::JOURNAL_OPTION, array() );
+				if ( $journal && self::token_hash( $token ) !== (string) ( $journal['lock_hash'] ?? '' ) ) { return new WP_Error( 'ecapla_certverify_restore_recovery_required', __( 'An interrupted registry restore must finish recovery before another restore can start.', 'certloom' ) ); }
+				foreach ( self::read_state( 'certverify_restore_builds', array() ) as $build ) {
+					if ( ! is_array( $build ) || self::token_hash( $token ) !== (string) ( $build['token_hash'] ?? '' ) ) { return new WP_Error( 'ecapla_certverify_restore_recovery_required', __( 'An interrupted registry restore must finish recovery before another restore can start.', 'certloom' ) ); }
+				}
+				return self::acquire_restore_maintenance_lock_locked( $token );
+			} );
+		} finally { self::$internal_restore_write = $previous; }
+	}
+
+	private static function acquire_restore_maintenance_lock_locked( $token ) {
 		global $wpdb;
 		$token_hash = self::token_hash( $token );
 		$now        = time();
@@ -920,11 +1007,11 @@ class Ecapla_CertVerify_Backup {
 		if ( add_option( self::MAINTENANCE_LOCK_OPTION, $payload, '', false ) ) {
 			return true;
 		}
-		$current = get_option( self::MAINTENANCE_LOCK_OPTION, array() );
+		$current = self::read_state( self::MAINTENANCE_LOCK_OPTION, array() );
 		if ( is_array( $current ) && $token_hash === (string) ( $current['token_hash'] ?? '' ) ) {
 			$payload['acquired_at'] = absint( $current['acquired_at'] ?? $now );
-			$saved = update_option( self::MAINTENANCE_LOCK_OPTION, $payload, false );
-			return $saved || $payload === get_option( self::MAINTENANCE_LOCK_OPTION, array() )
+			$saved = self::update_state( self::MAINTENANCE_LOCK_OPTION, $payload, false );
+			return $saved || $payload === self::read_state( self::MAINTENANCE_LOCK_OPTION, array() )
 				? true
 				: new WP_Error( 'ecapla_certverify_restore_lock_storage', __( 'Certloom could not extend the restore safety lock. No live data was changed.', 'certloom' ) );
 		}
@@ -959,7 +1046,7 @@ class Ecapla_CertVerify_Backup {
 
 	private static function delete_maintenance_lock_if_owner( $token_hash ) {
 		global $wpdb;
-		$current = get_option( self::MAINTENANCE_LOCK_OPTION, array() );
+		$current = self::read_state( self::MAINTENANCE_LOCK_OPTION, array() );
 		if ( ! is_array( $current ) || $token_hash !== (string) ( $current['token_hash'] ?? '' ) ) {
 			return true;
 		}
@@ -973,25 +1060,47 @@ class Ecapla_CertVerify_Backup {
 			)
 		);
 		wp_cache_delete( self::MAINTENANCE_LOCK_OPTION, 'options' );
-		return 1 === (int) $deleted || false === get_option( self::MAINTENANCE_LOCK_OPTION, false );
+		return 1 === (int) $deleted || false === self::read_state( self::MAINTENANCE_LOCK_OPTION, false );
 	}
 
-	private static function capture_state_marker() {
+	/** Uncached read model shared with bounded whole-state capture; it grants no restore authority. */
+	public static function capture_state_marker() {
 		$registry = Ecapla_CertVerify_Database::get_registry_snapshot();
 		if ( is_wp_error( $registry ) ) {
 			return $registry;
 		}
-		$config = array(
-			'fields'          => get_option( Ecapla_CertVerify_Fields::OPTION_KEY, null ),
-			'retired_fields'  => get_option( Ecapla_CertVerify_Fields::RETIRED_OPTION_KEY, null ),
-			'settings'        => get_option( Ecapla_CertVerify_Settings::OPTION_KEY, null ),
-			'numbering_state' => get_option( Ecapla_CertVerify_Numbering::STATE_OPTION, null ),
-		);
+		$config = \Certloom\Infrastructure\Data\DatabaseOptions::read( self::configuration_keys() );
+		if ( is_wp_error( $config ) ) { return $config; }
+		$generation = self::read_current_generation();
+		if ( is_wp_error( $generation ) ) { return $generation; }
 		return array(
-			'generation'  => self::current_generation(),
+			'generation'  => $generation,
 			'registry'    => $registry,
 			'config_hash' => hash( 'sha256', maybe_serialize( $config ) ),
 		);
+	}
+
+	/** The existing v4 manifest, without creating a file or importing configuration. */
+	public static function export_manifest() {
+		\Certloom\Infrastructure\Data\DatabaseOptions::invalidate( self::configuration_keys() );
+		if ( method_exists( 'Ecapla_CertVerify_Fields', 'reset_runtime_cache' ) ) { Ecapla_CertVerify_Fields::reset_runtime_cache(); }
+		$settings = Ecapla_CertVerify_Settings::get_all();
+		$policy = Ecapla_CertVerify_Numbering::normalize_policy( $settings );
+		if ( is_wp_error( $policy ) ) { return new WP_Error( 'ecapla_certverify_backup_numbering_policy', __( 'Certloom cannot create a complete backup while the certificate-numbering policy is invalid. Repair Settings → Certificate numbering and try again.', 'certloom' ) ); }
+		$numbering = Ecapla_CertVerify_Numbering::export_state();
+		if ( is_wp_error( $numbering ) ) { return $numbering; }
+		return array( 'type' => 'manifest', 'format' => self::FORMAT, 'format_version' => self::FORMAT_VERSION, 'plugin_version' => ECAPLA_CERTVERIFY_VERSION, 'schema_version' => ECAPLA_CERTVERIFY_SCHEMA_VERSION, 'generated_at' => gmdate( 'c' ), 'fields' => Ecapla_CertVerify_Fields::get_fields(), 'retired_fields' => Ecapla_CertVerify_Fields::get_retired_fields(), 'settings' => array_merge( $settings, $policy ), 'numbering_state' => $numbering );
+	}
+
+	/** Preserve the exact legacy record shape and hash contract in asynchronous capture. */
+	public static function export_record_line( array $record ) {
+		$item = array( 'type' => 'record', 'data' => array( 'cert_number' => (string) $record['cert_number'], 'status' => Ecapla_CertVerify_Database::workflow_status( $record ), 'status_source' => Ecapla_CertVerify_Database::effective_status_source( $record ), 'holder_name' => (string) $record['holder_name'], 'issue_date' => $record['issue_date'], 'expiry_date' => $record['expiry_date'], 'custom_fields' => (array) $record['custom_fields'], 'created_at' => (string) $record['created_at'], 'updated_at' => (string) $record['updated_at'] ) );
+		$json = wp_json_encode( $item );
+		return is_string( $json ) ? $json . "\n" : new WP_Error( 'ecapla_certverify_backup_record_encode_failed', __( 'Certloom could not encode a legacy backup record.', 'certloom' ) );
+	}
+
+	private static function configuration_keys() {
+		return array( Ecapla_CertVerify_Fields::OPTION_KEY, Ecapla_CertVerify_Fields::RETIRED_OPTION_KEY, Ecapla_CertVerify_Settings::OPTION_KEY, Ecapla_CertVerify_Numbering::STATE_OPTION );
 	}
 
 	private static function state_markers_match( $left, $right ) {
@@ -1034,7 +1143,7 @@ class Ecapla_CertVerify_Backup {
 		if ( add_option( $name, $payload, '', false ) ) {
 			return $payload;
 		}
-		$current = get_option( $name, '' );
+		$current = self::read_state( $name, '' );
 		$parts   = explode( '|', (string) $current );
 		$created = isset( $parts[1] ) ? absint( $parts[1] ) : time();
 		if ( time() - $created <= 120 ) {
@@ -1057,7 +1166,7 @@ class Ecapla_CertVerify_Backup {
 	private static function release_restore_lock( $token, $payload ) {
 		global $wpdb;
 		$name    = self::restore_lock_name( $token );
-		$current = (string) get_option( $name, '' );
+		$current = (string) self::read_state( $name, '' );
 		if ( '' === $current ) {
 			return true;
 		}
@@ -1074,7 +1183,7 @@ class Ecapla_CertVerify_Backup {
 			)
 		);
 		wp_cache_delete( $name, 'options' );
-		if ( 1 === (int) $deleted || '' === (string) get_option( $name, '' ) ) {
+		if ( 1 === (int) $deleted || '' === (string) self::read_state( $name, '' ) ) {
 			return true;
 		}
 		return new WP_Error( 'ecapla_certverify_restore_lock_release_failed', __( 'Certloom could not release the restore request lock safely. Wait for the short lease before continuing.', 'certloom' ) );
@@ -1082,7 +1191,7 @@ class Ecapla_CertVerify_Backup {
 
 
 	private static function cleanup_stale_restore_builds() {
-		$builds  = (array) get_option( 'certverify_restore_builds', array() );
+		$builds  = (array) self::read_state( 'certverify_restore_builds', array() );
 		$changed = false;
 		foreach ( $builds as $key => $build ) {
 			$updated    = absint( $build['updated_at'] ?? 0 );
@@ -1102,11 +1211,11 @@ class Ecapla_CertVerify_Backup {
 		}
 		if ( $changed ) {
 			if ( $builds ) {
-				$saved = update_option( 'certverify_restore_builds', $builds, false );
-				if ( ! $saved && $builds !== get_option( 'certverify_restore_builds', array() ) ) {
+				$saved = self::update_state( 'certverify_restore_builds', $builds, false );
+				if ( ! $saved && $builds !== self::read_state( 'certverify_restore_builds', array() ) ) {
 					return new WP_Error( 'ecapla_certverify_restore_cleanup_state_failed', __( 'Certloom removed expired restore workspaces but could not save the cleanup state.', 'certloom' ) );
 				}
-			} elseif ( ! delete_option( 'certverify_restore_builds' ) && false !== get_option( 'certverify_restore_builds', false ) ) {
+			} elseif ( ! self::delete_state( 'certverify_restore_builds' ) && false !== self::read_state( 'certverify_restore_builds', false ) ) {
 				return new WP_Error( 'ecapla_certverify_restore_cleanup_state_failed', __( 'Certloom removed expired restore workspaces but could not clear the cleanup state.', 'certloom' ) );
 			}
 		}
@@ -1114,22 +1223,22 @@ class Ecapla_CertVerify_Backup {
 	}
 
 	private static function register_restore_build( $token, $table ) {
-		$builds = (array) get_option( 'certverify_restore_builds', array() );
+		$builds = (array) self::read_state( 'certverify_restore_builds', array() );
 		$key = substr( hash( 'sha256', sanitize_text_field( $token ) ), 0, 32 );
 		$builds[ $key ] = array( 'table' => (string) $table, 'token_hash' => self::token_hash( $token ), 'updated_at' => time() );
-		$saved = update_option( 'certverify_restore_builds', $builds, false );
-		return $saved || $builds === get_option( 'certverify_restore_builds', array() );
+		$saved = self::update_state( 'certverify_restore_builds', $builds, false );
+		return $saved || $builds === self::read_state( 'certverify_restore_builds', array() );
 	}
 
 	private static function touch_restore_build( $token ) {
-		$builds = (array) get_option( 'certverify_restore_builds', array() );
+		$builds = (array) self::read_state( 'certverify_restore_builds', array() );
 		$key = substr( hash( 'sha256', sanitize_text_field( $token ) ), 0, 32 );
 		if ( empty( $builds[ $key ] ) ) {
 			return false;
 		}
 		$builds[ $key ]['updated_at'] = time();
-		$saved = update_option( 'certverify_restore_builds', $builds, false );
-		return $saved || $builds === get_option( 'certverify_restore_builds', array() );
+		$saved = self::update_state( 'certverify_restore_builds', $builds, false );
+		return $saved || $builds === self::read_state( 'certverify_restore_builds', array() );
 	}
 
 	private static function unregister_restore_build( $token ) {
@@ -1138,7 +1247,7 @@ class Ecapla_CertVerify_Backup {
 
 	private static function unregister_restore_build_by_hash( $token_hash ) {
 		$token_hash = sanitize_text_field( (string) $token_hash );
-		$builds     = (array) get_option( 'certverify_restore_builds', array() );
+		$builds     = (array) self::read_state( 'certverify_restore_builds', array() );
 		$key        = substr( $token_hash, 0, 32 );
 		if ( ! isset( $builds[ $key ] ) ) {
 			return true;
@@ -1149,11 +1258,11 @@ class Ecapla_CertVerify_Backup {
 		}
 		unset( $builds[ $key ] );
 		if ( $builds ) {
-			$saved = update_option( 'certverify_restore_builds', $builds, false );
-			if ( ! $saved && $builds !== get_option( 'certverify_restore_builds', array() ) ) {
+			$saved = self::update_state( 'certverify_restore_builds', $builds, false );
+			if ( ! $saved && $builds !== self::read_state( 'certverify_restore_builds', array() ) ) {
 				return new WP_Error( 'ecapla_certverify_restore_cleanup_state_failed', __( 'Certloom completed restore cleanup but could not update its restore-workspace tracking state.', 'certloom' ) );
 			}
-		} elseif ( ! delete_option( 'certverify_restore_builds' ) && false !== get_option( 'certverify_restore_builds', false ) ) {
+		} elseif ( ! self::delete_state( 'certverify_restore_builds' ) && false !== self::read_state( 'certverify_restore_builds', false ) ) {
 			return new WP_Error( 'ecapla_certverify_restore_cleanup_state_failed', __( 'Certloom completed restore cleanup but could not clear its restore-workspace tracking state.', 'certloom' ) );
 		}
 		return true;
@@ -1428,8 +1537,12 @@ class Ecapla_CertVerify_Backup {
 				return new WP_Error( 'ecapla_certverify_backup_field', __( 'The backup contains duplicate or invalid field keys.', 'certloom' ) );
 			}
 			$type = isset( $field['type'] ) ? sanitize_key( $field['type'] ) : 'text';
-			if ( ! in_array( $type, array( 'text', 'textarea', 'date', 'number', 'status' ), true ) ) {
+			if ( ! in_array( $type, array( 'text', 'textarea', 'date', 'number', 'status', 'visibility' ), true ) || ( 'visibility' === $type && '__certloom_profile_visibility' !== $key ) ) {
 				return new WP_Error( 'ecapla_certverify_backup_field', __( 'The backup contains an unsupported field type.', 'certloom' ) );
+			}
+			if ( array_key_exists( \Certloom\Application\Fields\FieldCollectionPolicy::KEY, $field ) ) {
+				$policy = ( new \Certloom\Application\Fields\FieldCollectionPolicy() )->for_definition( $field );
+				if ( is_wp_error( $policy ) ) { return $policy; }
 			}
 			$definitions[ $key ] = array(
 				'key'    => $key,
@@ -1587,22 +1700,22 @@ class Ecapla_CertVerify_Backup {
 
 	private static function restore_option( $key, $value ) {
 		if ( null === $value ) {
-			$deleted = delete_option( $key );
-			return $deleted || null === get_option( $key, null );
+			$deleted = self::delete_state( $key );
+			return $deleted || null === self::read_state( $key, null );
 		}
-		$saved = update_option( $key, $value, false );
-		return $saved || $value === get_option( $key, null );
+		$saved = self::update_state( $key, $value, false );
+		return $saved || $value === self::read_state( $key, null );
 	}
 
 
 	private static function save_journal( $journal ) {
-		$saved = update_option( self::JOURNAL_OPTION, $journal, false );
-		return $saved || $journal === get_option( self::JOURNAL_OPTION, array() );
+		$saved = self::update_state( self::JOURNAL_OPTION, $journal, false );
+		return $saved || $journal === self::read_state( self::JOURNAL_OPTION, array() );
 	}
 
 	private static function delete_journal() {
-		$deleted = delete_option( self::JOURNAL_OPTION );
-		return $deleted || false === get_option( self::JOURNAL_OPTION, false );
+		$deleted = self::delete_state( self::JOURNAL_OPTION );
+		return $deleted || false === self::read_state( self::JOURNAL_OPTION, false );
 	}
 
 	private static function rollback_table_name( $suffix ) {

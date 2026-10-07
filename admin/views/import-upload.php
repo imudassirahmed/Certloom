@@ -8,6 +8,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 ?>
 <div class="wrap ecapla-certverify-admin-wrap certloom-admin-shell">
 	<section class="certloom-page-hero"><div><span class="certloom-eyebrow"><?php esc_html_e( 'Recovery', 'certloom' ); ?></span><h1><?php esc_html_e( 'Backup & Restore', 'certloom' ); ?></h1></div></section>
+	<?php if ( current_user_can( Ecapla_CertVerify_Permissions::CAP_MANAGE_DATA_TOOLS ) ) : ?>
+	<section class="ecapla-certverify-admin-card certloom-recovery-card">
+		<h2><?php esc_html_e( 'Recover Certloom together', 'certloom' ); ?></h2>
+		<p><?php esc_html_e( 'Recovery snapshots combine the legacy registry, Program credentials, requests, designs, settings, certificate artwork and fonts. Review website connections before replacement, with a safety snapshot of your current records.', 'certloom' ); ?></p>
+		<p><a class="button button-primary" href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-recovery' ) ); ?>"><?php esc_html_e( 'Open recovery snapshots', 'certloom' ); ?></a></p>
+	</section>
+	<?php endif; ?>
 	<div class="certloom-product-notice-rail" aria-live="polite">
 	<?php if ( isset( $_GET['ecapla_certverify_error'] ) ) : ?><div class="notice notice-error"><p><?php echo esc_html( sanitize_text_field( wp_unslash( $_GET['ecapla_certverify_error'] ) ) ); ?></p></div><?php endif; ?>
 	<?php if ( isset( $_GET['backup_notice'] ) ) : ?>
@@ -17,7 +24,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 				<?php
 				if ( 'settings-saved' === $certloom_backup_notice ) { esc_html_e( 'Automatic backup settings saved.', 'certloom' ); }
 				elseif ( 'storage-verified' === $certloom_backup_notice ) { esc_html_e( 'Private backup storage tested successfully.', 'certloom' ); }
-				elseif ( 'backup-created' === $certloom_backup_notice ) { esc_html_e( 'Backup created, verified, and stored privately.', 'certloom' ); }
+				elseif ( 'backup-created' === $certloom_backup_notice ) { esc_html_e( 'Legacy certificate backup created, verified, and stored privately.', 'certloom' ); }
 				elseif ( 'restore-tested' === $certloom_backup_notice ) { esc_html_e( 'Restore test passed without changing live Certloom data.', 'certloom' ); }
 				elseif ( 'google-connected' === $certloom_backup_notice ) { esc_html_e( 'Google Drive connected. Test the destination before enabling automatic copies.', 'certloom' ); }
 				elseif ( 'google-settings-saved' === $certloom_backup_notice ) { esc_html_e( 'Google Drive backup settings saved.', 'certloom' ); }
@@ -33,7 +40,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	<?php endif; ?>
 	</div>
 	<p class="certloom-recovery-intro"><?php esc_html_e( 'Protect Certloom, restore a backup, or bring certificates in from CSV from one place.', 'certloom' ); ?></p>
-	<div class="notice notice-warning inline"><p><?php esc_html_e( 'These backups contain the legacy certificate registry and its settings. Credentials issued through the new Programs workflow are stored separately and are not included here. Back up both data stores before restoring or moving this site.', 'certloom' ); ?> <?php if ( current_user_can( \Ecapla_CertVerify_Permissions::CAP_MANAGE_DATA_TOOLS ) && \Certloom\Infrastructure\Migration\DomainFeatureGate::admin_preview_ready() ) : ?><a href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-domain-data-tools' ) ); ?>"><?php esc_html_e( 'Open credential data tools', 'certloom' ); ?></a><?php endif; ?></p></div>
+	<div class="notice notice-warning inline"><p><?php esc_html_e( 'These backups contain the legacy certificate registry and its settings. New credentials require a separate backup in Credential data tools. Neither archive is a complete site backup: media, fonts, pending jobs, integrations and WordPress account links need separate recovery. Before moving or restoring a site, back up the full WordPress database and files.', 'certloom' ); ?> <?php if ( current_user_can( \Ecapla_CertVerify_Permissions::CAP_MANAGE_DATA_TOOLS ) && \Certloom\Infrastructure\Migration\DomainFeatureGate::admin_preview_ready() ) : ?><a href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-domain-data-tools' ) ); ?>"><?php esc_html_e( 'Open credential data tools', 'certloom' ); ?></a><?php endif; ?></p></div>
 	<nav class="certloom-recovery-quickstart" aria-label="<?php esc_attr_e( 'Backup and restore actions', 'certloom' ); ?>"><a class="button button-primary" href="#certloom-backups"><?php esc_html_e( 'Your backups', 'certloom' ); ?></a><a class="button" href="#certloom-restore"><?php esc_html_e( 'Restore a backup', 'certloom' ); ?></a><a class="button" href="#certloom-csv-import"><?php esc_html_e( 'Import certificates', 'certloom' ); ?></a></nav>
 
 	<section class="certloom-recovery-intake" data-certloom-recovery-intake aria-labelledby="certloom-recovery-intake-title">
@@ -71,7 +78,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 		<?php if ( current_user_can( 'manage_options' ) ) : ?>
 			<section id="certloom-backups" class="ecapla-certverify-admin-card certloom-backup-center certloom-recovery-card">
 				<h2><?php esc_html_e( 'Your backups', 'certloom' ); ?></h2>
-				<p><?php esc_html_e( 'Back up the legacy certificate registry and settings, keep automatic copies in private storage, and optionally copy verified backups to Google Drive. New Programs credentials require a separate normalized-data backup.', 'certloom' ); ?></p>
+				<p><?php esc_html_e( 'Create legacy registry backups here, or choose a recovery snapshot schedule to include Program credentials, requests, designs and settings too. Find combined snapshots and their background progress in Recovery snapshots. Google Drive copies on this screen support legacy backups.', 'certloom' ); ?></p>
 				<p><strong><?php esc_html_e( 'Stored locally:', 'certloom' ); ?></strong> <?php esc_html_e( 'Private backup storage on this site', 'certloom' ); ?></p>
 				<p class="description"><?php esc_html_e( 'Before Restore, CSV import, reviewed bulk changes, bulk deletion, or permanent retired-field purge, Certloom creates a verified safety backup and stops the destructive operation if that backup cannot be created. Automatic safety backups have their own retention limit and never replace backups you create manually.', 'certloom' ); ?></p>
 
@@ -97,7 +104,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="certloom-backup-settings-form">
 					<input type="hidden" name="action" value="certloom_backup_settings" />
 					<?php wp_nonce_field( 'certloom_backup_settings' ); ?>
-					<label class="certloom-backup-setting" for="certloom-backup-schedule"><strong><?php esc_html_e( 'Schedule', 'certloom' ); ?></strong><select id="certloom-backup-schedule" name="backup_schedule"><option value="off" <?php selected( $scheduled_backup_state['schedule'] ?? 'off', 'off' ); ?>><?php esc_html_e( 'Off', 'certloom' ); ?></option><option value="daily" <?php selected( $scheduled_backup_state['schedule'] ?? 'off', 'daily' ); ?>><?php esc_html_e( 'Daily', 'certloom' ); ?></option><option value="weekly" <?php selected( $scheduled_backup_state['schedule'] ?? 'off', 'weekly' ); ?>><?php esc_html_e( 'Weekly', 'certloom' ); ?></option></select></label>
+					<label class="certloom-backup-setting" for="certloom-backup-schedule"><strong><?php esc_html_e( 'Schedule', 'certloom' ); ?></strong><select id="certloom-backup-schedule" name="backup_schedule"><option value="off" <?php selected( $scheduled_backup_state['schedule'] ?? 'off', 'off' ); ?>><?php esc_html_e( 'Off', 'certloom' ); ?></option><option value="daily" <?php selected( $scheduled_backup_state['schedule'] ?? 'off', 'daily' ); ?>><?php esc_html_e( 'Daily — legacy registry', 'certloom' ); ?></option><option value="weekly" <?php selected( $scheduled_backup_state['schedule'] ?? 'off', 'weekly' ); ?>><?php esc_html_e( 'Weekly — legacy registry', 'certloom' ); ?></option><option value="daily_whole" <?php selected( $scheduled_backup_state['schedule'] ?? 'off', 'daily_whole' ); ?>><?php esc_html_e( 'Daily — recovery snapshot', 'certloom' ); ?></option><option value="weekly_whole" <?php selected( $scheduled_backup_state['schedule'] ?? 'off', 'weekly_whole' ); ?>><?php esc_html_e( 'Weekly — recovery snapshot', 'certloom' ); ?></option></select></label>
 					<label class="certloom-backup-setting" for="certloom-backup-retention"><strong><?php esc_html_e( 'Automatic retention', 'certloom' ); ?></strong><span class="certloom-backup-number-with-unit"><input id="certloom-backup-retention" type="number" min="1" max="60" step="1" name="backup_retention" value="<?php echo esc_attr( absint( $scheduled_backup_state['retention'] ?? 14 ) ); ?>" /><span><?php esc_html_e( 'backups', 'certloom' ); ?></span></span></label>
 					<div class="certloom-backup-settings-actions"><?php submit_button( __( 'Save backup settings', 'certloom' ), 'secondary', 'submit', false ); ?></div>
 				</form>
@@ -109,14 +116,15 @@ if ( ! defined( 'ABSPATH' ) ) {
 				</ul>
 
 				<?php
+				$certloom_legacy_backups = array_values( array_filter( (array) $saved_backups, static function ( $entry ) { return 'whole_state' !== ( $entry['scope'] ?? '' ); } ) );
 				$certloom_backup_per_page = 50;
 				$certloom_backup_page = isset( $_GET['certloom_backup_page'] ) ? max( 1, absint( wp_unslash( $_GET['certloom_backup_page'] ) ) ) : 1;
-				$certloom_backup_total = count( (array) $saved_backups );
+				$certloom_backup_total = count( $certloom_legacy_backups );
 				$certloom_backup_pages = max( 1, (int) ceil( $certloom_backup_total / $certloom_backup_per_page ) );
 				$certloom_backup_page = min( $certloom_backup_page, $certloom_backup_pages );
-				$certloom_visible_backups = array_slice( (array) $saved_backups, ( $certloom_backup_page - 1 ) * $certloom_backup_per_page, $certloom_backup_per_page );
+				$certloom_visible_backups = array_slice( $certloom_legacy_backups, ( $certloom_backup_page - 1 ) * $certloom_backup_per_page, $certloom_backup_per_page );
 				?>
-				<?php if ( ! empty( $saved_backups ) ) : ?>
+				<?php if ( ! empty( $certloom_legacy_backups ) ) : ?>
 					<h3><?php esc_html_e( 'Saved backups', 'certloom' ); ?></h3>
 					<div class="certloom-backup-table-wrap">
 					<table class="widefat striped certloom-backup-table">

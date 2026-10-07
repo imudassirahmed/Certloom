@@ -1,4 +1,6 @@
 <?php
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 error_reporting( E_ALL );
 $root = dirname( __DIR__ );
 $tmp  = sys_get_temp_dir() . '/certloom-bak02-run-' . bin2hex( random_bytes( 4 ) );
@@ -71,6 +73,8 @@ class Ecapla_CertVerify_Backup {
 	}
 }
 
+require_once __DIR__ . '/bootstrap-option-command-double.php';
+require_once __DIR__ . '/bootstrap-autoload.php';
 require $root . '/src/Infrastructure/Backup/LocalBackupStore.php';
 require $root . '/src/Infrastructure/Backup/ScheduledBackup.php';
 

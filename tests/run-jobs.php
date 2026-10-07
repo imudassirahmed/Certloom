@@ -1,5 +1,7 @@
 <?php
 /** Pure tests for the shared resumable job lifecycle. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 if ( ! class_exists( 'WP_Error' ) ) {
 	class WP_Error {
 		private $code;

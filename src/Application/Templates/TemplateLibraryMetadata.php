@@ -59,6 +59,7 @@ final class TemplateLibraryMetadata {
 		$known = $family && isset( $factory_map[ $family ] ) ? $factory_map[ $family ] : null;
 		$page = isset( $layout['page'] ) && is_array( $layout['page'] ) ? $layout['page'] : array();
 		$recommended_profiles = TemplateRecommendationProfiles::normalize( isset( $template['recommended_profiles'] ) && is_array( $template['recommended_profiles'] ) ? $template['recommended_profiles'] : array() );
+		if ( ! $recommended_profiles && isset( $known['profiles'] ) ) { $recommended_profiles = $known['profiles']; }
 
 		return array(
 			'factory' => $factory,
@@ -143,7 +144,7 @@ final class TemplateLibraryMetadata {
 				'purposes' => array_values( (array) $concept['purposes'] ),
 			);
 		}
-		return $map;
+		return array_merge( $map, ProfilePresetCatalog::metadata() );
 	}
 
 	/** @return string */

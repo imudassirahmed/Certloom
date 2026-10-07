@@ -1,5 +1,7 @@
 <?php
 /** Browser-only Manual Issuance administration layout fixture. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $state = getenv( 'CERTLOOM_MANUAL_ISSUANCE_STATE' );
 if ( ! in_array( $state, array( 'compose', 'review', 'receipt' ), true ) ) { $state = 'compose'; }
 $css = file_get_contents( dirname( __DIR__, 2 ) . '/assets/css/certloom-tokens.css' ) . "\n" . file_get_contents( dirname( __DIR__, 2 ) . '/admin/assets/admin.css' );

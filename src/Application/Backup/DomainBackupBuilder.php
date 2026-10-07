@@ -118,7 +118,11 @@ final class DomainBackupBuilder implements DomainBackupBuilderInterface {
 
 	/** @return array<string,mixed>|\WP_Error */
 	private function finish( array $state ) {
-		if ( ! hash_equals( (string) $state['generation'], $this->generation->current() ) ) {
+		$generation = $this->generation->read_current();
+		if ( is_wp_error( $generation ) ) {
+			return $this->discard_invalid_backup( $state['path'], $generation->get_error_code(), $generation->get_error_message() );
+		}
+		if ( ! hash_equals( (string) $state['generation'], $generation ) ) {
 			return $this->discard_invalid_backup( $state['path'], 'certloom_domain_backup_concurrent_change', __( 'Certloom data changed while the complete backup was being built. No mixed-state backup was kept.', 'certloom' ) );
 		}
 		$config = $this->repository->configuration_snapshot();

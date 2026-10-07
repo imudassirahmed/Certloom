@@ -38,9 +38,12 @@ final class EmailAutomationRunRepository {
 			'code' => $code,
 			'finished_at' => current_time( 'mysql', true ),
 		);
-		$all = $this->all();
-		array_unshift( $all, $row );
-		$all = array_slice( $all, 0, self::MAX_RECORDS );
-		return update_option( self::OPTION, $all, false ) || $all === get_option( self::OPTION, array() );
+		$result = ( new \Certloom\Infrastructure\Data\DurableOptionMutation() )->change( self::OPTION, static function ( $bytes ) use ( $row ) {
+			$all = null === $bytes ? array() : maybe_unserialize( $bytes );
+			if ( ! is_array( $all ) || count( $all ) > self::MAX_RECORDS ) { return new \WP_Error( 'certloom_email_automation_history_invalid', __( 'Email automation history needs review.', 'certloom' ) ); }
+			array_unshift( $all, $row );
+			return maybe_serialize( array_slice( $all, 0, self::MAX_RECORDS ) );
+		} );
+		return true === $result;
 	}
 }

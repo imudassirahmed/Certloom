@@ -40,6 +40,13 @@ final class DomainRestoreConfigurationMerger {
 					? sanitize_text_field( (string) $field['retired_at'] )
 					: current_time( 'mysql', true ),
 			);
+			if ( array_key_exists( \Certloom\Application\Fields\FieldCollectionPolicy::KEY, $field ) ) {
+				$policy = ( new \Certloom\Application\Fields\FieldCollectionPolicy() )->for_definition( $field );
+				if ( is_wp_error( $policy ) ) { return $policy; }
+				$retired[ $key ][ \Certloom\Application\Fields\FieldCollectionPolicy::KEY ] = $policy;
+				$retired[ $key ]['sensitivity'] = $field['sensitivity'] ?? 'personal';
+				$retired[ $key ]['public_exposure'] = $field['public_exposure'] ?? 'private';
+			}
 			$known[ $key ] = true;
 		}
 

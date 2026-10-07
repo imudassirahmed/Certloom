@@ -1,5 +1,7 @@
 <?php
 /** Protected CSV mapping-session tests. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 if ( ! defined( 'MINUTE_IN_SECONDS' ) ) { define( 'MINUTE_IN_SECONDS', 60 ); }
 if ( ! class_exists( 'WP_Error' ) ) {
 	class WP_Error {

@@ -1,5 +1,7 @@
 <?php
 /** Current-authority legacy reads must fail closed on corrupt custom-field JSON. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define('ABSPATH',__DIR__.'/');
 define('DAY_IN_SECONDS',86400);define('MINUTE_IN_SECONDS',60);define('ARRAY_A','ARRAY_A');define('ECAPLA_CERTVERIFY_TABLE','certificates');
 class WP_Error { private $c; private $m; public function __construct($c,$m,$d=null){$this->c=$c;$this->m=$m;} public function get_error_code(){return $this->c;} public function get_error_message(){return $this->m;} }

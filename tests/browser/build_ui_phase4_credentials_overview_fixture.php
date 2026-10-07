@@ -1,5 +1,7 @@
 <?php
 /** Browser fixture for alpha.4.27 Credentials overview hierarchy. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $root = dirname( __DIR__, 2 );
 $admin_css = file_get_contents( $root . '/assets/css/certloom-tokens.css' ) . "\n" . file_get_contents( $root . '/admin/assets/admin.css' );
 $foundation = file_get_contents( $root . '/admin/assets/certloom-foundation.css' );

@@ -8,7 +8,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 /** Versioned line-oriented backup format whose chained hash can resume across requests. */
 final class DomainBackupFormat {
 	const FORMAT = 'certloom-domain-backup';
-	const VERSION = 4;
+	const VERSION = 5;
+	const ARTWORK_VERSION = 4;
 	const LEGACY_VERSION = 1;
 	const STRUCTURE_VERSION = 2;
 	const PRIVACY_VERSION = 3;
@@ -16,11 +17,12 @@ final class DomainBackupFormat {
 	const HASH_SEED_V2 = 'certloom-domain-backup-v2';
 	const HASH_SEED_V3 = 'certloom-domain-backup-v3';
 	const HASH_SEED_V4 = 'certloom-domain-backup-v4';
+	const HASH_SEED_V5 = 'certloom-domain-backup-v5';
 	const MAX_LINE_BYTES = 4 * 1024 * 1024;
 	const MAX_FILE_BYTES = 1024 * 1024 * 1024;
 
 	/** @return array<int,int> */
-	public static function supported_versions() { return array( self::LEGACY_VERSION, self::STRUCTURE_VERSION, self::PRIVACY_VERSION, self::VERSION ); }
+	public static function supported_versions() { return array( self::LEGACY_VERSION, self::STRUCTURE_VERSION, self::PRIVACY_VERSION, self::ARTWORK_VERSION, self::VERSION ); }
 
 	/** @return array<int,string> */
 	public static function entity_types_for_version( $version ) {
@@ -28,16 +30,17 @@ final class DomainBackupFormat {
 		if ( self::LEGACY_VERSION === $version ) {
 			return array( 'issuers', 'programs', 'recipients', 'credential_series', 'credential_numbers', 'credential_versions', 'credential_events' );
 		}
-		if ( $version < self::VERSION ) {
+		if ( $version < self::ARTWORK_VERSION ) {
 			return array( 'issuers', 'programs', 'recipients', 'signers', 'batches', 'batch_recipients', 'signer_assignments', 'credential_series', 'credential_numbers', 'credential_versions', 'credential_events' );
 		}
-		return array( 'issuers', 'programs', 'recipients', 'signers', 'batches', 'batch_recipients', 'signer_assignments', 'templates', 'template_revisions', 'template_assignments', 'credential_series', 'credential_numbers', 'credential_versions', 'credential_events' );
+		$base = array( 'issuers', 'programs', 'recipients', 'signers', 'batches', 'batch_recipients', 'signer_assignments', 'templates', 'template_revisions', 'template_assignments', 'credential_series', 'credential_numbers', 'credential_versions', 'credential_events' );
+		return $version >= self::VERSION ? array_merge( $base, \Certloom\Domain\Recipient\RecipientWorkflowEntities::all() ) : $base;
 	}
 
 	/** @return array<string,mixed>|\WP_Error */
 	public function normalize_manifest( array $manifest ) {
-		$version = absint( $manifest['format_version'] ?? 0 );
-		if ( 'manifest' !== (string) ( $manifest['type'] ?? '' ) || self::FORMAT !== (string) ( $manifest['format'] ?? '' ) || ! in_array( $version, self::supported_versions(), true ) ) {
+		$version = $manifest['format_version'] ?? null;
+		if ( 'manifest' !== ( $manifest['type'] ?? null ) || self::FORMAT !== ( $manifest['format'] ?? null ) || ! is_int( $version ) || ! in_array( $version, self::supported_versions(), true ) ) {
 			return new \WP_Error( 'certloom_domain_backup_manifest_invalid', __( 'This is not a supported Certloom domain backup.', 'certloom' ) );
 		}
 		$source_types = self::entity_types_for_version( $version );
@@ -46,7 +49,7 @@ final class DomainBackupFormat {
 			return new \WP_Error( 'certloom_domain_backup_manifest_invalid', __( 'The Certloom backup manifest does not declare the exact supported entity set in canonical order.', 'certloom' ) );
 		}
 		foreach ( $source_types as $entity ) {
-			if ( ! is_array( $declared[ $entity ] ) || ! array_key_exists( 'count', $declared[ $entity ] ) || ! array_key_exists( 'max_id', $declared[ $entity ] ) ) {
+			if ( ! is_array( $declared[ $entity ] ) || ! isset( $declared[ $entity ]['count'], $declared[ $entity ]['max_id'] ) || ! is_int( $declared[ $entity ]['count'] ) || ! is_int( $declared[ $entity ]['max_id'] ) || $declared[ $entity ]['count'] < 0 || $declared[ $entity ]['max_id'] < 0 ) {
 				return new \WP_Error( 'certloom_domain_backup_manifest_invalid', __( 'The Certloom backup manifest contains an incomplete entity declaration.', 'certloom' ) );
 			}
 		}
@@ -79,7 +82,7 @@ final class DomainBackupFormat {
 			if ( ! array_key_exists( 'batch_id', $rebuilt ) ) { $rebuilt['batch_id'] = null; }
 			$normalized = $rebuilt;
 		}
-		if ( $version < self::VERSION && 'recipients' === $entity ) {
+		if ( $version < self::PRIVACY_VERSION && 'recipients' === $entity ) {
 			$rebuilt = array();
 			foreach ( $normalized as $key => $value ) {
 				$rebuilt[ $key ] = $value;
@@ -109,10 +112,19 @@ final class DomainBackupFormat {
 		if ( false === $line ) {
 			return feof( $handle ) ? null : new \WP_Error( 'certloom_domain_backup_read_failed', __( 'Certloom could not read the backup stream safely.', 'certloom' ) );
 		}
-		if ( strlen( $line ) > self::MAX_LINE_BYTES || ( self::MAX_LINE_BYTES === strlen( $line ) && ! "\n" === substr( $line, -1 ) && ! feof( $handle ) ) ) {
+		if ( strlen( $line ) > self::MAX_LINE_BYTES || ( self::MAX_LINE_BYTES === strlen( $line ) && "\n" !== substr( $line, -1 ) && ! feof( $handle ) ) ) {
 			return new \WP_Error( 'certloom_domain_backup_line_too_large', sprintf( /* translators: %d: line number. */ __( 'The Certloom backup contains an oversized record on line %d.', 'certloom' ), absint( $line_no ) ) );
 		}
 		return $line;
+	}
+
+	/** Require exact record counts rather than making malformed archives appear valid. */
+	public function valid_integrity( array $record, $records, $hash ) {
+		return 'integrity' === ( $record['type'] ?? null )
+			&& isset( $record['records'], $record['chain_sha256'] )
+			&& is_int( $record['records'] ) && $record['records'] >= 0 && $records === $record['records']
+			&& is_string( $record['chain_sha256'] ) && 1 === preg_match( '/^[a-f0-9]{64}$/D', $record['chain_sha256'] )
+			&& hash_equals( $hash, $record['chain_sha256'] );
 	}
 
 	/** @return string */
@@ -122,7 +134,7 @@ final class DomainBackupFormat {
 			? self::HASH_SEED_V1
 			: ( self::STRUCTURE_VERSION === $version
 				? self::HASH_SEED_V2
-				: ( self::PRIVACY_VERSION === $version ? self::HASH_SEED_V3 : self::HASH_SEED_V4 ) );
+				: ( self::PRIVACY_VERSION === $version ? self::HASH_SEED_V3 : ( self::ARTWORK_VERSION === $version ? self::HASH_SEED_V4 : self::HASH_SEED_V5 ) ) );
 		$previous = '' === (string) $previous ? $seed : (string) $previous;
 		return hash( 'sha256', $previous . "\n" . (string) $line );
 	}

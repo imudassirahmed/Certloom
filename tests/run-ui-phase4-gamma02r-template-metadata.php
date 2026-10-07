@@ -1,5 +1,7 @@
 <?php
 /** Phase 4 Gamma-02R inline Template identity + recommendation metadata contract. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 if ( ! defined( 'ABSPATH' ) ) { define( 'ABSPATH', __DIR__ . '/fake-wp/' ); }
 if ( ! function_exists( '__' ) ) { function __( $text ) { return $text; } }
 if ( ! function_exists( 'sanitize_key' ) ) { function sanitize_key( $key ) { return strtolower( preg_replace( '/[^a-z0-9_\-]/', '', (string) $key ) ); } }

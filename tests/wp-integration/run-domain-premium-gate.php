@@ -8,6 +8,8 @@
  * This supplements run-domain-schema.php with database-engine/index/rollback
  * and failure-path invariants that pure-PHP tests cannot prove.
  */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 if ( ! defined( 'ABSPATH' ) ) { fwrite( STDERR, "Run inside WordPress.\n" ); exit( 1 ); }
 if ( ! ( defined( 'WP_CLI' ) && WP_CLI ) && ! defined( 'CERTLOOM_RUN_INTEGRATION_TESTS' ) ) {
 	wp_die( 'Certloom integration tests require WP-CLI or CERTLOOM_RUN_INTEGRATION_TESTS.' );

@@ -2,6 +2,9 @@
 namespace Certloom\Infrastructure\Recipient;
 
 use Certloom\Infrastructure\Repository\RecipientRepository;
+use Certloom\Infrastructure\Database\Transaction;
+use Certloom\Application\Recipient\RecipientAccountLink;
+use Certloom\Application\Recipient\RecipientAccountLinkService;
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
@@ -29,6 +32,19 @@ final class RecipientUserSync {
 		add_action( 'profile_update', array( $this, 'profile_updated' ), 20, 2 );
 		add_action( 'added_user_meta', array( $this, 'profile_meta_updated' ), 30, 4 );
 		add_action( 'updated_user_meta', array( $this, 'profile_meta_updated' ), 30, 4 );
+		add_action( 'deleted_user', array( $this, 'account_deleted' ), 20, 1 );
+		add_action( 'profile_update', array( $this, 'account_access_changed' ), 30, 1 );
+		add_action( 'set_user_role', array( $this, 'account_access_changed' ), 30, 1 );
+		add_action( 'add_user_role', array( $this, 'account_access_changed' ), 30, 1 );
+		add_action( 'remove_user_role', array( $this, 'account_access_changed' ), 30, 1 );
+	}
+	public function account_access_changed( $user_id ) {
+		$recipient = $this->recipients->find_by_wp_user_id( (int) $user_id );
+		if ( is_array( $recipient ) && empty( $recipient['privacy_anonymized_at'] ) ) { do_action( 'certloom_recipient_fields_changed', $recipient['id'] ); }
+	}
+	public function account_deleted( $user_id ) {
+		$result = ( new RecipientAccountLinkService() )->account_deleted( (int) $user_id );
+		if ( is_wp_error( $result ) && function_exists( 'ecapla_certverify_add_runtime_error' ) ) { ecapla_certverify_add_runtime_error( $result->get_error_message() ); }
 	}
 
 	/** @return bool */
@@ -69,10 +85,17 @@ final class RecipientUserSync {
 
 	/** @return array<string,mixed>|\WP_Error */
 	public function ensure_for_user( $user_id ) {
+		return ( new Transaction() )->run( function () use ( $user_id ) { return $this->ensure_locked( $user_id ); } );
+	}
+	private function ensure_locked( $user_id ) {
 		$user_id = absint( $user_id );
 		if ( ! $user_id || ! function_exists( 'get_userdata' ) ) {
 			return new \WP_Error( 'certloom_recipient_user_invalid', __( 'A valid WordPress account is required to create a Recipient profile.', 'certloom' ) );
 		}
+		$locked = RecipientAccountLinkService::lock_user( $user_id );
+		if ( is_wp_error( $locked ) ) { return $locked; }
+		if ( ! is_array( $locked ) || 0 !== (int) $locked['user_status'] ) { return new \WP_Error( 'certloom_recipient_user_missing', __( 'The WordPress account is unavailable.', 'certloom' ) ); }
+		if ( RecipientAccountLinkService::sync_held( $user_id ) ) { return new \WP_Error( 'certloom_recipient_user_connection_held', __( 'The organization disconnected this account. Ask them to review the recipient connection.', 'certloom' ) ); }
 		$user = get_userdata( $user_id );
 		if ( ! $user ) {
 			return new \WP_Error( 'certloom_recipient_user_missing', __( 'The WordPress account no longer exists.', 'certloom' ) );
@@ -80,6 +103,9 @@ final class RecipientUserSync {
 		$existing = $this->recipients->find_by_wp_user_id( $user_id );
 		if ( is_wp_error( $existing ) ) { return $existing; }
 		if ( is_array( $existing ) && ! empty( $existing['id'] ) ) {
+			$existing = $this->recipients->find_for_update( $existing['id'] );
+			if ( is_wp_error( $existing ) ) { return $existing; }
+			if ( ! is_array( $existing ) || (int) $existing['wp_user_id'] !== $user_id || ! empty( $existing['privacy_anonymized_at'] ) ) { return new \WP_Error( 'certloom_recipient_user_connection_held', __( 'This recipient connection needs organization review.', 'certloom' ) ); }
 			$updated = $this->update_from_user( $existing, $user );
 			if ( is_wp_error( $updated ) ) { return $updated; }
 			$refreshed = $this->recipients->find( absint( $existing['id'] ) );
@@ -94,13 +120,22 @@ final class RecipientUserSync {
 
 	/** @return true|\WP_Error */
 	public function sync_linked_user( $user_id ) {
+		return ( new Transaction() )->run( function () use ( $user_id ) { return $this->sync_locked( $user_id ); } );
+	}
+	private function sync_locked( $user_id ) {
 		$user_id = absint( $user_id );
 		if ( ! $user_id || ! function_exists( 'get_userdata' ) ) { return true; }
+		$locked = RecipientAccountLinkService::lock_user( $user_id );
+		if ( is_wp_error( $locked ) ) { return $locked; }
+		if ( ! is_array( $locked ) || 0 !== (int) $locked['user_status'] || RecipientAccountLinkService::sync_held( $user_id ) ) { return true; }
 		$recipient = $this->recipients->find_by_wp_user_id( $user_id );
 		if ( is_wp_error( $recipient ) ) { return $recipient; }
 		if ( ! is_array( $recipient ) || empty( $recipient['id'] ) ) {
-			return $this->ensure_for_user( $user_id );
+			return true;
 		}
+		$recipient = $this->recipients->find_for_update( $recipient['id'] );
+		if ( is_wp_error( $recipient ) ) { return $recipient; }
+		if ( ! is_array( $recipient ) || (int) $recipient['wp_user_id'] !== $user_id || ! empty( $recipient['privacy_anonymized_at'] ) ) { return true; }
 		$user = get_userdata( $user_id );
 		if ( ! $user ) { return true; }
 		return $this->update_from_user( $recipient, $user );
@@ -110,6 +145,11 @@ final class RecipientUserSync {
 	private function update_from_user( array $recipient, $user ) {
 		$patch = $this->profile_from_user( $user );
 		unset( $patch['wp_user_id'], $patch['middle_name'], $patch['external_id'], $patch['custom_fields'] );
+		if ( isset( $recipient['custom_fields'][ RecipientAccountLink::KEY ] ) ) {
+			$account = ( new RecipientAccountLink() )->normalize( $recipient['custom_fields'][ RecipientAccountLink::KEY ] );
+			if ( is_wp_error( $account ) ) { return $account; }
+			if ( 'organization' === $account['name_authority'] ) { unset( $patch['display_name'], $patch['first_name'], $patch['last_name'] ); }
+		}
 		return $this->recipients->update( absint( $recipient['id'] ?? 0 ), $patch );
 	}
 

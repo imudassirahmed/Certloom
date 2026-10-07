@@ -9,9 +9,21 @@ if ( ! defined( 'ABSPATH' ) ) {
 final class DomainGeneration {
 	const OPTION = 'certloom_domain_data_generation';
 
-	/** @return string */
+	/** Fresh convenience read for diagnostics; an uncertain marker never matches a saved baseline. @return string */
 	public function current() {
-		return (string) get_option( self::OPTION, '0' );
+		$value = $this->read_current();
+		return is_wp_error( $value ) ? '' : $value;
+	}
+
+	/** A backup consistency decision must observe other requests and distinguish absence from a failed read. @return string|\WP_Error */
+	public function read_current() {
+		global $wpdb;
+		$wpdb->last_error = '';
+		$value = $wpdb->get_var( $wpdb->prepare( 'SELECT option_value FROM %i WHERE option_name = %s', $wpdb->options, self::OPTION ) );
+		if ( '' !== (string) $wpdb->last_error || ( null !== $value && ( ! is_string( $value ) || '' === $value ) ) ) {
+			return new \WP_Error( 'certloom_domain_generation_read_failed', __( 'Certloom could not read its data-change marker safely. Backup consistency could not be confirmed.', 'certloom' ) );
+		}
+		return null === $value ? '0' : $value;
 	}
 
 	/**
@@ -30,8 +42,9 @@ final class DomainGeneration {
 			return new \WP_Error( 'certloom_domain_generation_random_failed', __( 'Certloom could not prepare a safe data-change marker.', 'certloom' ) );
 		}
 		$value = sprintf( '%.6F|%s', microtime( true ), $random );
-		$saved = update_option( self::OPTION, $value, false );
-		return $saved || hash_equals( $value, (string) get_option( self::OPTION, '0' ) )
+		update_option( self::OPTION, $value, false );
+		$current = $this->read_current();
+		return ! is_wp_error( $current ) && hash_equals( $value, $current )
 			? true
 			: new \WP_Error( 'certloom_domain_generation_save_failed', __( 'Certloom could not save its data-change marker, so the requested change was not started.', 'certloom' ) );
 	}

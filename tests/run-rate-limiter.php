@@ -1,5 +1,7 @@
 <?php
 /** Pure-ish object-cache branch tests for the shared scoped RateLimiter. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define( 'MINUTE_IN_SECONDS', 60 );
 $GLOBALS['rl_cache'] = array();
 $GLOBALS['rl_fail_incr'] = false;
@@ -93,7 +95,7 @@ echo "PASS  IPv4-mapped IPv6 normalizes to the IPv4 network identity
 $precision = ini_get( 'precision' );
 @ini_set( 'precision', '6' );
 $bucket_method = new ReflectionMethod( RateLimiter::class, 'bucket' );
-$bucket_method->setAccessible( true );
+if ( PHP_VERSION_ID < 80100 ) { $bucket_method->setAccessible( true ); }
 $bucket_value = $bucket_method->invoke( $limiter );
 rl_same( 1, preg_match( '/^[0-9]+$/', $bucket_value ), 'minute bucket remains decimal under low precision ini' );
 if ( false !== $precision ) { @ini_set( 'precision', (string) $precision ); }

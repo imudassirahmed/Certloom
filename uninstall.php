@@ -126,6 +126,8 @@ function ecapla_certverify_uninstall_site() {
 	}
 	delete_option( 'certloom_domain_schema_health' );
 	delete_option( 'certloom_domain_schema_lock' );
+	delete_option( 'certloom_pending_reassessment_job' ); // Disposable worker reference; retained requests keep their own identity.
+	delete_option( 'certloom_pending_lifecycle_job' ); // Disposable daily sweep reference; notice evidence stays in retained request history.
 	if ( ! $preserve_domain_lineage ) {
 		delete_option( 'certloom_legacy_domain_migration_state' );
 		delete_option( 'certloom_domain_write_authority' );
@@ -136,6 +138,7 @@ function ecapla_certverify_uninstall_site() {
 		delete_option( 'certloom_domain_data_generation' );
 	}
 	delete_option( 'certloom_domain_maintenance_lock' );
+	delete_option( 'certloom_domain_write_fence' );
 	delete_option( 'certloom_domain_restore_build' );
 	delete_option( 'certloom_domain_restore_journal' );
 	delete_option( 'certloom_domain_restore_receipts' );
@@ -158,10 +161,13 @@ function ecapla_certverify_uninstall_site() {
 	delete_option( 'certloom_backup_restore_test_evidence' );
 	/* Remote-provider credentials and executable connection state never survive uninstall. Existing Drive files are not deleted implicitly. */
 	delete_option( 'certloom_google_drive_secrets' );
+	delete_option( 'certloom_recovery_provenance_v1' );
 	delete_option( 'certloom_google_drive_config' );
 	delete_option( 'certloom_google_drive_last_result' );
 	delete_option( 'certloom_tutor_lms_last_result' );
 	delete_option( 'certloom_tutor_lms_mappings' );
+	delete_option( 'certloom_tutor_pending_mappings_v1' );
+	delete_option( 'certloom_woocommerce_pending_mappings_v1' );
 	delete_option( 'certloom_learndash_last_result' );
 	delete_option( 'certloom_learndash_mappings' );
 	delete_option( 'certloom_woocommerce_last_result' );
@@ -170,10 +176,10 @@ function ecapla_certverify_uninstall_site() {
 	delete_option( 'certloom_coursera_mappings_v1' );
 	delete_option( 'certloom_coursera_xapi_credentials_v1' );
 	delete_option( 'certloom_webhook_sources_v1' );
+	delete_option( 'certloom_webhook_sources_v2' );
 	delete_option( 'certloom_webhook_last_result' );
-	delete_option( 'certloom_email_template_catalog_v1' );
-	delete_option( 'certloom_email_template_issued_v1' );
-	delete_option( 'certloom_email_design_assignments_v1' );
+	// Saved email designs and their choices are durable authoring data, retained
+	// alongside certificate designs until an explicit delete-data opt-in below.
 	delete_option( 'certloom_email_automation_rules_v1' );
 	delete_option( 'certloom_credly_connection_v1' );
 	delete_option( 'certloom_credly_mappings_v1' );
@@ -219,6 +225,8 @@ function ecapla_certverify_uninstall_site() {
 		'_transient_timeout_certloom_coursera_setup_secret_',
 		'_transient_certloom_webhook_setup_secret_',
 		'_transient_timeout_certloom_webhook_setup_secret_',
+		'_transient_certloom_webhook_v2_setup_secret_',
+		'_transient_timeout_certloom_webhook_v2_setup_secret_',
 		'_transient_certloom_email_preview_',
 		'_transient_timeout_certloom_email_preview_',
 		'_transient_certloom_email_notice_',
@@ -324,22 +332,25 @@ function ecapla_certverify_uninstall_site() {
 		}
 	}
 
-	/* Best-effort cleanup of the two built-in private job directory locations. */
+	/* Clean only site-scoped roots. The historical system-temp root can be
+	 * shared by multiple WordPress sites; filenames alone do not prove ownership.
+	 * Keep access-control files whenever cached/unrecognized content remains.
+	 */
 	$private_directories = array();
-	if ( function_exists( 'get_temp_dir' ) ) {
-		$private_directories[] = trailingslashit( wp_normalize_path( get_temp_dir() ) ) . 'certloom-private';
-	}
 	if ( defined( 'WP_CONTENT_DIR' ) ) {
 		$private_directories[] = trailingslashit( wp_normalize_path( WP_CONTENT_DIR ) ) . 'certloom-private';
 	}
+	if ( defined( 'ABSPATH' ) ) {
+		$private_directories[] = trailingslashit( wp_normalize_path( dirname( untrailingslashit( ABSPATH ) ) ) ) . 'certloom-private';
+	}
 	foreach ( array_unique( $private_directories ) as $private_directory ) {
-		if ( ! is_dir( $private_directory ) ) {
+		if ( is_link( $private_directory ) || ! is_dir( $private_directory ) || dirname( (string) realpath( $private_directory ) ) !== realpath( dirname( $private_directory ) ) ) {
 			continue;
 		}
 		$files = glob( trailingslashit( $private_directory ) . '*' );
 		foreach ( (array) $files as $private_file ) {
 			$base = basename( (string) $private_file );
-			if ( is_file( $private_file ) && ( preg_match( '/^[a-f0-9]{32}-[a-z0-9_-]+-[a-f0-9]{48}\.data$/i', $base ) || in_array( $base, array( 'index.php', '.htaccess', 'web.config' ), true ) ) ) {
+			if ( ! is_link( $private_file ) && is_file( $private_file ) && dirname( (string) realpath( $private_file ) ) === realpath( $private_directory ) && preg_match( '/^[a-f0-9]{32}-[a-z0-9_-]+-[a-f0-9]{48}\.data$/i', $base ) ) {
 				@unlink( $private_file );
 			}
 		}
@@ -349,6 +360,9 @@ function ecapla_certverify_uninstall_site() {
 	if ( ! $delete_data ) {
 		return;
 	}
+	delete_option( 'certloom_email_template_catalog_v1' );
+	delete_option( 'certloom_email_template_issued_v1' );
+	delete_option( 'certloom_email_design_assignments_v1' );
 
 	/* Explicit delete-data also removes persistent customer backup packages and their catalog. */
 	$backup_store_file = __DIR__ . '/src/Infrastructure/Backup/LocalBackupStore.php';
@@ -390,6 +404,10 @@ function ecapla_certverify_uninstall_site() {
 
 	$domain_tables = array(
 		$wpdb->prefix . 'certloom_credential_events',
+		$wpdb->prefix . 'certloom_program_registrations',
+		$wpdb->prefix . 'certloom_field_submissions',
+		$wpdb->prefix . 'certloom_issuance_requests',
+		$wpdb->prefix . 'certloom_issuance_request_events',
 		$wpdb->prefix . 'certloom_credential_numbers',
 		$wpdb->prefix . 'certloom_credential_versions',
 		$wpdb->prefix . 'certloom_credential_series',
@@ -410,6 +428,7 @@ function ecapla_certverify_uninstall_site() {
 
 	delete_option( 'certloom_domain_schema_version' );
 	delete_option( 'certverify_fields' );
+	delete_option( 'certloom_pending_configuration' ); // Purge with the retained request data, not merely the scheduler.
 	delete_option( 'certverify_retired_fields' );
 	delete_option( 'certverify_settings' );
 	delete_option( 'certverify_number_sequence_next' );
@@ -460,9 +479,10 @@ if ( $certloom_delete_admin_drafts ) {
 	global $wpdb;
 	$wpdb->query(
 		$wpdb->prepare(
-			'DELETE FROM %i WHERE meta_key = %s',
+			'DELETE FROM %i WHERE meta_key = %s OR meta_key REGEXP %s',
 			$wpdb->usermeta,
-			'certloom_admin_draft_workspaces_v1'
+			'certloom_admin_draft_workspaces_v1',
+			'^certloom_admin_draft_workspaces_v1_site_[1-9][0-9]*$'
 		)
 	); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Removes only Certloom-owned per-user drafts.
 }

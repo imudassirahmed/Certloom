@@ -74,11 +74,11 @@ final class GoogleDriveOAuth {
 		}
 		$old_sealed  = get_option( self::SECRETS_OPTION, false );
 		$had_secrets = false !== $old_sealed;
-		$saved_secret = update_option( self::SECRETS_OPTION, $sealed, false );
+		$saved_secret = ( true === ( new \Certloom\Infrastructure\Data\DurableOptionMutation() )->set( self::SECRETS_OPTION, $sealed ) );
 		if ( ! $saved_secret && $sealed !== get_option( self::SECRETS_OPTION, '' ) ) {
 			return new \WP_Error( 'certloom_google_secret_save_failed', __( 'Certloom could not save the Google Drive connection securely.', 'certloom' ) );
 		}
-		$saved_config = update_option( self::CONFIG_OPTION, $config, false );
+		$saved_config = ( true === ( new \Certloom\Infrastructure\Data\DurableOptionMutation() )->set( self::CONFIG_OPTION, $config ) );
 		if ( $saved_config || $config === get_option( self::CONFIG_OPTION, array() ) ) { return true; }
 		if ( ! self::restore_secret_option( $had_secrets, $old_sealed ) ) {
 			return new \WP_Error( 'certloom_google_config_save_rollback_failed', __( 'Certloom could not save the Google Drive settings and could not safely restore the previous encrypted connection. Re-enter the Google Drive connection settings before reconnecting.', 'certloom' ) );
@@ -221,7 +221,7 @@ final class GoogleDriveOAuth {
 		$config = get_option( self::CONFIG_OPTION, array() );
 		if ( ! is_array( $config ) ) { $config = array(); }
 		$config['enabled'] = $enabled ? 1 : 0;
-		$saved = update_option( self::CONFIG_OPTION, $config, false );
+		$saved = ( true === ( new \Certloom\Infrastructure\Data\DurableOptionMutation() )->set( self::CONFIG_OPTION, $config ) );
 		return ( $saved || $config === get_option( self::CONFIG_OPTION, array() ) ) ? true : new \WP_Error( 'certloom_google_config_save_failed', __( 'Certloom could not save the Google Drive backup setting.', 'certloom' ) );
 	}
 
@@ -240,7 +240,7 @@ final class GoogleDriveOAuth {
 		$config['folder_id']    = '';
 		$config['connected_at'] = '';
 		$config['connected_ts'] = 0;
-		$config_saved = update_option( self::CONFIG_OPTION, $config, false );
+		$config_saved = ( true === ( new \Certloom\Infrastructure\Data\DurableOptionMutation() )->set( self::CONFIG_OPTION, $config ) );
 		if ( $config_saved || $config === get_option( self::CONFIG_OPTION, array() ) ) { return true; }
 		if ( ! self::restore_secret_option( $had_secrets, $old_sealed ) ) {
 			return new \WP_Error( 'certloom_google_disconnect_rollback_failed', __( 'Certloom could not save the Google Drive disconnect state or safely restore the previous encrypted connection. Re-enter the Google Drive connection settings before reconnecting.', 'certloom' ) );
@@ -255,7 +255,7 @@ final class GoogleDriveOAuth {
 		$config = get_option( self::CONFIG_OPTION, array() );
 		if ( ! is_array( $config ) ) { $config = array(); }
 		$config['folder_id'] = $folder_id;
-		$saved = update_option( self::CONFIG_OPTION, $config, false );
+		$saved = ( true === ( new \Certloom\Infrastructure\Data\DurableOptionMutation() )->set( self::CONFIG_OPTION, $config ) );
 		return ( $saved || $config === get_option( self::CONFIG_OPTION, array() ) ) ? true : new \WP_Error( 'certloom_google_folder_save_failed', __( 'Certloom could not save its Google Drive backup folder.', 'certloom' ) );
 	}
 
@@ -306,7 +306,7 @@ final class GoogleDriveOAuth {
 		$config['connection_mode'] = $mode;
 		$config['connected_at']    = gmdate( 'c' );
 		$config['connected_ts']    = time();
-		$config_saved = update_option( self::CONFIG_OPTION, $config, false );
+		$config_saved = ( true === ( new \Certloom\Infrastructure\Data\DurableOptionMutation() )->set( self::CONFIG_OPTION, $config ) );
 		if ( $config_saved || $config === get_option( self::CONFIG_OPTION, array() ) ) { return true; }
 		if ( ! self::restore_secret_option( $had_secrets, $old_sealed ) ) {
 			return new \WP_Error( 'certloom_google_oauth_save_rollback_failed', __( 'Google authorized the connection, but Certloom could not save its local connection state safely. Reconnect Google Drive.', 'certloom' ) );
@@ -338,18 +338,17 @@ final class GoogleDriveOAuth {
 	/** Restore the exact previous encrypted secret option after a paired config write fails. */
 	private static function restore_secret_option( $had_secrets, $old_sealed ) {
 		if ( $had_secrets ) {
-			$restored = update_option( self::SECRETS_OPTION, $old_sealed, false );
+			$restored = ( true === ( new \Certloom\Infrastructure\Data\DurableOptionMutation() )->set( self::SECRETS_OPTION, $old_sealed ) );
 			return $restored || $old_sealed === get_option( self::SECRETS_OPTION, false );
 		}
-		delete_option( self::SECRETS_OPTION );
-		return false === get_option( self::SECRETS_OPTION, false );
+		return true === ( new \Certloom\Infrastructure\Data\DurableOptionMutation() )->remove( self::SECRETS_OPTION );
 	}
 
 	/** @return true|\WP_Error */
 	private static function save_secret_payload( array $payload ) {
 		$sealed = SecretVault::seal( $payload );
 		if ( is_wp_error( $sealed ) ) { return $sealed; }
-		$saved = update_option( self::SECRETS_OPTION, $sealed, false );
+		$saved = ( true === ( new \Certloom\Infrastructure\Data\DurableOptionMutation() )->set( self::SECRETS_OPTION, $sealed ) );
 		return ( $saved || $sealed === get_option( self::SECRETS_OPTION, '' ) ) ? true : new \WP_Error( 'certloom_google_secret_save_failed', __( 'Certloom could not save the Google Drive connection securely.', 'certloom' ) );
 	}
 

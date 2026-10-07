@@ -1,5 +1,7 @@
 <?php
 /** alpha.4.75 custom font library + smooth visual picker contract. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define( 'ABSPATH', __DIR__ . '/' );
 $GLOBALS['certloom_test_options'] = array(
 	'certloom_custom_font_library_v1' => array(
@@ -14,6 +16,7 @@ $GLOBALS['certloom_test_options'] = array(
 );
 function get_option($k,$d=array()){return array_key_exists($k,$GLOBALS['certloom_test_options'])?$GLOBALS['certloom_test_options'][$k]:$d;}
 function wp_upload_dir(){return array('basedir'=>'/tmp/certloom-uploads','baseurl'=>'https://example.test/wp-content/uploads','error'=>'');}
+function rest_url($path){return 'https://example.test/wp-json/'.ltrim($path,'/');}
 function esc_url_raw($v){return (string)$v;} function esc_url($v){return (string)$v;} function wp_strip_all_tags($v){return strip_tags((string)$v);} function wp_get_global_settings(){return array();} function sanitize_hex_color($v){return preg_match('/^#[0-9a-fA-F]{6}$/',(string)$v)?strtolower((string)$v):null;} function sanitize_key($v){return strtolower(preg_replace('/[^a-z0-9_\-]/','',(string)$v));} function sanitize_text_field($v){return trim(strip_tags((string)$v));} function absint($v){return abs((int)$v);} function esc_attr($v){return htmlspecialchars((string)$v,ENT_QUOTES,'UTF-8');} function esc_html($v){return htmlspecialchars((string)$v,ENT_QUOTES,'UTF-8');} function esc_html__($v,$d=null){return (string)$v;} function wp_kses_post($v){return (string)$v;}
 require_once __DIR__ . '/bootstrap-autoload.php';
 use Certloom\Application\Rendering\CustomFontLibrary;
@@ -25,7 +28,7 @@ cf(isset($families['custom-0123456789abcdef']),'custom family metadata is read f
 cf(count($families['custom-0123456789abcdef']['faces'])===2,'custom family preserves multiple exact weight/style faces');
 cf(isset($defs['custom-0123456789abcdef'])&&!empty($defs['custom-0123456789abcdef']['custom']),'custom family becomes a first-class Studio catalog definition');
 cf($defs['custom-0123456789abcdef']['preview_family']==='CertloomCustom_0123456789abcdef','custom preview family uses a stable collision-resistant browser name');
-cf(strpos($defs['custom-0123456789abcdef']['faces'][0]['url'],'/certloom-fonts/'.str_repeat('a',64).'.ttf')!==false,'browser preview URL is derived from content-addressed local storage');
+cf(strpos($defs['custom-0123456789abcdef']['faces'][0]['url'],'/certloom/v1/design-fonts/'.str_repeat('a',64).'.ttf')!==false,'browser preview URL uses the exact indexed font REST boundary');
 $catalog=new DesignerFontCatalog();
 cf($catalog->contains('custom-0123456789abcdef'),'shared Designer catalog accepts custom family keys');
 cf(strpos($catalog->browser_css('custom-0123456789abcdef'),'CertloomCustom_0123456789abcdef')!==false,'Certificate browser preview resolves custom family CSS');

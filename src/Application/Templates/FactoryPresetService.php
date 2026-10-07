@@ -22,11 +22,14 @@ final class FactoryPresetService {
 	private $catalog;
 	/** @var CuratedPresetCatalog */
 	private $curated_catalog;
+	/** @var ProfilePresetCatalog */
+	private $profile_catalog;
 
-	public function __construct( ?TemplateRepository $templates = null, ?PresetCatalog $catalog = null, ?CuratedPresetCatalog $curated_catalog = null ) {
+	public function __construct( ?TemplateRepository $templates = null, ?PresetCatalog $catalog = null, ?CuratedPresetCatalog $curated_catalog = null, ?ProfilePresetCatalog $profile_catalog = null ) {
 		$this->templates = $templates ?: new TemplateRepository();
 		$this->catalog = $catalog ?: new PresetCatalog();
 		$this->curated_catalog = $curated_catalog ?: new CuratedPresetCatalog();
+		$this->profile_catalog = $profile_catalog ?: new ProfilePresetCatalog();
 	}
 
 	/**
@@ -43,11 +46,12 @@ final class FactoryPresetService {
 	 * @return array<string,mixed>|true|\WP_Error
 	 */
 	public function ensure_current( $actor_user_id = 0 ) {
-		$definitions = array_merge( $this->catalog->all(), $this->curated_catalog->all() );
+		$definitions = array_merge( $this->catalog->all(), $this->curated_catalog->all(), $this->profile_catalog->all() );
 		$expected = count( $definitions );
 		$signature = hash( 'sha256', wp_json_encode( array(
 			'preset_version' => PresetCatalog::PRESET_VERSION,
 			'curated_version' => CuratedPresetCatalog::PRESET_VERSION,
+			'profile_version' => ProfilePresetCatalog::PRESET_VERSION,
 			'count' => $expected,
 		) ) );
 		$state = get_option( 'certloom_factory_design_catalog_v1', array() );
@@ -71,7 +75,7 @@ final class FactoryPresetService {
 
 	public function sync_all( $actor_user_id = 0 ) {
 		$result = array( 'created' => 0, 'updated' => 0, 'unchanged' => 0, 'customized' => 0, 'items' => array() );
-		$definitions = array_merge( $this->catalog->all(), $this->curated_catalog->all() );
+		$definitions = array_merge( $this->catalog->all(), $this->curated_catalog->all(), $this->profile_catalog->all() );
 		foreach ( $definitions as $definition ) {
 			$status = $this->sync_one( $definition, $actor_user_id );
 			if ( is_wp_error( $status ) ) {
@@ -115,7 +119,9 @@ final class FactoryPresetService {
 		if ( is_wp_error( $seed ) ) { return $seed; }
 
 		$result = array( 'published' => 0, 'already_published' => 0, 'skipped_customized' => 0, 'deferred' => false, 'reason' => 'starter_publication_ready' );
-		foreach ( $this->starter_definitions( $limit ) as $definition ) {
+		// Detailed profile designs remain drafts until the organization reviews
+		// their field sources/exposure and deliberately publishes them.
+		foreach ( array_merge( $this->starter_definitions( $limit ), $this->profile_catalog->essentials() ) as $definition ) {
 			$template = $this->templates->find_by_machine_key( (string) $definition['machine_key'] );
 			if ( is_wp_error( $template ) ) { return $template; }
 			if ( ! is_array( $template ) || ! is_array( $template['current_revision'] ?? null ) ) { continue; }
@@ -210,8 +216,8 @@ final class FactoryPresetService {
 
 	/** @return int|null */
 	private function match_known_factory_version( $preset_key, $layout_hash ) {
-		$catalog = 0 === strpos( sanitize_key( (string) $preset_key ), CuratedPresetCatalog::KEY_PREFIX ) ? $this->curated_catalog : $this->catalog;
-		$max_version = $catalog instanceof CuratedPresetCatalog ? CuratedPresetCatalog::PRESET_VERSION : PresetCatalog::PRESET_VERSION;
+		$catalog = $this->catalog_for_key( $preset_key );
+		$max_version = $catalog::PRESET_VERSION;
 		for ( $version = 1; $version <= $max_version; $version++ ) {
 			$definition = $catalog->get( $preset_key, $version );
 			if ( is_array( $definition ) && ( new CanonicalJson() )->matches_hash( $definition['layout'], $layout_hash ) ) { return $version; }
@@ -222,8 +228,11 @@ final class FactoryPresetService {
 	/** @return array<string,mixed>|null */
 	private function definition_for_key( $preset_key ) {
 		$preset_key = sanitize_key( (string) $preset_key );
-		if ( 0 === strpos( $preset_key, CuratedPresetCatalog::KEY_PREFIX ) ) { return $this->curated_catalog->get( $preset_key ); }
-		return $this->catalog->get( $preset_key );
+		return $this->catalog_for_key( $preset_key )->get( $preset_key );
+	}
+	private function catalog_for_key( $preset_key ) {
+		if ( 0 === strpos( (string) $preset_key, ProfilePresetCatalog::KEY_PREFIX ) ) { return $this->profile_catalog; }
+		return 0 === strpos( (string) $preset_key, CuratedPresetCatalog::KEY_PREFIX ) ? $this->curated_catalog : $this->catalog;
 	}
 
 	private function preset_key_from_machine_key( $machine_key ) {

@@ -2,3 +2,7 @@
 /languages/*.pot text eol=lf
 /languages/*.po text eol=lf
 /tests/i18n/fixtures/*.po text eol=lf
+# Keep frozen third-party bytes identical to the independently tested candidate.
+/resources/renderer/vendor/** -text
+/resources/renderer/fonts/*.ttf -text
+/resources/renderer/*.json text eol=lf

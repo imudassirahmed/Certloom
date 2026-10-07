@@ -495,22 +495,28 @@ function ecapla_certverify_init() {
 	Ecapla_CertVerify_Shortcode::init();
 	Ecapla_CertVerify_Block::init();
 	Ecapla_CertVerify_Privacy::init();
+	( new \Certloom\Infrastructure\Recipient\RecipientCollectionRest() )->register();
+	( new \Certloom\Infrastructure\Recipient\RecipientCollectionUi() )->register();
 	add_action( 'rest_api_init', array( 'Ecapla_CertVerify_REST', 'register_routes' ) );
 
 	if ( is_admin() ) {
 		require_once ECAPLA_CERTVERIFY_PATH . 'admin/class-ecapla-certverify-list-table.php';
 		require_once ECAPLA_CERTVERIFY_PATH . 'admin/class-ecapla-certverify-admin.php';
 		new Ecapla_CertVerify_Admin();
+		( new \Certloom\Infrastructure\Admin\RecipientReviewAdmin() )->register();
+		( new \Certloom\Infrastructure\Admin\IssuanceWorkflowGuide() )->register();
 		( new \Certloom\Infrastructure\Admin\TutorLmsIntegrationAdmin() )->register();
 		( new \Certloom\Infrastructure\Admin\LearnDashIntegrationAdmin() )->register();
 		( new \Certloom\Infrastructure\Admin\WooCommerceIntegrationAdmin() )->register();
 		( new \Certloom\Infrastructure\Admin\CourseraIntegrationAdmin() )->register();
 		( new \Certloom\Infrastructure\Admin\WebhookIntegrationAdmin() )->register();
+		( new \Certloom\Infrastructure\Admin\WebhookV2IntegrationAdmin() )->register();
 		( new \Certloom\Infrastructure\Admin\CredlyIntegrationAdmin() )->register();
 	}
 
 	\Certloom\Infrastructure\Integration\CourseraXapiRest::register();
 	\Certloom\Infrastructure\Integration\WebhookRest::register();
+	\Certloom\Infrastructure\Integration\WebhookV2Rest::register();
 
 	if ( did_action( 'elementor/loaded' ) ) {
 		ecapla_certverify_elementor_loaded();
@@ -593,6 +599,7 @@ function ecapla_certverify_register_elementor_widgets( $widgets_manager ) {
 	require_once ECAPLA_CERTVERIFY_PATH . 'elementor/class-ecapla-certverify-elementor-widget.php';
 	require_once ECAPLA_CERTVERIFY_PATH . 'elementor/class-ecapla-certverify-template-widgets.php';
 	require_once ECAPLA_CERTVERIFY_PATH . 'elementor/class-ecapla-certverify-credential-widget.php';
+	require_once ECAPLA_CERTVERIFY_PATH . 'elementor/class-certloom-pro-verification-widget.php';
 
 	$widgets_manager->register( new Ecapla_CertVerify_Elementor_Widget() );
 	$widgets_manager->register( new Ecapla_CertVerify_Elementor_Meridian_Widget() );
@@ -601,6 +608,7 @@ function ecapla_certverify_register_elementor_widgets( $widgets_manager ) {
 	$widgets_manager->register( new Ecapla_CertVerify_Elementor_Nova_Widget() );
 	$widgets_manager->register( new Ecapla_CertVerify_Elementor_Forge_Widget() );
 	$widgets_manager->register( new Ecapla_CertVerify_Elementor_Credential_Widget() );
+	$widgets_manager->register( new Certloom_Pro_Verification_Widget() );
 }
 
 /**

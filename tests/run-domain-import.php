@@ -1,5 +1,7 @@
 <?php
 /** Pure tests for new-domain import mapping/preflight. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 if ( ! class_exists( 'WP_Error' ) ) { class WP_Error {} }
 function absint($v){ return abs((int)$v); }
 function sanitize_key($k){ return strtolower(preg_replace('/[^a-z0-9_\-]/','',(string)$k)); }

@@ -1,5 +1,8 @@
 <?php
 /** EML-02 functional Email Design hierarchy / fail-closed authority gate. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
+require_once __DIR__ . '/bootstrap-option-command-double.php';
 define( 'ABSPATH', __DIR__ . '/webroot/' );
 define( 'CERTLOOM_PATH', dirname( __DIR__ ) . '/' );
 if ( ! class_exists( 'WP_Error' ) ) { class WP_Error { private $c,$m; public function __construct($c='',$m=''){ $this->c=$c;$this->m=$m; } public function get_error_code(){return $this->c;} public function get_error_message(){return $this->m;} } }

@@ -181,8 +181,7 @@ final class RemoteBackupCatalog {
 
 	private function save( array $catalog ) {
 		$catalog = array_slice( array_values( $catalog ), 0, self::MAX_ENTRIES );
-		$saved = update_option( self::OPTION, $catalog, false );
-		return $saved || $catalog === get_option( self::OPTION, array() );
+		return true === ( new \Certloom\Infrastructure\Data\DurableOptionMutation() )->set( self::OPTION, $catalog );
 	}
 
 	/** @return array<string,mixed>|null */

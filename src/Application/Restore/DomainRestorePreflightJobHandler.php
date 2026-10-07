@@ -115,7 +115,8 @@ final class DomainRestorePreflightJobHandler implements JobHandlerInterface {
 		if ( is_wp_error( $config ) ) {
 			return $config;
 		}
-		$baseline_generation = $this->generation->current();
+		$baseline_generation = $this->generation->read_current();
+		if ( is_wp_error( $baseline_generation ) ) { return $baseline_generation; }
 		$review = array(
 			'ready_for_commit'            => true,
 			'mode'                        => $mode,

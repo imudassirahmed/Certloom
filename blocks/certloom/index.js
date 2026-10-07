@@ -112,7 +112,7 @@
 				),
 				el( 'div', blockProps,
 					el( Notice, { status: 'info', isDismissible: false, className: 'ecapla-certverify-block-note' }, __( 'This is the native WordPress block. Elementor is not required.', 'certloom' ) ),
-					el( ServerSideRender, { block: 'certloom/verification', attributes: a } )
+					el( 'div', { inert: '', className: 'certloom-block-preview' }, el( ServerSideRender, { block: 'certloom/verification', attributes: a } ) )
 				)
 			);
 		},

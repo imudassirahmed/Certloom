@@ -1,0 +1,65 @@
+/* Shared account component. Rules stay inside Certloom-owned surfaces. */
+.certloom-account {
+  box-sizing: border-box; max-width: 1120px; margin: 32px 0; color: var(--cl-ink);
+  border: 1px solid var(--cl-rule); border-radius: var(--cl-r-card); background: var(--cl-surface);
+  font: 400 15px/1.55 var(--cl-sans); overflow: hidden;
+}
+.certloom-account *, .certloom-account *::before, .certloom-account *::after { box-sizing: border-box; }
+.certloom-account__header { display: flex; align-items: flex-start; gap: 24px; justify-content: space-between; padding: 28px 32px; border-bottom: 1px solid var(--cl-rule); }
+.certloom-account__header h2, .certloom-account__header h1 { margin: 4px 0 10px; color: var(--cl-ink); font: 650 25px/1.3 var(--cl-sans); }
+.certloom-account__header p { max-width: 680px; margin: 0; color: var(--cl-ink-soft); }
+.certloom-account .certloom-account__eyebrow { font-size: 12px; font-weight: 650; letter-spacing: .04em; color: var(--cl-blue-deep); }
+.certloom-account__mark { display: grid; place-items: center; flex-shrink: 0; width: 44px; height: 44px; border-radius: 50%; background: var(--cl-blue-wash); color: var(--cl-blue); font-size: 23px; }
+.certloom-account__workspace { padding: 26px 32px; min-height: 120px; }
+.certloom-account__workspace[aria-busy="true"] { cursor: progress; }
+.certloom-account__nav { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+.certloom-account button { appearance: none; min-height: 42px; padding: 9px 16px; border: 1px solid var(--cl-rule-firm); border-radius: var(--cl-r-sm); background: var(--cl-surface); color: var(--cl-ink); font: 600 14px/1.4 var(--cl-sans); cursor: pointer; transition: background-color 150ms ease, border-color 150ms ease; }
+.certloom-account button:hover { border-color: var(--cl-blue); background: var(--cl-blue-wash); }
+.certloom-account button[aria-pressed="true"] { border-color: var(--cl-blue); background: var(--cl-blue-wash); color: var(--cl-blue-deep); }
+.certloom-account button:disabled { cursor: default; opacity: .65; }
+.certloom-account [aria-busy="true"] button:disabled { cursor: progress; }
+.certloom-account .certloom-account__primary { color: var(--cl-on-brand); background: var(--cl-blue); border-color: var(--cl-blue); }
+.certloom-account .certloom-account__primary:hover { background: var(--cl-blue-deep); }
+.certloom-account button:focus-visible, .certloom-account input:focus-visible, .certloom-account textarea:focus-visible { outline: 3px solid var(--cl-focus); outline-offset: 3px; }
+.certloom-account__panel h3, .certloom-account__program h3 { margin: 0 0 6px; font: 650 19px/1.4 var(--cl-sans); color: var(--cl-ink); }
+.certloom-account__intro { margin: 0 0 24px; color: var(--cl-ink-soft); }
+.certloom-account__fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 24px; }
+.certloom-account__field { min-width: 0; }
+.certloom-account__field label { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 8px; font-weight: 600; }
+.certloom-account__requirement { flex-shrink: 0; color: var(--cl-ink-soft); font-size: 12px; font-weight: 400; }
+.certloom-account h3[tabindex="-1"]:focus { outline: 2px solid var(--cl-focus); outline-offset: 4px; border-radius: var(--cl-r-sm); }
+.certloom-account__field input, .certloom-account__field textarea { width: 100%; max-width: none; min-height: 44px; margin: 0; padding: 10px 12px; border: 1px solid var(--cl-rule-firm); border-radius: var(--cl-r-sm); background: var(--cl-surface); color: var(--cl-ink); font: 400 15px/1.4 var(--cl-sans); box-shadow: none; }
+.certloom-account__field textarea { min-height: 96px; resize: vertical; }
+.certloom-account__help { margin: 8px 0 0; color: var(--cl-ink-soft); font-size: 13px; }
+.certloom-account__status { display: inline-block; margin-top: 10px; padding: 3px 8px; border: 1px solid var(--cl-rule); border-radius: var(--cl-r-ctl); font-size: 12px; }
+.certloom-account__status--awaiting_approval { background: var(--cl-blue-wash); color: var(--cl-blue-deep); }
+.certloom-account__status--rejected { color: var(--cl-error); }
+.certloom-account__actions { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
+.certloom-account__footnote { margin: 20px 0 0; font-size: 13px; color: var(--cl-ink-soft); }
+.certloom-account__programs { display: grid; gap: 12px; }
+.certloom-account__requests { display: grid; gap: 16px; }
+.certloom-account__request { padding: 20px; border: 1px solid var(--cl-rule); border-radius: var(--cl-r-sm); background: var(--cl-surface); }
+.certloom-account__request h4 { margin: 0 0 10px; font: 600 17px/1.4 var(--cl-sans); color: var(--cl-ink); overflow-wrap: anywhere; }
+.certloom-account__request p { margin: 0 0 16px; color: var(--cl-ink-soft); }
+.certloom-account__program { display: flex; justify-content: space-between; align-items: center; gap: 20px; padding: 20px; border: 1px solid var(--cl-rule); border-radius: var(--cl-r-sm); }
+.certloom-account__issuer { margin-top: 28px; padding: 20px; background: var(--cl-paper); border-radius: var(--cl-r-sm); }
+.certloom-account__issuer h4 { margin: 0 0 8px; font-size: 15px; }
+.certloom-account__issuer p { margin: 0 0 10px; color: var(--cl-ink-soft); font-size: 13px; }
+.certloom-account__issuer ul { margin: 0; padding-left: 20px; }
+.certloom-account__empty { padding: 20px; background: var(--cl-paper); border-radius: var(--cl-r-sm); color: var(--cl-ink-soft); }
+.certloom-account__feedback { margin: 0; padding: 0 32px 24px; color: var(--cl-ink); }
+.certloom-account__feedback:empty { padding-bottom: 0; }
+.certloom-account__feedback[data-error="true"] { color: var(--cl-error); }
+.certloom-account__feedback:focus { outline: 2px solid var(--cl-focus); outline-offset: -3px; border-radius: var(--cl-r-sm); }
+.certloom-account__review-list { display: grid; gap: 16px; }
+.certloom-account__candidate { white-space: pre-wrap; overflow-wrap: anywhere; padding: 12px; background: var(--cl-paper); border-radius: var(--cl-r-sm); margin-top: 14px; }
+@media (max-width: 680px) {
+  .certloom-account { margin: 24px 0; }
+  .certloom-account__header, .certloom-account__workspace { padding: 20px; }
+  .certloom-account__feedback { padding-left: 20px; padding-right: 20px; }
+  .certloom-account__header h2 { font-size: 22px; }
+  .certloom-account__fields { grid-template-columns: minmax(0, 1fr); gap: 22px; }
+  .certloom-account__program { align-items: flex-start; flex-direction: column; gap: 12px; }
+}
+@media (prefers-reduced-motion: reduce) { .certloom-account button { transition: none; } }
+@media (forced-colors: active) { .certloom-account button[aria-pressed="true"] { outline: 2px solid Highlight; } }

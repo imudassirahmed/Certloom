@@ -408,6 +408,7 @@ final class IssueCredentialRest {
 
 	/** @return array<string,mixed> */
 	private function receipt_payload( array $receipt ) {
+		$downloads = ( new \Certloom\Infrastructure\Rendering\CredentialDownload() )->links( (string) ( $receipt['public_id'] ?? '' ) );
 		return array(
 			'version_id' => absint( $receipt['version_id'] ?? 0 ),
 			'series_id' => absint( $receipt['series_id'] ?? 0 ),
@@ -417,6 +418,7 @@ final class IssueCredentialRest {
 			'expires_at' => $receipt['expires_at'] ?? null,
 			'verification_url' => (string) ( $receipt['verification_url'] ?? '' ),
 			'idempotent_replay' => ! empty( $receipt['idempotent_replay'] ),
+			'downloads' => $downloads,
 		);
 	}
 

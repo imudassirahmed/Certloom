@@ -1,5 +1,7 @@
 <?php
 /** Concrete PDF-04 candidate adapter tests without requiring mPDF/ext-gd. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 require_once __DIR__ . '/bootstrap-autoload.php';
 require_once __DIR__ . '/render-plan-reference/reference_lib.php';
 
@@ -122,8 +124,8 @@ function prc_schema4_plan($font_path){
 	return array('_meta'=>array('schema'=>'certloom-render-plan','version'=>1),'page'=>array('size'=>'A4','orientation'=>'landscape','width_mm'=>297.0,'height_mm'=>210.0),'operations'=>array($rich,$table,$signature),'_runtime'=>array('fonts'=>array($hash=>array('path'=>$font_path,'sha256'=>$hash,'format'=>'ttf','size'=>filesize($font_path))),'assets'=>(array)($primitive['_runtime']['assets']??array())));
 }
 
-$font_candidates=array('/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf','/usr/share/fonts/dejavu/DejaVuSans.ttf');$font='';foreach($font_candidates as $candidate){if(is_file($candidate)){$font=$candidate;break;}}
-if(''===$font){throw new RuntimeException('Candidate tests require the established local DejaVu Sans development fixture font.');}
+$font_candidates=array_filter(array(getenv('CERTLOOM_TEST_DEJAVU_SANS'),'/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf','/usr/share/fonts/dejavu/DejaVuSans.ttf'));$font='';foreach($font_candidates as $candidate){if(is_file($candidate)&&is_readable($candidate)&&'DejaVuSans.ttf'===basename($candidate)){$font=realpath($candidate);break;}}
+if(''===$font){throw new RuntimeException('Set CERTLOOM_TEST_DEJAVU_SANS to the absolute path of the local DejaVuSans.ttf development fixture font.');}
 $manifest=array('schema'=>'certloom-font-manifest','version'=>2,'families'=>array('dejavu'=>array('400-normal'=>array('faces'=>array(array('sha256'=>hash_file('sha256',$font),'format'=>'ttf','coverage'=>array('U+0000-10FFFF')))))));
 $candidate_hash=str_repeat('a',64);
 

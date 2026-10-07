@@ -6,6 +6,8 @@
  * supported repeating rowsets so this contract cannot drift back to the
  * deleted one-page Manual Issuance implementation.
  */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 ob_start();
 require __DIR__ . '/build_issue_credential_479_fixture.php';
 $html = ob_get_clean();

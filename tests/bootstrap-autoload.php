@@ -7,6 +7,8 @@
  * source-file require ordering so adding an interface/dependency cannot break
  * an unrelated test merely because a manual require list became stale.
  */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 if ( ! defined( 'ABSPATH' ) ) {
 	define( 'ABSPATH', __DIR__ . '/fake-wp/' );
 }

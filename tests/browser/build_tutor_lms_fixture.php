@@ -1,5 +1,7 @@
 <?php
 /** Browser-only INT-02 Tutor LMS fixture using the production Integrations view/CSS. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define( 'ABSPATH', __DIR__ . '/' );
 require_once dirname( __DIR__ ) . '/bootstrap-autoload.php';
 function __( $v, $d = null ){ return $v; }

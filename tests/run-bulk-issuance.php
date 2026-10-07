@@ -1,5 +1,7 @@
 <?php
 /** BULK-01 reviewed, crash-resumable Bulk Issuance architecture/behavior gate. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define( 'ABSPATH', __DIR__ . '/webroot/' );
 define( 'WP_CONTENT_DIR', __DIR__ . '/webroot/wp-content' );
 if ( ! class_exists( 'WP_Error' ) ) { class WP_Error { private $c,$m,$d; public function __construct($c='',$m='',$d=null){$this->c=$c;$this->m=$m;$this->d=$d;} public function get_error_code(){return $this->c;} public function get_error_message(){return $this->m;} public function get_error_data(){return $this->d;} } }

@@ -71,6 +71,15 @@ final class Ecapla_CertVerify_Privacy {
 				foreach ( $rows as $row ) { $data[] = self::domain_history_export_item( $spec['prefix'], $row ); }
 			}
 			$signers = $repo->export_signers_for_email( $email, $offset, self::PAGE_SIZE );
+			foreach ( array( 'program_registrations' => __( 'Certloom Program registrations', 'certloom' ), 'field_submissions' => __( 'Certloom submitted details and decisions', 'certloom' ), 'issuance_requests' => __( 'Certloom pending certificate requests', 'certloom' ), 'issuance_request_events' => __( 'Certloom request activity', 'certloom' ) ) as $entity => $label ) {
+				$rows = $repo->export_workflow_for_identity( $entity, $email, $wp_user_id, $offset, self::PAGE_SIZE );
+				if ( is_wp_error( $rows ) ) { return self::export_error( $rows ); }
+				$counts[] = count( $rows );
+				foreach ( $rows as $row ) {
+					unset( $row['policy_sha256'], $row['intake_key'], $row['payload_sha256'], $row['review_sha256'], $row['mapping_sha256'], $row['scope_key'], $row['event_key'] );
+					$data[] = self::generic_export_item( 'certloom-' . str_replace( '_', '-', $entity ), $label, $entity, $row );
+				}
+			}
 			if ( is_wp_error( $signers ) ) { return self::export_error( $signers ); }
 			$counts[] = count( $signers );
 			foreach ( $signers as $row ) { $data[] = self::signer_export_item( $row ); }

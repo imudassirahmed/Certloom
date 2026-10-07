@@ -1,6 +1,8 @@
 <?php
 /** Alpha 4.42 public-profile access: healthy normalized credentials verify publicly without preview ceremony. */
 namespace {
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
+
 	define( 'ABSPATH', __DIR__ . '/fake-wp/' );
 	function __( $text, $domain = null ) { return $text; }
 	function _x( $text, $context, $domain = null ) { return $text; }
@@ -23,6 +25,7 @@ namespace {
 	function home_url( $path = '/' ) { return 'https://example.test' . $path; }
 	class WP_Error { private $code; private $message; public function __construct( $code = '', $message = '' ) { $this->code=$code; $this->message=$message; } public function get_error_code(){ return $this->code; } public function get_error_message(){ return $this->message; } }
 	class Ecapla_CertVerify_Shortcode { public static function enqueue_assets() {} }
+	class Ecapla_CertVerify_Settings { public static function get( $key, $default = '' ) { return $default; } }
 }
 namespace Certloom\Infrastructure\Verification {
 	final class PublicVerificationGate { public static $ready = false; public function is_ready(){ return (bool) self::$ready; } }

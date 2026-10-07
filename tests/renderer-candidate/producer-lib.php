@@ -7,6 +7,8 @@
  * against the frozen PDF-04 fixtures. Production runtime authority remains owned
  * exclusively by RendererAuthorityGate + resources/renderer/accepted.json.
  */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 require_once dirname( __DIR__ ) . '/bootstrap-autoload.php';
 require_once dirname( __DIR__ ) . '/render-plan-reference/reference_lib.php';
 

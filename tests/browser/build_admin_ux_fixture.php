@@ -1,5 +1,7 @@
 <?php
 /** Browser fixture for the unified Certloom administration workspace. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $state = getenv( 'CERTLOOM_ADMIN_UX_STATE' );
 $aliases = array( 'simple_credential' => 'credential', 'simple_history' => 'history', 'advanced' => 'technical' );
 $state = isset( $aliases[ $state ] ) ? $aliases[ $state ] : $state;

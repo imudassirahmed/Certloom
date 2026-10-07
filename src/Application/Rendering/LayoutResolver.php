@@ -127,31 +127,8 @@ final class LayoutResolver {
 					$element['style']['direction'] = $this->directions->resolve( $this->table_plain_text( $element ), $element['style']['direction'] );
 					break;
 				case 'asset':
-					$source = isset( $element['source'] ) ? (string) $element['source'] : '';
-					if ( '' !== $source ) {
-						$source_map = array( 'issuer.logo' => 'issuer.logo_asset', 'issuer.seal' => 'issuer.seal_asset' );
-						$key = $source_map[ $source ] ?? '';
-						$reference = '' !== $key && array_key_exists( $key, $merge_snapshot ) ? $merge_snapshot[ $key ] : null;
-						if ( is_array( $reference ) || is_object( $reference ) || is_resource( $reference ) || null === $reference || '' === trim( (string) $reference ) ) {
-							throw new InvalidArgumentException( 'The immutable credential issuer does not provide the media required by this template.' );
-						}
-						$reference = trim( (string) $reference );
-					} else {
-						$reference = $element['asset'];
-					}
-					$verified_asset = $this->assets->inspect( $assets->resolve( $reference ) );
-					$verified_asset['reference'] = $reference;
-					$element['asset'] = $verified_asset;
-					unset( $element['source'] );
-					break;
 				case 'signature_asset':
-					$reference = isset( $element['source'] ) && 'signer.signature' === (string) $element['source']
-						? ( array_key_exists( 'signer.signature_asset', $merge_snapshot ) ? $merge_snapshot['signer.signature_asset'] : null )
-						: ( $element['asset'] ?? null );
-					if ( is_array( $reference ) || is_object( $reference ) || is_resource( $reference ) || null === $reference || '' === trim( (string) $reference ) ) {
-						throw new InvalidArgumentException( 'The immutable credential signer does not provide a usable signature asset.' );
-					}
-					$reference = trim( (string) $reference );
+					$reference = LayoutAssetManifest::reference( $element, $merge_snapshot );
 					$verified_asset = $this->assets->inspect( $assets->resolve( $reference ) );
 					$verified_asset['reference'] = $reference;
 					$element['asset'] = $verified_asset;

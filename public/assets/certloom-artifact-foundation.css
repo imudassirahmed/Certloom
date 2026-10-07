@@ -276,3 +276,82 @@
     border-color: CanvasText;
   }
 }
+
+/* Public achievement layout: one global position, shared by routes and embeds. */
+.certloom-route-page { background:var(--cl-surface); }
+.certloom-route-main#primary { background:var(--certloom-brand-surface,var(--cl-surface)); padding:clamp(24px,4vw,56px) clamp(16px,3vw,48px); }
+.certloom-route-shell { width:min(100%,1440px); }
+.certloom-public.certloom-credential-profile.cvp-widget.cvp-widget--normalized, .certloom-public .certloom-credential-profile.cvp-widget:has(.cvp-profile-card) { width:100%; }
+.certloom-credential-profile.cvp-widget .cvp-header { margin:0 0 24px; text-align:start; }
+.certloom-credential-profile.cvp-widget .cvp-header .cvp-heading { margin:4px 0 0; font:600 22px/1.3 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; letter-spacing:-.02em; }
+.certloom-public.cvp-profile-card { --cvp-border:var(--cl-rule); --cvp-muted:var(--cl-ink-soft); display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.12fr); gap:clamp(24px,3vw,48px); align-items:start; margin:0; padding:0; overflow:visible; border:0; border-radius:var(--cl-r-none); box-shadow:none; background:transparent; color:var(--cl-ink); font:400 15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; text-align:start; }
+.certloom-public.cvp-profile-card { direction:ltr; }
+.certloom-public.cvp-profile-card.cvp-profile-layout--left { grid-template-columns:minmax(0,1.12fr) minmax(0,1fr); }
+.certloom-public.cvp-profile-card.cvp-profile-layout--center,
+.certloom-public.cvp-profile-card.cvp-profile-layout--details { grid-template-columns:minmax(0,1fr); }
+.certloom-public.cvp-profile-card.cvp-profile-layout--center > .cvp-profile-certificate,
+.cvp-profile-layout--center > .cvp-profile-information { width:min(100%,var(--cvp-certificate-width,960px)); margin-inline:auto; }
+.cvp-profile-layout--details > .cvp-profile-information { width:min(100%,860px); margin-inline:auto; }
+.certloom-public.cvp-profile-card .cvp-profile-information { min-width:0; padding:clamp(22px,3vw,40px); border-radius:var(--cl-r-card); background:var(--cl-blue-wash); }
+.certloom-public.cvp-profile-card .cvp-profile-hero { margin:0; padding:0; border:0; background:transparent; text-align:start; }
+.certloom-public.cvp-profile-card .cvp-profile-status-row { margin:0 0 22px; gap:10px; flex-direction:row; align-items:center; text-align:start; }
+.certloom-public.cvp-profile-card .cvp-status-mark { flex:0 0 32px; width:32px; height:32px; margin:0; display:grid; place-items:center; font:600 18px/1 sans-serif; }
+.certloom-public.cvp-profile-card .cvp-status-mark { border:1px solid currentColor; border-radius:var(--cl-r-round); clip-path:none; transform:none; color:var(--cl-ink-soft); background:var(--cl-surface); }
+.certloom-public.cvp-profile-card.cvp-status-valid .cvp-status-mark { color:var(--cl-valid); background:var(--cl-valid-wash); }
+.certloom-public.cvp-profile-card:is(.cvp-status-revoked,.cvp-status-withdrawn,.cvp-status-voided,.cvp-status-not_issued) .cvp-status-mark { color:var(--cl-revoked); background:var(--cl-revoked-wash); }
+.certloom-public.cvp-profile-card:is(.cvp-status-expired,.cvp-status-suspended,.cvp-status-pending_review,.cvp-status-not_yet_valid,.cvp-status-suspended_noncompliant) .cvp-status-mark { color:var(--cl-expired); background:var(--cl-expired-wash); }
+.certloom-public.cvp-profile-card .cvp-profile-status-label { font-family:inherit; font-size:14px; font-weight:650; line-height:1.4; color:var(--cl-ink); }
+.certloom-public.cvp-profile-card .cvp-profile-status-row p { margin:4px 0 0; max-width:48ch; font-size:12px; line-height:1.5; color:var(--cl-ink-soft); }
+.certloom-public.cvp-profile-card .cvp-profile-recipient { margin:0; font:650 clamp(24px,2.7vw,36px)/1.22 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; letter-spacing:-.025em; color:var(--cl-ink); }
+.certloom-public.cvp-profile-card .cvp-profile-program { margin:10px 0 0; font:600 clamp(17px,1.7vw,22px)/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; color:var(--cl-ink); }
+.certloom-public.cvp-profile-card .cvp-profile-program-description { margin:14px 0 0; font-size:15px; line-height:1.65; color:var(--cl-ink); }
+.certloom-public.cvp-profile-card .cvp-profile-facts { margin:24px 0 0; padding:0; column-gap:24px; }
+.certloom-public.cvp-profile-card .cvp-profile-facts > div,
+.certloom-public.cvp-profile-card .cvp-profile-facts > div:nth-child(even),
+.certloom-public.cvp-profile-card .cvp-profile-facts > div:nth-child(odd) { margin:0; padding:12px 0; border-inline-start:0; border-bottom:1px solid var(--cl-rule); }
+.certloom-public.cvp-profile-card .cvp-profile-facts dt { margin:0 0 5px; font-size:12px; font-weight:500; letter-spacing:0; text-transform:none; color:var(--cl-ink-soft); }
+.certloom-public.cvp-profile-card .cvp-profile-facts dd { margin:0; font-size:14px; font-weight:600; line-height:1.5; color:var(--cl-ink); }
+.certloom-public.cvp-profile-card .cvp-profile-certificate { min-width:0; margin:0; padding:0; }
+.certloom-public.cvp-profile-card .cvp-profile-section-head { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+.certloom-public.cvp-profile-card .cvp-certificate-preview { border:0; border-radius:var(--cl-r-none); background:transparent; box-shadow:none; }
+.certloom-public.cvp-profile-card .cvp-certificate-preview .certloom-template-preview-scroll { padding:0; background:transparent; }
+.certloom-public.cvp-profile-card .cvp-certificate-preview .certloom-template-preview-page { box-shadow:none; }
+.certloom-public.cvp-profile-card .cvp-certificate-image { display:block; width:100%; height:auto; object-fit:contain; }
+.certloom-public.cvp-profile-card .cvp-profile-proof { margin:24px 0 0; padding:20px 0 0; gap:16px; border:0; border-top:1px solid var(--cl-rule); border-radius:var(--cl-r-none); background:transparent; }
+.certloom-public.cvp-profile-card .cvp-profile-proof-copy h3 { margin:0 0 6px; font:600 14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; color:var(--cl-ink); }
+.certloom-public.cvp-profile-card .cvp-profile-proof-copy .cvp-eyebrow { display:none; }
+.certloom-public.cvp-profile-card .cvp-profile-proof-copy > p { font-size:12px; line-height:1.6; color:var(--cl-ink-soft); }
+.certloom-public.cvp-profile-card .cvp-profile-qr { width:100px; min-width:0; }
+.certloom-public.cvp-profile-card .cvp-profile-qr .certloom-verification-qr { width:100px; max-width:100%; padding:8px; border:0; background:var(--cl-surface); }
+.certloom-public.cvp-profile-card .cvp-profile-qr :is(.certloom-verification-qr-code,svg,figcaption) { width:84px; max-width:100%; }
+.certloom-public.cvp-profile-card .cvp-profile-qr figcaption { display:none; }
+.certloom-public.cvp-profile-card .cvp-profile-barcode { padding:16px 0 0; }
+.certloom-public.cvp-profile-card .cvp-result-actions { display:flex; flex-wrap:wrap; gap:8px; margin:24px 0 0; padding:0; border:0; }
+.certloom-public.cvp-profile-card .cvp-result-actions > :is(a,button),.certloom-public.cvp-profile-card .cvp-result-actions summary { width:auto; min-height:44px; }
+.certloom-public.cvp-profile-card .cvp-result-actions > .certloom-share { width:auto; }
+.certloom-public.cvp-profile-card .cvp-profile-privacy-note { margin:0; padding:0; border:0; font-size:14px; color:var(--cl-ink-soft); }
+.certloom-inline-profile { width:100%; min-width:0; }
+.certloom-search-again { display:inline-flex; min-height:44px; align-items:center; margin:0 0 18px; padding:8px 12px; border:1px solid var(--cl-rule); border-radius:var(--cl-r-ctl); background:var(--cl-surface); color:var(--cl-blue); font-family:inherit; font-size:14px; font-weight:600; line-height:1.4; cursor:pointer; }
+.certloom-search-again:focus-visible { outline:2px solid var(--cl-blue); outline-offset:3px; }
+:is(.cv-widget,.cvx-widget) > :is(.cv-result,.cvx-result):empty { display:none; }
+:is(.cv-widget,.cvx-widget) > :is(.cv-result,.cvx-result) { width:100%; margin-top:24px; }
+:is(.cv-widget,.cvx-widget).certloom-has-design > :is(.cv-search-card,.cvx-shell,.cv-guide,.cvx-guide,.cv-credit,.cvx-credit) { display:none; }
+:is(.cv-widget,.cvx-widget).certloom-has-design > :is(.cv-result,.cvx-result) { margin-top:0; }
+.certloom-share-menu[popover],.certloom-share-menu--portal { position:fixed; inset:auto; width:220px; min-width:190px; margin:0; box-sizing:border-box; padding:8px; overflow:auto; border:1px solid var(--cl-rule); border-radius:var(--cl-r-card); background:var(--cl-surface); color:var(--cl-ink); box-shadow:var(--cl-shadow-popover); z-index:2147483000; font:400 14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
+.certloom-share-menu[popover]:not(:popover-open) { display:none; }
+.certloom-share-menu[popover]:popover-open,.certloom-share-menu--portal { display:grid; gap:4px; }
+.certloom-share-menu::backdrop { background:transparent; }
+.certloom-share-menu :is(a,button) { min-height:40px; text-align:start; }
+.certloom-share-menu--portal .certloom-share-link { font:inherit; }
+@media (hover:hover) and (pointer:fine) { :is(.certloom-result-action,.certloom-search-again,.cv-search-btn,.cvx-search-btn) { transition:background-color 150ms ease-out,border-color 150ms ease-out,color 150ms ease-out,transform 100ms ease-out; } body.certloom-pointer-input :is(.certloom-result-action,.certloom-search-again,.cv-search-btn,.cvx-search-btn):active { transform:scale(.98); } }
+@media(max-width:800px) { .certloom-public.cvp-profile-card,.certloom-public.cvp-profile-card.cvp-profile-layout--left { grid-template-columns:minmax(0,1fr); gap:24px; } .certloom-public.cvp-profile-card .cvp-profile-information { padding:24px; } }
+@container certverify-modern (max-width:700px) { .certloom-public.cvp-profile-card,.certloom-public.cvp-profile-card.cvp-profile-layout--left { grid-template-columns:minmax(0,1fr); gap:24px; } }
+@container certverify-legacy (max-width:700px) { .certloom-public.cvp-profile-card,.certloom-public.cvp-profile-card.cvp-profile-layout--left { grid-template-columns:minmax(0,1fr); gap:24px; } }
+@media(max-width:480px) { .certloom-public.cvp-profile-card .cvp-profile-facts { grid-template-columns:minmax(0,1fr); } .certloom-public.cvp-profile-card .cvp-profile-proof { grid-template-columns:minmax(0,1fr) auto; } .certloom-public.cvp-profile-card .cvp-profile-information { padding:20px; } }
+@media(prefers-reduced-motion:reduce) { :is(.certloom-result-action,.certloom-search-again,.cv-search-btn,.cvx-search-btn) { transition:none; } :is(.certloom-result-action,.certloom-search-again,.cv-search-btn,.cvx-search-btn):active { transform:none; } }
+@media(forced-colors:active) { .certloom-public.cvp-profile-card .cvp-profile-information { background:Canvas; border:1px solid CanvasText; } .certloom-share-menu[popover],.certloom-share-menu--portal { background:Canvas; color:CanvasText; border-color:CanvasText; } }
+@media print { .certloom-public.cvp-profile-card { display:block; } .certloom-public.cvp-profile-card .cvp-profile-information { padding:16px 0; background:var(--cl-surface); } .certloom-public.cvp-profile-card .cvp-profile-certificate { margin:0 0 20px; } .certloom-search-again,.certloom-share-menu,.cvp-profile-information .cvp-result-actions { display:none; } }
+
+@keyframes certloom-result-enter { from { opacity:0; } to { opacity:1; } }
+body.certloom-pointer-input .certloom-result-enter { animation:certloom-result-enter 160ms ease-out; }
+@media(prefers-reduced-motion:reduce) { body.certloom-pointer-input .certloom-result-enter { animation:none; } }

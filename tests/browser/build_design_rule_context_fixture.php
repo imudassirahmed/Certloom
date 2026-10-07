@@ -1,5 +1,7 @@
 <?php
 /** DRCUX-01 contextual Designs card browser fixture using production CSS/JS. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $css = file_get_contents( dirname( __DIR__, 2 ) . '/admin/assets/design-rules.css' );
 $js  = file_get_contents( dirname( __DIR__, 2 ) . '/admin/assets/design-rule-context.js' );
 ?><!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>

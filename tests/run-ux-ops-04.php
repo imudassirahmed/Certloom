@@ -1,5 +1,7 @@
 <?php
 /** 1.6.98 UX-OPS-04 staging blocker + premium interaction regression. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define( 'ABSPATH', __DIR__ . '/' );
 $root = dirname( __DIR__ );
 $pass = 0; $fail = 0;
@@ -59,11 +61,11 @@ u4( false !== strpos( $template, "'Search', 'certloom'" ) && false !== strpos( $
 u4( false === strpos( $library_css, 'certloom-library-filter-program' ) && false === strpos( $library_css, 'certloom-template-library-program-filter' ), 'Retired Program-filter styling is physically removed instead of left dormant' );
 u4( false !== strpos( $library_css, '.certloom-template-library-filter-primary,.certloom-template-library-filter-advanced{display:grid;grid-template-columns:minmax(220px,1.45fr) repeat(3,minmax(145px,1fr)) auto' ), 'Primary filter row contains equal-height Search/Purpose/Orientation/Style plus action' );
 u4( false === strpos( $admin_css, '.certloom-template-library-filter-primary{display:grid!important' ), 'Old conflicting six-column !important filter override is gone' );
-u4( false !== strpos( $library_css, '@media (max-width:782px)' ) && false !== strpos( $library_css, '.certloom-template-library-filter-primary,.certloom-template-library-filter-advanced{grid-template-columns:1fr}' ), 'Current filter structure deliberately stacks on mobile' );
+u4( 1 === preg_match( '/@media\s*\(max-width:782px\)/', $library_css ) && false !== strpos( $library_css, '.certloom-template-library-filter-primary,.certloom-template-library-filter-advanced{grid-template-columns:repeat(2,minmax(0,1fr))}' ) && false !== strpos( $library_css, '.certloom-template-library-filter-primary>label:first-child' ) && false !== strpos( $library_css, 'grid-column:1/-1' ), 'mobile filters keep a full-width Search and action with bounded two-column choices' );
 
 // 7. Recipient is a reusable first-class identity and the ordinary create path
 // must not silently bypass it once normalized issuance is available.
-u4( false !== strpos( $manual, 'Who receives this credential?' ) && false !== strpos( $manual, 'Recipient profiles are reusable across future credentials.' ) && false !== strpos( $manual, 'credential-specific facts remain on each issued credential.' ), 'Issuance explains the reusable Recipient concept through concise contextual guidance' );
+u4( false !== strpos( $manual, 'Who receives this credential?' ) && false !== strpos( $manual, 'create a reusable Recipient profile without leaving issuance.' ) && false !== strpos( $manual, 'Only the display name is required.' ), 'Issuance explains reusable profiles and the minimum required details through concise contextual guidance' );
 u4( false !== strpos( $manual, "'recipient_id' => isset( \$_GET['recipient_id'] )" ) && false !== strpos( $issue_rest, "\$recipient = ( new RecipientRepository() )->find( \$recipient_id )" ) && false !== strpos( $issue_rest, "'deep_link' => array(" ) && false !== strpos( $issue_js, 'if (deep.recipient)' ), 'Recipient profile deep-link preselection survives the bounded recipient search window' );
 u4( false !== strpos( $domain, "ManualIssuanceAdmin::PAGE, 'recipient_id'" ) && false !== strpos( $domain, "'Issue credential to this recipient', 'certloom'" ), 'Recipient profiles provide a direct Recipient-preselected Issue credential action' );
 u4( false !== strpos( $domain, 'data-certloom-context-lookup="wp_user"' ) && false !== strpos( $domain, "'WordPress account', 'certloom'" ) && false === strpos( $domain, "'WordPress user ID', 'certloom'" ), 'Recipient editor uses a searchable WordPress account selector instead of a raw numeric user ID' );

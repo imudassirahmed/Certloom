@@ -1,4 +1,5 @@
 <?php
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 /** 1.6.55 canonical Render Plan Template Preview foundation tests. */
 define( 'ABSPATH', __DIR__ . '/' );
 if ( ! class_exists( 'WP_Error' ) ) { class WP_Error { private $c,$m; public function __construct($c='',$m=''){ $this->c=$c;$this->m=$m; } public function get_error_code(){return $this->c;} public function get_error_message(){return $this->m;} } }
@@ -79,6 +80,15 @@ p55has($presented['html'],'Alexandria Noor Rahman','resolved recipient appears i
 p55has($presented['html'],'certloom-template-preview-op-qr','QR is presented from Render Plan');
 p55has($presented['html'],'<rect','QR dark runs become SVG rectangles without a second encoder');
 p55(empty($presented['warnings']),'factory preset Preview needs no asset warnings');
+
+$hostile_plan=$standard['render_plan'];
+foreach($hostile_plan['operations'] as &$hostile_op){if('text'===$hostile_op['type']){$hostile_op['text']['value']='<script>alert("preview")</script><img src=x onerror=alert(1)>' ;break;}}
+unset($hostile_op);
+$hostile_html=(new RenderPlanHtmlPreview())->present($hostile_plan)['html'];
+p55not($hostile_html,'<script>','preview presenter never emits text as executable script markup');
+p55not($hostile_html,'<img src=x','preview presenter never emits text as an unescaped element');
+p55has($hostile_html,'&lt;script&gt;','hostile text remains visible as escaped text');
+p55has($hostile_html,'certloom-template-preview-op-qr','trusted SVG QR markup survives the same presentation path');
 
 $root=dirname(__DIR__);
 $src=array(

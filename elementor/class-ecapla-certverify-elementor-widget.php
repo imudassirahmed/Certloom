@@ -910,7 +910,7 @@ class Ecapla_CertVerify_Elementor_Widget extends \Elementor\Widget_Base {
 			'credit_align'  => '',
 		);
 
-		echo Ecapla_CertVerify_Render::legacy_widget( $atts ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Ecapla_CertVerify_Render escapes every value it prints.
+		echo Ecapla_CertVerify_Render::scoped_markup_html( Ecapla_CertVerify_Render::legacy_widget( $atts ), 'certloom-elementor-' . str_replace( '-', '', wp_generate_uuid4() ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Ecapla_CertVerify_Render escapes every value it prints.
 	}
 
 	/**

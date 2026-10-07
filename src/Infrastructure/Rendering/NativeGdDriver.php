@@ -39,17 +39,33 @@ final class NativeGdDriver implements GdDriverInterface {
 	public function filled_rectangle( $image, $x1, $y1, $x2, $y2, $color ) { imagefilledrectangle( $image, (int) round( $x1 ), (int) round( $y1 ), (int) round( $x2 ), (int) round( $y2 ), $color ); }
 	public function rectangle( $image, $x1, $y1, $x2, $y2, $color, $thickness = 1 ) { imagesetthickness( $image, max( 1, (int) $thickness ) ); imagerectangle( $image, (int) round( $x1 ), (int) round( $y1 ), (int) round( $x2 ), (int) round( $y2 ), $color ); imagesetthickness( $image, 1 ); }
 	public function filled_ellipse( $image, $cx, $cy, $width, $height, $color ) { imagefilledellipse( $image, (int) round( $cx ), (int) round( $cy ), max( 1, (int) round( $width ) ), max( 1, (int) round( $height ) ), $color ); }
-	public function ellipse( $image, $cx, $cy, $width, $height, $color, $thickness = 1 ) { imagesetthickness( $image, max( 1, (int) $thickness ) ); imageellipse( $image, (int) round( $cx ), (int) round( $cy ), max( 1, (int) round( $width ) ), max( 1, (int) round( $height ) ), $color ); imagesetthickness( $image, 1 ); }
+	public function ellipse( $image, $cx, $cy, $width, $height, $color, $thickness = 1 ) {
+		// imageellipse ignores GD's configured thickness; a complete arc honors it.
+		imagesetthickness( $image, max( 1, (int) $thickness ) );
+		imagearc( $image, (int) round( $cx ), (int) round( $cy ), max( 1, (int) round( $width ) ), max( 1, (int) round( $height ) ), 0, 360, $color );
+		imagesetthickness( $image, 1 );
+	}
 	public function line( $image, $x1, $y1, $x2, $y2, $color, $thickness = 1 ) { imagesetthickness( $image, max( 1, (int) $thickness ) ); imageline( $image, (int) $x1, (int) $y1, (int) $x2, (int) $y2, $color ); imagesetthickness( $image, 1 ); }
 
 	public function text_box( $size_pt, $angle_deg, $font_path, $text ) {
-		$box = imagettfbbox( (float) $size_pt, (float) $angle_deg, (string) $font_path, (string) $text );
-		if ( false === $box ) { throw new RuntimeException( 'GD could not measure exact-font text.' ); }
-		return $box;
+		return ExactFontMetrics::box( $size_pt, $angle_deg, $font_path, $text );
 	}
 	public function text( $image, $size_pt, $angle_deg, $x, $baseline_y, $color, $font_path, $text ) {
-		$result = imagettftext( $image, (float) $size_pt, (float) $angle_deg, (int) round( $x ), (int) round( $baseline_y ), $color, (string) $font_path, (string) $text );
-		if ( false === $result ) { throw new RuntimeException( 'GD could not draw exact-font text.' ); }
+		if ( '' === (string) $text ) { return; }
+		$box = $this->text_box( $size_pt, $angle_deg, $font_path, $text );
+		$xs = array( $box[0], $box[2], $box[4], $box[6] ); $ys = array( $box[1], $box[3], $box[5], $box[7] );
+		$left = (int) floor( (float) $x + min( $xs ) ) - 2; $top = (int) floor( (float) $baseline_y + min( $ys ) ) - 2;
+		$width = max( 1, (int) ceil( (float) $x + max( $xs ) ) - $left + 2 ); $height = max( 1, (int) ceil( (float) $baseline_y + max( $ys ) ) - $top + 2 );
+		// Bound temporary memory independently of document/canvas dimensions.
+		$scale = min( 8, (int) floor( sqrt( 5000000 / ( $width * $height ) ) ) );
+		if ( $scale < 2 ) { throw new RuntimeException( 'Exact-font raster text exceeds the bounded sampling workspace.' ); }
+		$sample = $this->create_transparent_canvas( $width * $scale, $height * $scale );
+		try {
+			$rgba = imagecolorsforindex( $image, $color );
+			$ink = imagecolorallocatealpha( $sample, $rgba['red'], $rgba['green'], $rgba['blue'], $rgba['alpha'] );
+			$result = imagettftext( $sample, (float) $size_pt * $scale, (float) $angle_deg, (int) round( ( (float) $x - $left ) * $scale ), (int) round( ( (float) $baseline_y - $top ) * $scale ), $ink, (string) $font_path, (string) $text );
+			if ( false === $result || ! imagecopyresampled( $image, $sample, $left, $top, 0, 0, $width, $height, $width * $scale, $height * $scale ) ) { throw new RuntimeException( 'GD could not draw exact-font text.' ); }
+		} finally { $this->destroy( $sample ); }
 	}
 
 	public function load_image( $path, $mime ) {

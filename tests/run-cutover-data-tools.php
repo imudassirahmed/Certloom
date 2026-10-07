@@ -1,5 +1,7 @@
 <?php
 /** Pure test: legacy constants cannot bypass manifest-backed final cutover authority. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define( 'ABSPATH', __DIR__ . '/fake-wp/' );
 define( 'CERTLOOM_DOMAIN_WRITE_PATHS_READY', true );
 define( 'CERTLOOM_DOMAIN_DATA_TOOLS_READY', true );

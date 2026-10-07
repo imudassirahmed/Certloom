@@ -1,5 +1,7 @@
 <?php
 /** UX-CORE-04 Credly post-issuance destination contract. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define( 'ABSPATH', __DIR__ . '/fake-wp/' );
 define( 'CERTLOOM_DOMAIN_WRITE_PATHS_READY', false );
 define( 'CERTLOOM_DOMAIN_ADMIN_PREVIEW', false );
@@ -117,7 +119,7 @@ cr( false !== strpos( $listener, "'destination' => 'credly'" ) && false !== strp
 cr( false !== strpos( $listener, "hash( 'sha256', 'credly|'" ) && false !== strpos( $schema, 'UNIQUE KEY dedupe_key' ), 'Credly delivery is deterministically deduplicated per immutable Version and destination mapping' );
 cr( false !== strpos( $handler, 'STATUS_UNCERTAIN' ) && false !== strpos( $handler, 'Review the Credly account before trying again.' ), 'uncertain Credly delivery is terminal until reviewed' );
 cr( false !== strpos( $jobs, 'certloom_credly_publish_uncertain' ) && false !== strpos( $runtime, 'certloom_credly_retry_uncertain_forbidden' ), 'interrupted Credly side effects cannot auto-replay' );
-cr( false !== strpos( $schema, "const SCHEMA_VERSION         = '19'" ) && false !== strpos( $schema, "'destination_deliveries'" ) && false !== strpos( $schema, 'UNIQUE KEY dedupe_key' ), 'schema v19 includes durable deduplicated destination delivery evidence' );
+cr( 19 <= (int) \Certloom\Infrastructure\Database\SchemaManager::SCHEMA_VERSION && false !== strpos( $schema, "'destination_deliveries'" ) && false !== strpos( $schema, 'UNIQUE KEY dedupe_key' ), 'schema includes durable deduplicated destination delivery evidence' );
 cr( false !== strpos( $accept, "'destination_deliveries'" ) && false !== strpos( $stage, "'destination_deliveries'" ) && false !== strpos( $preflight, "'destination_deliveries'" ), 'real-host and migration diagnostics include the destination-delivery table' );
 cr( false !== strpos( $admin, 'CAP_MANAGE_INTEGRATIONS' ) && false !== strpos( $admin, 'check_admin_referer' ), 'Credly admin mutations are capability and nonce protected' );
 cr( false !== strpos( $view, "'Connect Credly'" ) && false !== strpos( $view, "'Program → Credly badge'" ) && false !== strpos( $view, "'Credly delivery history'" ), 'Credly has a real connected publishing UI rather than a placeholder' );

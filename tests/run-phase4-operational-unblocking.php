@@ -1,5 +1,7 @@
 <?php
 /** Alpha 4.42 operational unblocking contract: no ceremony barrier around completed review workflows. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $root = dirname( __DIR__ );
 $gate = file_get_contents( $root . '/src/Infrastructure/Migration/DomainFeatureGate.php' );
 $public_gate = file_get_contents( $root . '/src/Infrastructure/Verification/PublicVerificationGate.php' );

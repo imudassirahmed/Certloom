@@ -1,5 +1,7 @@
 <?php
 /** Build a self-contained DSN-04 browser fixture from one canonical factory layout. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define( 'ABSPATH', __DIR__ . '/' );
 function __($t){return $t;} function sanitize_key($v){return strtolower(preg_replace('/[^a-z0-9_\-]/','',(string)$v));} function absint($v){return abs((int)$v);} function esc_attr($v){return htmlspecialchars((string)$v,ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8');} function esc_textarea($v){return htmlspecialchars((string)$v,ENT_NOQUOTES|ENT_SUBSTITUTE,'UTF-8');}
 require_once dirname(__DIR__) . '/bootstrap-autoload.php';

@@ -161,7 +161,7 @@ final class ScopedFieldContract {
 		foreach ( $resolved as $key => $row ) {
 			$field = $catalog[ $key ] ?? null;
 			if ( ! is_array( $field ) ) { continue; }
-			$out[] = array(
+			$resolved_field = array(
 				'key' => $key,
 				'label' => (string) ( $field['label'] ?? $key ),
 				'type' => (string) ( $field['type'] ?? 'text' ),
@@ -172,6 +172,12 @@ final class ScopedFieldContract {
 				'origin' => (string) $row['origin'],
 				'value_source' => self::value_source( $key ),
 			);
+			if ( array_key_exists( FieldCollectionPolicy::KEY, $field ) ) {
+				$policy = ( new FieldCollectionPolicy() )->for_definition( $field );
+				if ( is_wp_error( $policy ) ) { return $policy; }
+				$resolved_field[ FieldCollectionPolicy::KEY ] = $policy;
+			}
+			$out[] = $resolved_field;
 		}
 		usort( $out, static function ( $a, $b ) use ( $catalog ) {
 			$ao = isset( $catalog[ $a['key'] ]['order'] ) ? absint( $catalog[ $a['key'] ]['order'] ) : PHP_INT_MAX;

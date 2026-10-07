@@ -1,5 +1,7 @@
 <?php
 /** Source-only validator for deterministic renderer-candidate freeze directories. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 require_once dirname( __DIR__ ) . '/bootstrap-autoload.php';
 use Certloom\Application\Rendering\CanonicalJson;
 use Certloom\Application\Rendering\RendererCandidateManifest;

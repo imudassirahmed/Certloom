@@ -1,4 +1,6 @@
 <?php
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 error_reporting( E_ALL );
 $root = dirname( __DIR__ );
 $tmp  = sys_get_temp_dir() . '/certloom-bak02b-' . bin2hex( random_bytes( 4 ) );
@@ -16,6 +18,8 @@ class Ecapla_CertVerify_Backup {
  public static function create_export_file(){ $GLOBALS['builder_calls']++; if('fail'===$GLOBALS['builder_mode'])return new WP_Error('synthetic_builder_failure','builder failed'); $p=tempnam(sys_get_temp_dir(),'bak02b-');$bytes="{\"type\":\"manifest\"}\n{\"type\":\"integrity\"}\n";file_put_contents($p,$bytes);return ['path'=>$p,'bytes'=>strlen($bytes),'records'=>3,'file_sha256'=>hash('sha256',$bytes),'content_sha256'=>str_repeat('a',64),'generated_at'=>'2026-08-29T00:00:00Z','format_version'=>4,'plugin_version'=>'1.6.88','schema_version'=>'1.4.7','source_authority'=>'current_registry']; }
  public static function analyze_file($p){$GLOBALS['analyze_calls']++;return is_file($p)?'tok'.$GLOBALS['analyze_calls']:new WP_Error('missing','missing');} public static function get_preview($t){return ['records'=>3,'current_records'=>5,'conflicts'=>1,'current_only'=>2];} public static function delete_session($t){$GLOBALS['deleted_sessions']++;return true;}
 }
+require_once __DIR__ . '/bootstrap-option-command-double.php';
+require_once __DIR__ . '/bootstrap-autoload.php';
 require $root.'/src/Infrastructure/Backup/LocalBackupStore.php';require $root.'/src/Infrastructure/Backup/ScheduledBackup.php';require $root.'/src/Infrastructure/Backup/RestoreTest.php';require $root.'/src/Infrastructure/Backup/SafetySnapshot.php';
 use Certloom\Infrastructure\Backup\LocalBackupStore; use Certloom\Infrastructure\Backup\ScheduledBackup; use Certloom\Infrastructure\Backup\RestoreTest; use Certloom\Infrastructure\Backup\SafetySnapshot;
 $c=0;$f=0;function ck($v,$m){global $c,$f;$c++;if($v)echo"PASS  $m\n";else{$f++;echo"FAIL  $m\n";}}

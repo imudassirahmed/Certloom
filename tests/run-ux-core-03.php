@@ -6,6 +6,8 @@
  * than card collections; ordinary forms share one restrained control rhythm;
  * required fields fail visibly with useful examples; mobile targets stay >=44px.
  */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $root = dirname( __DIR__ );
 $pass = 0; $fail = 0;
 function ux3( $ok, $label ) { global $pass, $fail; if ( $ok ) { $pass++; echo "PASS  {$label}\n"; } else { $fail++; echo "FAIL  {$label}\n"; } }

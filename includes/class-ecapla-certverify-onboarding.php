@@ -6,11 +6,26 @@ if ( ! defined( 'ABSPATH' ) ) {
 /** Premium, non-blocking first-run setup and WIZ-01 workflow state. */
 class Ecapla_CertVerify_Onboarding {
 	const OPTION_KEY = 'certverify_onboarding';
-	const VERSION    = 7;
+	const VERSION    = 9;
+	/** Saved intent is validated without applying a user's workspace or creating records. */
+	public static function validate_recovery_value( $value ) {
+		$defaults = self::defaults();
+		if ( ! is_array( $value ) || array_diff( array_keys( $value ), array_keys( $defaults ) ) || ( isset( $value['version'] ) && self::VERSION !== $value['version'] ) ) { return new WP_Error( 'certloom_whole_setup_invalid', __( 'Review and save the current setup before restoring its progress.', 'certloom' ) ); }
+		foreach ( $value as $key => $item ) {
+			if ( gettype( $item ) !== gettype( $defaults[$key] ) ) { return new WP_Error( 'certloom_whole_setup_invalid', __( 'Saved setup progress contains unsupported values.', 'certloom' ) ); }
+			if ( is_string( $item ) && ( strlen( $item ) > 200 || sanitize_text_field( $item ) !== $item ) ) { return new WP_Error( 'certloom_whole_setup_invalid', __( 'Saved setup text needs review.', 'certloom' ) ); }
+			if ( is_int( $item ) && ( $item < 0 || ( 'wizard_rerun_count' === $key && $item > 999 ) ) ) { return new WP_Error( 'certloom_whole_setup_invalid', __( 'Saved setup references need review.', 'certloom' ) ); }
+			if ( in_array( $key, array( 'completed_at', 'wizard_started_at', 'wizard_last_seen_at', 'wizard_completed_at' ), true ) && '' !== $item && ! \Certloom\Application\Restore\WholeStateOptionRows::date( $item, 'Y-m-d H:i:s' ) ) { return new WP_Error( 'certloom_whole_setup_invalid', __( 'Saved setup dates need review.', 'certloom' ) ); }
+			if ( 'wizard_step' === $key && ! in_array( $item, self::wizard_steps(), true ) ) { return new WP_Error( 'certloom_whole_setup_invalid', __( 'Saved setup step needs review.', 'certloom' ) ); }
+			if ( in_array( $key, array( 'wizard_completed_steps', 'wizard_skipped_steps' ), true ) && ( array_values( $item ) !== $item || count( array_unique( $item, SORT_REGULAR ) ) !== count( $item ) || array_diff( $item, self::wizard_steps() ) ) ) { return new WP_Error( 'certloom_whole_setup_invalid', __( 'Saved setup steps need review.', 'certloom' ) ); }
+			if ( 'wizard_draft' === $key ) { try { $draft = self::sanitize_wizard_draft( $item ); } catch ( Throwable $error ) { return new WP_Error( 'certloom_whole_setup_invalid', __( 'Saved setup choices need review.', 'certloom' ) ); } if ( ! \Certloom\Application\Restore\WholeStateOptionRows::same( $item, $draft ) ) { return new WP_Error( 'certloom_whole_setup_invalid', __( 'Saved setup choices need review.', 'certloom' ) ); } }
+		}
+		return $value;
+	}
 
 	/** @return array<int,string> */
 	public static function wizard_steps() {
-		return array( 'welcome', 'profile', 'organization', 'fields', 'appearance', 'context', 'issue', 'finish' );
+		return array( 'welcome', 'profile', 'organization', 'context', 'fields', 'appearance', 'email', 'configuration', 'issue', 'finish' );
 	}
 
 	/** @return array<string,string> */
@@ -19,10 +34,12 @@ class Ecapla_CertVerify_Onboarding {
 			'welcome'      => __( 'Welcome', 'certloom' ),
 			'profile'      => __( 'Profile', 'certloom' ),
 			'organization' => __( 'Organization', 'certloom' ),
-			'fields'       => __( 'Credential fields', 'certloom' ),
-			'appearance'   => __( 'Appearance', 'certloom' ),
-			'context'      => __( 'Context & data', 'certloom' ),
-			'issue'        => __( 'First credential', 'certloom' ),
+			'context'      => __( 'Program', 'certloom' ),
+			'fields'       => __( 'Fields', 'certloom' ),
+			'appearance'   => __( 'Certificate', 'certloom' ),
+			'email'        => __( 'Email', 'certloom' ),
+			'configuration'=> __( 'Review', 'certloom' ),
+			'issue'        => __( 'Issue', 'certloom' ),
 			'finish'       => __( 'Finish', 'certloom' ),
 		);
 	}
@@ -74,7 +91,15 @@ class Ecapla_CertVerify_Onboarding {
 			// profile/appearance/first-credential Wizard contract.
 			$state['wizard_completed_at'] = '';
 		}
+		$state = self::resume_program_first( $state );
 		$state['version']                 = self::VERSION;
+		return $state;
+	}
+
+	/** Resume unfinished older drafts at the new prerequisite without erasing choices. */
+	private static function resume_program_first( array $state ) {
+		if ( ! empty( $state['wizard_draft']['quick_setup'] ) || '' !== (string) ( $state['wizard_completed_at'] ?? '' ) || ! in_array( $state['wizard_step'], array( 'fields', 'appearance', 'email', 'configuration', 'issue' ), true ) ) { return $state; }
+		if ( ! in_array( 'context', $state['wizard_completed_steps'], true ) && ! in_array( 'context', $state['wizard_skipped_steps'], true ) ) { $state['wizard_step'] = 'context'; }
 		return $state;
 	}
 
@@ -200,7 +225,7 @@ class Ecapla_CertVerify_Onboarding {
 	 *
 	 * @return array<string,mixed>|WP_Error
 	 */
-	public static function autosave_wizard_draft( $step, array $draft_patch, $client_revision = 0 ) {
+	public static function autosave_wizard_draft( $step, array $draft_patch, $client_revision = 0, array $workspace_context = array() ) {
 		$allowed = Ecapla_CertVerify_Backup::assert_writes_allowed();
 		if ( is_wp_error( $allowed ) ) { return $allowed; }
 		$step = self::normalize_step( sanitize_key( (string) $step ) );
@@ -210,12 +235,14 @@ class Ecapla_CertVerify_Onboarding {
 		if ( '' === $state['wizard_started_at'] ) { $state['wizard_started_at'] = $now; }
 		$state['wizard_last_seen_at'] = $now;
 		$state['wizard_step'] = $step;
-		$saved = self::save_user_draft_workspace( $state, max( 0, (int) $client_revision ) );
+		$saved = self::save_user_draft_workspace( $state, max( 0, (int) $client_revision ), $workspace_context );
 		if ( is_wp_error( $saved ) ) { return $saved; }
 		return array(
 			'run_id'     => (string) ( $saved['run_id'] ?? '' ),
-			'step'       => $step,
+			'step'       => (string) ( $saved['step'] ?? $step ),
 			'updated_at' => (string) ( $saved['updated_at'] ?? $now ),
+			'client_revision' => (int) ( $saved['client_revision'] ?? 0 ),
+			'revision' => (int) ( $saved['revision'] ?? 0 ),
 		);
 	}
 
@@ -241,7 +268,8 @@ class Ecapla_CertVerify_Onboarding {
 	public static function restart_wizard() {
 		$allowed = Ecapla_CertVerify_Backup::assert_writes_allowed();
 		if ( is_wp_error( $allowed ) ) { return $allowed; }
-		\Certloom\Application\Admin\DraftWorkspace::clear( 'setup' );
+		$cleared = \Certloom\Application\Admin\DraftWorkspace::clear( 'setup' );
+		if ( is_wp_error( $cleared ) ) { return $cleared; }
 		$state = self::get_state();
 		$state['wizard_step'] = 'welcome';
 		$state['wizard_completed_steps'] = array();
@@ -411,7 +439,7 @@ class Ecapla_CertVerify_Onboarding {
 		if ( $state === $stored ) { return true; }
 		$generation = Ecapla_CertVerify_Backup::reserve_mutation_generation();
 		if ( is_wp_error( $generation ) ) { return $generation; }
-		$saved = update_option( self::OPTION_KEY, $state, false );
+		$saved = ( true === ( new \Certloom\Infrastructure\Data\DurableOptionMutation() )->set( self::OPTION_KEY, $state ) );
 		if ( ! $saved && $state !== get_option( self::OPTION_KEY, array() ) ) {
 			return new WP_Error( 'ecapla_certverify_onboarding_save_failed', __( 'Certloom could not save the setup progress.', 'certloom' ) );
 		}
@@ -448,7 +476,7 @@ class Ecapla_CertVerify_Onboarding {
 	}
 
 	/** @return array<string,mixed>|WP_Error */
-	private static function save_user_draft_workspace( array $state, $client_revision = 0 ) {
+	private static function save_user_draft_workspace( array $state, $client_revision = 0, array $workspace_context = array() ) {
 		if ( ! function_exists( 'get_current_user_id' ) || absint( get_current_user_id() ) < 1 ) { return array(); }
 		$payload = array(
 			'wizard_draft'           => self::sanitize_wizard_draft( is_array( $state['wizard_draft'] ?? null ) ? $state['wizard_draft'] : array() ),
@@ -457,7 +485,7 @@ class Ecapla_CertVerify_Onboarding {
 			'wizard_started_at'      => sanitize_text_field( (string) ( $state['wizard_started_at'] ?? '' ) ),
 		);
 		$status = '' !== trim( (string) ( $state['wizard_completed_at'] ?? '' ) ) ? 'complete' : 'active';
-		return \Certloom\Application\Admin\DraftWorkspace::save( 'setup', $payload, array( 'step' => self::normalize_step( $state['wizard_step'] ?? 'welcome' ), 'status' => $status, 'client_revision' => max( 0, (int) $client_revision ) ) );
+		return \Certloom\Application\Admin\DraftWorkspace::save( 'setup', $payload, array_merge( array( 'step' => self::normalize_step( $state['wizard_step'] ?? 'welcome' ), 'status' => $status, 'client_revision' => max( 0, (int) $client_revision ) ), $workspace_context ) );
 	}
 
 	private static function normalize_step( $step ) {
@@ -510,6 +538,9 @@ class Ecapla_CertVerify_Onboarding {
 				$signer_email = trim( (string) ( $draft['setup_new_signer_email'] ?? '' ) );
 				if ( '' !== $signer_email && function_exists( 'is_email' ) && ! is_email( $signer_email ) ) { return new WP_Error( 'certloom_setup_signer_email_invalid', __( 'Enter a valid email address for the new signer or leave it blank.', 'certloom' ) ); }
 				return true;
+			case 'email':
+				if ( 'selected' === ( $draft['setup_email_mode'] ?? 'inherit' ) && empty( $draft['setup_email_design_id'] ) ) { return new WP_Error( 'certloom_setup_email_design_required', __( 'Choose an email design or keep the current email design.', 'certloom' ) ); }
+				return true;
 			case 'issue':
 				if ( '' === trim( (string) ( $draft['first_recipient_name'] ?? '' ) ) ) { return new WP_Error( 'certloom_setup_recipient_required', __( 'Enter the recipient name to continue.', 'certloom' ) ); }
 				$has_program = ! empty( $draft['setup_program_id'] ) || '' !== trim( (string) ( $draft['setup_new_program_title'] ?? '' ) );
@@ -550,7 +581,16 @@ class Ecapla_CertVerify_Onboarding {
 	/** @return array<string,mixed> */
 	private static function sanitize_wizard_draft( array $draft ) {
 		$out = array();
+		if ( array_key_exists( 'setup_field_plan', $draft ) ) {
+			$intent = ( new \Certloom\Application\Setup\WizardFieldSetup() )->normalize_intent( $draft['setup_field_plan'] );
+			// Retain an invalid marker so a corrupt draft cannot become a permissive legacy setup.
+			$out['setup_field_plan'] = is_wp_error( $intent ) ? array( 'invalid' => true ) : $intent;
+		}
 		if ( array_key_exists( 'quick_setup', $draft ) ) { $out['quick_setup'] = ! empty( $draft['quick_setup'] ) ? 1 : 0; }
+		if ( array_key_exists( 'setup_email_mode', $draft ) ) { $out['setup_email_mode'] = 'selected' === $draft['setup_email_mode'] ? 'selected' : 'inherit'; }
+		if ( array_key_exists( 'setup_email_design_id', $draft ) ) { $out['setup_email_design_id'] = self::limit_text( sanitize_key( (string) $draft['setup_email_design_id'] ), 100 ); }
+		if ( array_key_exists( 'setup_design_default', $draft ) ) { $out['setup_design_default'] = ! empty( $draft['setup_design_default'] ) ? 1 : 0; }
+		if ( array_key_exists( 'setup_configuration_applied', $draft ) ) { $out['setup_configuration_applied'] = ! empty( $draft['setup_configuration_applied'] ) ? 1 : 0; }
 		if ( array_key_exists( 'usage_profile', $draft ) ) {
 			$out['usage_profile'] = ( new \Certloom\Application\Setup\PurposePresetEngine() )->normalize_profile( $draft['usage_profile'] );
 		}

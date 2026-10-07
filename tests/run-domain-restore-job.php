@@ -1,10 +1,14 @@
 <?php
 /** Pure-ish tests for explicitly-confirmed resumable Replace restore job handling. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
+require_once __DIR__ . '/support/option-database.php';
 define('ABSPATH',__DIR__.'/fake-wp/');
 if(!class_exists('WP_Error')){class WP_Error{private $c,$m;function __construct($c='',$m=''){ $this->c=$c;$this->m=$m;}function get_error_code(){return $this->c;}function get_error_message(){return $this->m;}}}
 function is_wp_error($v){return $v instanceof WP_Error;}function __($t){return $t;}function absint($v){return abs((int)$v);}function sanitize_key($k){return strtolower(preg_replace('/[^a-z0-9_\-]/','',(string)$k));}function wp_json_encode($v,$flags=0){return json_encode($v,$flags);}
 $GLOBALS['rj_options']=array('certloom_domain_data_generation'=>'g1','certverify_fields'=>array(),'certverify_retired_fields'=>array(),'certverify_settings'=>array('verification_page'=>10));
 function get_option($k,$d=false){return array_key_exists($k,$GLOBALS['rj_options'])?$GLOBALS['rj_options'][$k]:$d;}
+$wpdb = new CertloomOptionDatabase( $GLOBALS['rj_options'] );
 require_once __DIR__.'/bootstrap-autoload.php';
 use Certloom\Application\Contract\DomainRestoreStagingInterface;use Certloom\Application\Restore\DomainRestoreJobHandler;use Certloom\Application\Job\JobSliceResult;use Certloom\Infrastructure\Backup\DomainBackupRepository;
 final class RJRestore implements DomainRestoreStagingInterface{public $started=0,$continued=0,$committed=0,$receipt=null;public function start($p,$o,$m=500000){$this->started++;return array('complete'=>false,'records'=>0,'counts'=>array(),'path'=>$p);}public function continue_stage(array $s,$l=200){$this->continued++;$s['records']=10;$s['counts']=array('recipients'=>10);$s['complete']=$this->continued>1;return $s;}public function commit_replace(array $s){$this->committed++;return true;}public function completion_receipt($owner_token){return $this->receipt;}}

@@ -18,6 +18,12 @@
   --cl-blue-wash: #EAF0FE;
   --cl-blue-bright: #1369FC;
 
+  /* Verification Studio preset surfaces; Custom uses bounded customer colors. */
+  --cl-studio-campus: var(--cl-blue-wash);
+  --cl-studio-celebration-accent: var(--cl-expired);
+  --cl-studio-celebration-surface: var(--cl-expired-wash);
+  --cl-studio-celebration-rule: var(--cl-rule);
+
   /* Graphic-only brand colours sampled from the supplied Certloom logo.
      These are the exact shield/check hues used for artwork and data-viz. */
   --cl-brand-blue-dark: #0048EF;

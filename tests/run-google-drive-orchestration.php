@@ -1,4 +1,7 @@
 <?php
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
+require_once __DIR__ . '/bootstrap-option-command-double.php';
 error_reporting(E_ALL);
 $root=dirname(__DIR__);$tmp=sys_get_temp_dir().'/certloom-bak03-orch-'.bin2hex(random_bytes(4));@mkdir($tmp.'/webroot/wp-content',0777,true);define('ABSPATH',$tmp.'/webroot/');define('WP_CONTENT_DIR',$tmp.'/webroot/wp-content');define('MINUTE_IN_SECONDS',60);
 class WP_Error{private $c,$m;function __construct($c='',$m=''){$this->c=$c;$this->m=$m;}function get_error_code(){return $this->c;}function get_error_message(){return $this->m;}}

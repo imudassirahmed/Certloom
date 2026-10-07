@@ -50,6 +50,21 @@
 		var title = q('[data-certloom-library-dialog-title]', dialog);
 		var close = q('[data-certloom-library-dialog-close]', dialog);
 		var opener = null;
+		function fitPreview() {
+			var stage = q('[data-certloom-library-dialog-stage]', dialog);
+			var clone = stage && q('.certloom-template-preview-scroll', stage);
+			if (!dialog.open || !clone || !body) { return; }
+			var width = parseFloat(clone.style.width), height = parseFloat(clone.style.height);
+			var style = window.getComputedStyle(body);
+			var availableWidth = body.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+			var head = q('.certloom-template-library-dialog-head', dialog);
+			var foot = q('p.description', dialog);
+			var availableHeight = window.innerHeight - 40 - (head ? head.offsetHeight : 0) - (foot ? foot.offsetHeight : 0) - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom);
+			var scale = Math.min(860 / width, 600 / height, 1.65, Math.max(1, availableWidth) / width, Math.max(80, availableHeight) / height);
+			stage.style.width = String(width * scale) + 'px';
+			stage.style.height = String(height * scale) + 'px';
+			clone.style.setProperty('--certloom-dialog-scale', String(scale));
+		}
 		qa('[data-certloom-library-preview]').forEach(function (button) {
 			button.addEventListener('click', function () {
 				var card = button.closest('.certloom-template-library-card');
@@ -79,6 +94,8 @@
 				if (title) { title.textContent = source.getAttribute('data-template-title') || 'Template Preview'; }
 				opener = button;
 				dialog.showModal();
+				fitPreview();
+				if (window.CertloomTextFit) { window.CertloomTextFit.refresh(dialog); }
 				if (close) { close.focus(); }
 			});
 		});
@@ -86,6 +103,7 @@
 			if (dialog.open) { dialog.close(); }
 		}
 		if (close) { close.addEventListener('click', closeDialog); }
+		window.addEventListener('resize', fitPreview);
 		dialog.addEventListener('click', function (event) { if (event.target === dialog) { closeDialog(); } });
 		dialog.addEventListener('close', function () {
 			if (body) { body.replaceChildren(); }

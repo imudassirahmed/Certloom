@@ -1,5 +1,7 @@
 <?php
 /** FLD-02 mutable Program/Batch configuration dependency guard regression. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define( 'ABSPATH', __DIR__ . '/' );
 $root = dirname( __DIR__ );
 $pass = 0; $fail = 0;

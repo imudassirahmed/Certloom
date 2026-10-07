@@ -1,5 +1,7 @@
 <?php
 /** UX-CORE-05 WooCommerce source contract. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define( 'ABSPATH', __DIR__ . '/fake-wp/' );
 define( 'CERTLOOM_DOMAIN_WRITE_PATHS_READY', false );
 define( 'CERTLOOM_DOMAIN_ADMIN_PREVIEW', false );
@@ -60,7 +62,7 @@ wo(false!==strpos($bridge,"const HOOK               = 'woocommerce_order_status_
 wo(false===strpos($bridge,'get_billing_email')&&false===strpos($bridge,'get_billing_first_name')&&false===strpos($bridge,'get_billing_last_name'),'runtime never guesses Recipient ownership from billing identity');
 wo(false!==strpos($bridge,'LinkedRecipientResolver')&&false!==strpos($bridge,'IntegrationIssuanceCoordinator'),'WooCommerce uses explicit WP-user Recipient resolver and canonical issuance coordinator');
 wo(false!==strpos($admin,'CAP_MANAGE_INTEGRATIONS')&&false!==strpos($admin,'check_admin_referer'),'WooCommerce mapping mutations are capability and nonce protected');
-wo(false!==strpos($admin,'IntegrationMappingTargetGuard'),'WooCommerce mappings validate Program/Batch field and hierarchy compatibility through the shared target guard');
+wo(false!==strpos($admin,'WooCommerceCompletionMappingCommand')&&false!==strpos(file_get_contents($root.'/src/Infrastructure/Integration/WooCommerceCompletionMappingCommand.php'),'IntegrationMappingTargetGuard'),'WooCommerce mappings validate Program/Batch field and hierarchy compatibility through the shared target guard');
 wo(false!==strpos($view,"'Commerce source'")&&false!==strpos($view,"'WooCommerce product'")&&false!==strpos($view,"'Issue automatically after completed order'"),'WooCommerce has a human source → Program → design configuration flow');
 wo(false!==strpos($plugin,'WooCommerceBridge::register()')&&false!==strpos($plugin,'WooCommerceIntegrationAdmin()'),'plugin boot registers WooCommerce runtime and admin boundaries');
 wo(false!==strpos($uninstall,"'certloom_woocommerce_mappings'")&&false!==strpos($uninstall,"'certloom_woocommerce_last_result'"),'uninstall removes WooCommerce mappings and operational evidence');

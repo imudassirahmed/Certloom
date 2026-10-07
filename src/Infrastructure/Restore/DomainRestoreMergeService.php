@@ -9,6 +9,8 @@ use Certloom\Application\Restore\DomainRestoreConfigurationMerger;
 use Certloom\Application\Contract\TransactionInterface;
 use Certloom\Infrastructure\Backup\DomainBackupRepository;
 use Certloom\Infrastructure\Database\Transaction;
+use Certloom\Infrastructure\Data\DomainMaintenanceLock;
+use Certloom\Infrastructure\Data\MaintenanceMutex;
 
 /**
  * Conservative, resumable Merge restore into a second private target graph.
@@ -234,6 +236,7 @@ final class DomainRestoreMergeService {
 	/** @return array<string,mixed>|\WP_Error */
 	private function merge_row( array $workspace, $entity, array $row ) {
 		global $wpdb;
+		if ( 'recipients' === $entity && ! empty( $row['wp_user_id'] ) ) { return \Certloom\Application\Restore\DomainRestoreRowValidator::unverified_account_links(); }
 		$owner     = (string) $workspace['owner_token'];
 		$source_id = absint( $row['id'] ?? 0 );
 		$hash      = $this->row_hash( $row );
@@ -255,8 +258,15 @@ final class DomainRestoreMergeService {
 		 * Certloom's checked transaction boundary rather than issuing unchecked SQL
 		 * transaction-control statements locally.
 		 */
-		return $this->transaction->run( function () use ( $workspace, $entity, $row, $hash ) {
-			return $this->merge_row_in_transaction( $workspace, $entity, $row, $hash );
+		return MaintenanceMutex::run( function () use ( $workspace, $entity, $row, $hash ) {
+			if ( ! ( new DomainMaintenanceLock() )->owned_active( $workspace['owner_token'] ?? '' ) ) {
+				return new \WP_Error( 'certloom_domain_maintenance_owner_mismatch', __( 'This worker no longer owns the Certloom maintenance lock.', 'certloom' ) );
+			}
+			return DomainMaintenanceLock::run_internal( function () use ( $workspace, $entity, $row, $hash ) {
+				return $this->transaction->run( function () use ( $workspace, $entity, $row, $hash ) {
+					return $this->merge_row_in_transaction( $workspace, $entity, $row, $hash );
+				} );
+			} );
 		} );
 	}
 
@@ -458,9 +468,102 @@ final class DomainRestoreMergeService {
 					$row['version_id'] = absint( $version['target_id'] );
 				}
 				return $this->insert_and_map( $owner, $entity, $source_id, $hash, $target_table, $row );
+
+			case 'program_registrations':
+			case 'field_submissions':
+			case 'issuance_requests':
+			case 'issuance_request_events':
+				return $this->merge_workflow_row( $workspace, $entity, $source_id, $hash, $target_table, $row );
 		}
 
 		return new \WP_Error( 'certloom_domain_restore_merge_entity_invalid', __( 'Merge restore encountered an unsupported entity type.', 'certloom' ) );
+	}
+
+	/** Restore workflow identities conservatively; current local decisions always win. */
+	private function merge_workflow_row( array $workspace, $entity, $source_id, $hash, $table, array $row ) {
+		$owner = (string) $workspace['owner_token'];
+		$source_request_id = $row['request_id'] ?? null;
+		$row = \Certloom\Application\Restore\RecipientWorkflowRestorePolicy::prepare( $entity, $row );
+		foreach ( array( 'recipient_id' => 'recipients', 'program_id' => 'programs', 'batch_id' => 'batches', 'registration_id' => 'program_registrations', 'series_id' => 'credential_series', 'request_id' => 'issuance_requests' ) as $column => $parent ) {
+			if ( ! array_key_exists( $column, $row ) ) { continue; }
+			$row[ $column ] = $this->mapped_nullable( $owner, $parent, $row[ $column ] );
+			if ( is_wp_error( $row[ $column ] ) ) { return $row[ $column ]; }
+		}
+		if ( 'field_submissions' === $entity ) {
+			$row['scope_id'] = 'recipient' === $row['scope_kind'] ? $row['recipient_id'] : $this->mapped_required( $owner, 'program_registrations', $row['scope_id'] );
+			if ( is_wp_error( $row['scope_id'] ) ) { return $row['scope_id']; }
+			$row['scope_key'] = \Certloom\Domain\Recipient\FieldSubmissionScope::key( $row['recipient_id'], $row['scope_kind'], $row['scope_id'], $row['field_key'] );
+		}
+		if ( 'program_registrations' === $entity ) {
+			$existing = $this->lookup_composite_id( $table, array( 'recipient_id' => $row['recipient_id'], 'program_id' => $row['program_id'], 'instance_key' => $row['instance_key'] ) );
+			if ( is_wp_error( $existing ) ) { return $existing; }
+			if ( $existing ) {
+				$current = $this->lookup_row( $table, 'id', $existing );
+				if ( is_wp_error( $current ) ) { return $current; }
+				if ( ! is_array( $current ) || (string) $current['batch_id'] !== (string) $row['batch_id'] || (string) $current['source_type'] !== (string) $row['source_type'] || (string) $current['source_ref'] !== (string) $row['source_ref'] ) { return $this->workflow_conflict(); }
+			}
+		} else {
+			$existing_row = $this->lookup_row( $table, 'public_ref', $row['public_ref'] );
+			if ( is_wp_error( $existing_row ) ) { return $existing_row; }
+			$existing = is_array( $existing_row ) ? absint( $existing_row['id'] ) : 0;
+			if ( $existing ) {
+				foreach ( array( 'recipient_id', 'program_id', 'batch_id', 'registration_id', 'request_id', 'intake_key', 'payload_sha256', 'field_key', 'scope_kind', 'scope_id' ) as $column ) {
+					if ( isset( $row[ $column ] ) && (string) $row[ $column ] !== (string) $existing_row[ $column ] ) { return $this->workflow_conflict(); }
+				}
+			}
+		}
+		if ( 'issuance_requests' === $entity ) {
+			$intake = $this->lookup_row( $table, 'intake_key', $row['intake_key'] );
+			if ( is_wp_error( $intake ) ) { return $intake; }
+			if ( is_array( $intake ) ) {
+				if ( $existing && $existing !== (int) $intake['id'] ) { return $this->workflow_conflict(); }
+				if ( ! hash_equals( $row['payload_sha256'], (string) $intake['payload_sha256'] ) || (int) $row['recipient_id'] !== (int) $intake['recipient_id'] || (int) $row['program_id'] !== (int) $intake['program_id'] ) { return $this->workflow_conflict(); }
+				$existing = (int) $intake['id'];
+			}
+		}
+		if ( $existing ) { return $this->record_map( $owner, $entity, $source_id, $hash, $existing, 'existing' ); }
+		if ( 'field_submissions' === $entity ) {
+			if ( null !== $row['open_slot'] ) {
+				$open = $this->lookup_composite_id( $table, array( 'scope_key' => $row['scope_key'], 'open_slot' => 1 ) );
+				if ( is_wp_error( $open ) ) { return $open; }
+				if ( $open ) { $row['status'] = 'superseded'; $row['open_slot'] = null; }
+			}
+		}
+		if ( 'issuance_requests' === $entity && null !== $row['version_id'] ) {
+			$version = $this->mapped_request_version( $workspace, $row['version_id'], $row['series_id'] );
+			if ( is_wp_error( $version ) ) { return $version; }
+			$row['version_id'] = $version;
+		}
+		if ( 'issuance_request_events' === $entity ) {
+			$request = $this->maps->get( $owner, 'issuance_requests', $source_request_id );
+			if ( is_wp_error( $request ) ) { return $request; }
+			if ( is_array( $request ) && 'existing' === $request['action'] ) {
+				return $this->record_map( $owner, $entity, (int) $row['id'], $hash, null, 'skipped', array( 'reason' => 'existing_request_history_preserved' ) );
+			}
+		}
+		return $this->insert_and_map( $owner, $entity, (int) $row['id'], $hash, $table, $row );
+	}
+
+	private function mapped_request_version( array $workspace, $source_id, $series_id ) {
+		$mapped = $this->maps->get( $workspace['owner_token'], 'credential_versions', $source_id );
+		if ( is_wp_error( $mapped ) ) { return $mapped; }
+		if ( ! empty( $mapped['target_id'] ) ) { return (int) $mapped['target_id']; }
+		$source_table = $this->workspace->workspace_table( $workspace, 'stage', 'credential_versions' );
+		$target_table = $this->workspace->workspace_table( $workspace, 'merge', 'credential_versions' );
+		if ( is_wp_error( $source_table ) || is_wp_error( $target_table ) ) { return is_wp_error( $source_table ) ? $source_table : $target_table; }
+		$source = $this->lookup_row( $source_table, 'id', $source_id );
+		if ( is_wp_error( $source ) ) { return $source; }
+		if ( ! is_array( $source ) ) { return $this->workflow_conflict(); }
+		$id = $this->lookup_composite_id( $target_table, array( 'series_id' => $series_id, 'version_number' => $source['version_number'] ) );
+		if ( is_wp_error( $id ) ) { return $id; }
+		$target = $id ? $this->lookup_row( $target_table, 'id', $id ) : null;
+		if ( is_wp_error( $target ) ) { return $target; }
+		if ( ! is_array( $target ) || (string) $source['display_number'] !== (string) $target['display_number'] || (string) $source['snapshot_json'] !== (string) $target['snapshot_json'] || (string) $source['source_idempotency_key'] !== (string) $target['source_idempotency_key'] ) { return $this->workflow_conflict(); }
+		return $id;
+	}
+
+	private function workflow_conflict() {
+		return new \WP_Error( 'certloom_domain_restore_merge_workflow_conflict', __( 'Current recipient workflow identities conflict with this backup. No workflow decisions were overwritten.', 'certloom' ) );
 	}
 
 	/** @return array<string,mixed>|\WP_Error */
@@ -530,7 +633,7 @@ final class DomainRestoreMergeService {
 	/** @return int|\WP_Error */
 	private function lookup_composite_id( $table, array $pairs ) {
 		global $wpdb;
-		$allowed = array( 'batch_id', 'recipient_id', 'signer_id', 'scope_type', 'scope_id', 'role_type' );
+		$allowed = array( 'batch_id', 'recipient_id', 'signer_id', 'scope_type', 'scope_id', 'role_type', 'program_id', 'instance_key', 'scope_key', 'open_slot', 'series_id', 'version_number' );
 		$where = array(); $args = array( $table );
 		foreach ( $pairs as $column => $value ) {
 			if ( ! in_array( $column, $allowed, true ) ) { return new \WP_Error( 'certloom_domain_restore_merge_lookup_invalid', __( 'Certloom refused an unsafe Merge restore identity lookup.', 'certloom' ) ); }

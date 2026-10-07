@@ -1,5 +1,7 @@
 <?php
 /** UX-C03 — restore continuation must never be an invisible/queued dead end. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $root=dirname(__DIR__);$view=file_get_contents($root.'/admin/views/backup-progress.php');$js=file_get_contents($root.'/admin/assets/admin.js');$css=file_get_contents($root.'/admin/assets/admin.css');$pass=0;$fail=0;
 function rcx($ok,$label){global $pass,$fail;if($ok){$pass++;echo "PASS  $label\n";}else{$fail++;echo "FAIL  $label\n";}}
 rcx(false!==strpos($view,'data-certverify-continue-button')&&false!==strpos($view,"esc_html_e( 'Continue restore', 'certloom' )"),'restore progress always exposes a manual Continue restore action');

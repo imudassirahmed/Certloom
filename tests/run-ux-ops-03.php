@@ -1,5 +1,7 @@
 <?php
 /** 1.6.98 UX-OPS-03 admin coherence and non-destructive workflow contract. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define( 'ABSPATH', __DIR__ . '/' );
 $root = dirname( __DIR__ );
 $pass = 0; $fail = 0;

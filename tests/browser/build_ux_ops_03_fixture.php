@@ -1,5 +1,7 @@
 <?php
 /** Browser fixture for UX-OPS-03 admin coherence interactions. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $css = file_get_contents( dirname( __DIR__, 2 ) . '/assets/css/certloom-tokens.css' ) . "\n" . file_get_contents( dirname( __DIR__, 2 ) . '/admin/assets/admin.css' );
 $rules_css = file_get_contents( dirname( __DIR__, 2 ) . '/admin/assets/design-rules.css' );
 $js  = file_get_contents( dirname( __DIR__, 2 ) . '/admin/assets/admin.js' );

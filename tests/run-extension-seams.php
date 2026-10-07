@@ -1,5 +1,7 @@
 <?php
 /** Audit regression: useful core extension seams remain validated and post-commit. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define( 'ABSPATH', __DIR__ . '/' );
 $fail=0;$checks=0; function es($ok,$label){global$fail,$checks;$checks++;echo($ok?'PASS  ':'FAIL  ').$label.PHP_EOL;if(!$ok)$fail++;}
 $registry=file_get_contents(dirname(__DIR__).'/src/Application/Integration/IntegrationAdapterRegistry.php');

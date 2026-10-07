@@ -13,6 +13,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 final class EmailDesignAssignmentRepository {
 	const OPTION = 'certloom_email_design_assignments_v1';
 	const MAX_ASSIGNMENTS = 5000;
+	public function validate_recovery_value( $value ) {
+		return \Certloom\Application\Restore\WholeStateOptionRows::validate_list( $value, self::MAX_ASSIGNMENTS, function ( $row ) { return $this->normalize( $row, false ); }, array( 'scope_type', 'scope_id', 'purpose' ) );
+	}
 
 	/** @return array<int,array<string,mixed>> */
 	public function all() {
@@ -182,8 +185,7 @@ final class EmailDesignAssignmentRepository {
 	/** @return true|\WP_Error */
 	private function persist( array $rows ) {
 		$rows = array_values( $rows );
-		$saved = update_option( self::OPTION, $rows, false );
-		return $saved || $rows === get_option( self::OPTION, array() ) ? true : new \WP_Error( 'certloom_email_assignment_save_failed', __( 'Certloom could not save the email design rule.', 'certloom' ) );
+		return ( new \Certloom\Infrastructure\Data\DurableOptionMutation() )->set( self::OPTION, $rows );
 	}
 
 	private function key( $scope, $id, $purpose ) { return sanitize_key( (string) $purpose ) . '|' . sanitize_key( (string) $scope ) . '|' . absint( $id ); }

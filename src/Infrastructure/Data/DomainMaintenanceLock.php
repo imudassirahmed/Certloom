@@ -39,20 +39,27 @@ final class DomainMaintenanceLock {
 	/** @return true|\WP_Error */
 	public function acquire( $owner_token, $purpose = 'maintenance', $ttl = self::DEFAULT_TTL ) {
 		return MaintenanceMutex::run( function () use ( $owner_token, $purpose, $ttl ) {
-			return $this->acquire_locked( $owner_token, $purpose, $ttl );
+			return DomainWriteFence::exclusive( function () use ( $owner_token, $purpose, $ttl ) {
+				return $this->acquire_locked( $owner_token, $purpose, $ttl );
+			} );
 		} );
 	}
 
 	private function acquire_locked( $owner_token, $purpose = 'maintenance', $ttl = self::DEFAULT_TTL ) {
 		global $wpdb;
+		if ( class_exists( 'Ecapla_CertVerify_Backup', false ) && method_exists( 'Ecapla_CertVerify_Backup', 'is_restore_in_progress' ) && \Ecapla_CertVerify_Backup::is_restore_in_progress() ) {
+			return new \WP_Error( 'certloom_legacy_recovery_required', __( 'The legacy registry restore must finish recovery before another maintenance operation can start.', 'certloom' ) );
+		}
 
 		$owner_token = $this->token( $owner_token );
 		if ( is_wp_error( $owner_token ) ) {
 			return $owner_token;
 		}
 
-		foreach ( array( 'certloom_domain_restore_journal', 'certloom_domain_restore_build' ) as $key ) {
-			$pending = get_option( $key, null );
+		$pending_options = DatabaseOptions::read( array( 'certloom_domain_restore_journal', 'certloom_domain_restore_build', 'certloom_whole_asset_publication', 'certloom_whole_restore_journal' ) );
+		if ( is_wp_error( $pending_options ) ) { return $pending_options; }
+		foreach ( $pending_options as $entry ) {
+			$pending = $entry['exists'] ? $entry['value'] : null;
 			if ( null !== $pending && ( ! is_array( $pending ) || ( $pending['owner_token'] ?? '' ) !== $owner_token ) ) {
 				return new \WP_Error( 'certloom_domain_maintenance_recovery_required', __( 'An interrupted Certloom restore must finish recovery before another maintenance operation can start.', 'certloom' ) );
 			}
@@ -164,6 +171,10 @@ final class DomainMaintenanceLock {
 
 	private function release_locked( $owner_token ) {
 		global $wpdb;
+		$publication = DatabaseOptions::read( array( 'certloom_whole_asset_publication', 'certloom_whole_restore_journal' ) );
+		if ( is_wp_error( $publication ) ) { return $publication; }
+		if ( $publication['certloom_whole_asset_publication']['exists'] ) { return new \WP_Error( 'certloom_whole_asset_recovery_required', __( 'Finish recovery of certificate media before releasing maintenance access.', 'certloom' ) ); }
+		if ( $publication['certloom_whole_restore_journal']['exists'] ) { return new \WP_Error( 'certloom_whole_recovery_required', __( 'Finish complete workspace recovery before releasing maintenance access.', 'certloom' ) ); }
 
 		$owner_token = $this->token( $owner_token );
 		if ( is_wp_error( $owner_token ) ) {
@@ -245,8 +256,8 @@ final class DomainMaintenanceLock {
 		if ( '' !== $stored && ( ! $lock || $lock['expires_at'] > time() ) ) { return true; }
 		// Expiry permits recovery, not user writes against an unresolved swap.
 		$pending = $wpdb->get_var( $wpdb->prepare(
-			'SELECT option_name FROM %i WHERE option_name IN (%s, %s) LIMIT 1',
-			$wpdb->options, 'certloom_domain_restore_journal', 'certloom_domain_restore_build'
+			'SELECT option_name FROM %i WHERE option_name IN (%s, %s, %s, %s) LIMIT 1',
+			$wpdb->options, 'certloom_domain_restore_journal', 'certloom_domain_restore_build', 'certloom_whole_asset_publication', 'certloom_whole_restore_journal'
 		) );
 		return null !== $pending || '' !== (string) $wpdb->last_error;
 	}
@@ -254,6 +265,7 @@ final class DomainMaintenanceLock {
 	/** Read coordination state from MySQL, never a request or persistent option cache. */
 	private function stored_value() {
 		global $wpdb;
+		$wpdb->last_error = '';
 		$value = $wpdb->get_var( $wpdb->prepare( 'SELECT option_value FROM %i WHERE option_name = %s', $wpdb->options, self::OPTION ) );
 		return '' !== (string) $wpdb->last_error
 			? new \WP_Error( 'certloom_domain_maintenance_read_failed', __( 'Certloom could not check database maintenance ownership. Changes remain paused until the database responds.', 'certloom' ) )

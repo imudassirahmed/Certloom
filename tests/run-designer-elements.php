@@ -1,5 +1,7 @@
 <?php
 /** DSN-03 canonical element/content creation architecture and regression gate. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define( 'ABSPATH', __DIR__ . '/' );
 function __($v){return $v;} function is_wp_error($v){return false;} function sanitize_key($v){return strtolower(preg_replace('/[^a-z0-9_\-]/','',(string)$v));} function absint($v){return abs((int)$v);}
 require_once __DIR__ . '/bootstrap-autoload.php';

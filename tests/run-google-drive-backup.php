@@ -1,4 +1,7 @@
 <?php
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
+require_once __DIR__ . '/bootstrap-option-command-double.php';
 error_reporting( E_ALL );
 $root = dirname( __DIR__ );
 $tmp = sys_get_temp_dir() . '/certloom-bak03-' . bin2hex( random_bytes( 4 ) );

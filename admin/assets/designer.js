@@ -598,6 +598,7 @@
 					var code = payload && payload.data ? payload.data.code : '';
 					if ( 'certloom_designer_autosave_conflict' === code ) { autosaveConflict = true; setAutosaveStatus( t( 'autosaveConflict', 'Autosave stopped because this Template changed in another session. Your browser changes were not overwritten; reload only after preserving anything you still need.' ), 'conflict' ); }
 					else if ( 'certloom_designer_autosave_session_conflict' === code ) { autosaveRecoverySessionBlocked = true; setAutosaveStatus( t( 'autosaveSessionPaused', 'Recovery autosave is paused because another Studio session owns the current recovery checkpoint. Draft/Save is still available.' ), 'session' ); }
+					else if ( 'certloom_designer_autosave_busy' === code ) { setAutosaveStatus( t( 'autosaveFailed', 'Recovery autosave is temporarily unavailable. Manual save remains available.' ), 'error' ); window.setTimeout( function () { scheduleAutosave(); }, AUTOSAVE_RETRY_MS ); }
 					else { setAutosaveStatus( t( 'autosaveFailed', 'Recovery autosave is temporarily unavailable. Manual save remains available.' ), 'error' ); }
 				}
 			} ).catch( function () { setAutosaveStatus( t( 'autosaveFailed', 'Recovery autosave is temporarily unavailable. Manual save remains available.' ), 'error' ); window.setTimeout( function () { scheduleAutosave(); }, AUTOSAVE_RETRY_MS ); } ).then( function () {
@@ -1585,6 +1586,13 @@
 				content.style.fontSize = px( Number( textStyle.font_size_pt || 18 ) * 25.4 / 72, zoom ) + 'px'; content.style.letterSpacing = px( Number( textStyle.letter_spacing_pt || 0 ) * 25.4 / 72, zoom ) + 'px';
 				content.style.whiteSpace = 'clip' === textStyle.overflow ? 'pre' : 'pre-wrap'; content.style.overflow = 'hidden';
 			}
+			if (node.classList.contains('is-text') && !node.classList.contains('is-list')) {
+				var textWrapper = document.createElement('span');
+				while (content.firstChild) { textWrapper.appendChild(content.firstChild); }
+				content.appendChild(textWrapper);
+				content.setAttribute('data-certloom-text-overflow', String((element.style || {}).overflow || 'shrink'));
+				content.setAttribute('data-certloom-text-min-px', String(px(5 * 25.4 / 72, zoom)));
+			}
 			node.appendChild( content );
 		}
 		function renderGuides() {
@@ -1623,7 +1631,8 @@
 		function ensureSelectedLayerVisible() {
 			if ( ! layersContainer || ! selectedId ) { return; }
 			var row = layersContainer.querySelector( '[data-certloom-designer-layer-row="' + selectedId + '"]' ); if ( ! row ) { return; }
-			var top = row.offsetTop, bottom = top + row.offsetHeight, viewTop = layersContainer.scrollTop, viewBottom = viewTop + layersContainer.clientHeight;
+			var rowRect = row.getBoundingClientRect(), listRect = layersContainer.getBoundingClientRect();
+			var viewTop = layersContainer.scrollTop, top = viewTop + rowRect.top - listRect.top - layersContainer.clientTop, bottom = top + rowRect.height, viewBottom = viewTop + layersContainer.clientHeight;
 			if ( top < viewTop ) { layersContainer.scrollTop = top; }
 			else if ( bottom > viewBottom ) { layersContainer.scrollTop = Math.max( 0, bottom - layersContainer.clientHeight ); }
 		}
@@ -1684,6 +1693,7 @@
 				if ( isLocked( element ) ) { node.classList.add( 'is-locked' ); }
 				styleContent( node, element ); addHandles( node, element ); pageEl.appendChild( node );
 			}
+			if (window.CertloomTextFit) { window.CertloomTextFit.refresh(pageEl); }
 			renderSafeArea(); renderGuides(); renderSpacingGuides(); renderSelectionToolbar(); renderLayers(); syncControls(); setInspector(); renderStudioRulers(); syncDirty(); showError( '' );
 		}
 		function tableElementGeometryValid( element ) {
@@ -2065,6 +2075,8 @@
 		function isFormControl( target ) { return !! target && ( /^(INPUT|SELECT|TEXTAREA)$/.test( target.tagName ) || ( 'BUTTON' === target.tagName && ! target.hasAttribute( 'data-certloom-designer-element' ) ) ); }
 		function keyboard( event ) {
 			var modifier = event.ctrlKey || event.metaKey; var inside = root.contains( event.target ); var key = String( event.key || '' ); var lower = key.toLowerCase(); var passiveDocumentTarget = event.target === document.body || event.target === document.documentElement; var canvasFocused = event.target === workspace || pageEl.contains( event.target ) || ( passiveDocumentTarget && selectionIds().length > 0 );
+			// The focused Layers region owns navigation keys; they must scroll rather than move artwork.
+			if ( event.target === layersContainer && ! modifier && ! event.altKey && [ 'ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' ', 'Spacebar' ].indexOf( key ) !== -1 ) { return; }
 			if ( 'Escape' === key && contextMenu && ! contextMenu.hidden ) { closeContextMenu(); focusSelectedCanvasElement(); event.preventDefault(); return; }
 			if ( modifier && ! event.altKey && 's' === lower ) {
 				if ( ! inside || isFormControl( event.target ) && ! root.contains( event.target ) ) { return; }

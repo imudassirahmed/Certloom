@@ -1,5 +1,7 @@
 <?php
 /** 1.6.24 renderer candidate + three-format golden-bound artifact-bundle contract regression. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 require_once __DIR__ . '/bootstrap-autoload.php';
 
 use Certloom\Application\Rendering\RendererAcceptanceContract;
@@ -69,7 +71,7 @@ rab_check(false!==strpos($verifier,"qualification != 'production-candidate'"),'V
 require_once __DIR__ . '/renderer-candidate/acceptance-evidence-lib.php';
 $path_builder = new CertloomProductionAcceptanceEvidenceBuilder( dirname( __DIR__ ) );
 $path_method = new ReflectionMethod( CertloomProductionAcceptanceEvidenceBuilder::class, 'publish_json_file' );
-$path_method->setAccessible( true );
+if ( PHP_VERSION_ID < 80100 ) { $path_method->setAccessible( true ); }
 $path_tmp = sys_get_temp_dir() . '/certloom-rab-output-path-' . bin2hex( random_bytes( 5 ) );
 mkdir( $path_tmp, 0700, true );
 $prior_error_handler = set_error_handler( function ( $severity, $message, $file, $line ) { throw new ErrorException( $message, 0, $severity, $file, $line ); } );

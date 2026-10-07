@@ -15,6 +15,7 @@ use Certloom\Infrastructure\Database\SchemaManager;
 use Certloom\Infrastructure\Database\Transaction;
 use Certloom\Application\Contract\TransactionInterface;
 use Certloom\Infrastructure\Media\PortableDesignAssets;
+use Certloom\Infrastructure\Recipient\PendingConfigurationQueue;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -47,10 +48,9 @@ final class TemplateRepository {
 		$is_preset_key = 0 === strpos( (string) $identity['machine_key'], 'certloom-preset-' );
 		if ( self::SOURCE_PRESET === $source_type && ! $is_preset_key ) { return new \WP_Error( 'certloom_preset_key_required', __( 'Factory preset templates must use the reserved Certloom preset machine-key namespace.', 'certloom' ) ); }
 		if ( self::SOURCE_PRESET !== $source_type && $is_preset_key ) { return new \WP_Error( 'certloom_preset_key_reserved', __( 'The certloom-preset machine-key namespace is reserved for built-in factory templates.', 'certloom' ) ); }
-		$generation = ( new DomainGeneration() )->mark_before_mutation();
-		if ( is_wp_error( $generation ) ) { return $generation; }
-
 		return $this->transaction->run( function () use ( $identity, $layout, $actor_user_id, $source_type ) {
+			$generation = ( new DomainGeneration() )->mark_before_mutation();
+			if ( is_wp_error( $generation ) ) { return $generation; }
 			global $wpdb;
 			$now = current_time( 'mysql', true );
 			$row = $identity + array(
@@ -86,9 +86,9 @@ final class TemplateRepository {
 		$identity = $this->normalize_identity( $data, true );
 		if ( is_wp_error( $identity ) ) { return $identity; }
 		if ( empty( $identity ) ) { return true; }
-		$generation = ( new DomainGeneration() )->mark_before_mutation();
-		if ( is_wp_error( $generation ) ) { return $generation; }
-		return $this->transaction->run( function () use ( $template_id, $identity, $expected_updated_at ) {
+		return $this->configuration_command( function ( &$changed ) use ( $template_id, $identity, $expected_updated_at ) {
+			$generation = ( new DomainGeneration() )->mark_before_mutation();
+			if ( is_wp_error( $generation ) ) { return $generation; }
 			global $wpdb;
 			$locked = $this->lock_template( $template_id );
 			if ( is_wp_error( $locked ) ) { return $locked; }
@@ -107,6 +107,9 @@ final class TemplateRepository {
 					if ( $has_preset ) { return new \WP_Error( 'certloom_preset_key_immutable', __( 'Factory template machine keys are permanent. Duplicate the template if you need a separately named design.', 'certloom' ) ); }
 				}
 			}
+			$differs = false;
+			foreach ( $identity as $key => $value ) { if ( $value !== ( $locked[ $key ] ?? null ) ) { $differs = true; break; } }
+			if ( ! $differs ) { return true; }
 			$identity['updated_at'] = current_time( 'mysql', true );
 			$wpdb->last_error = '';
 			$updated = $wpdb->update( SchemaManager::table( 'templates' ), $identity, array( 'id' => $template_id ) );
@@ -115,7 +118,7 @@ final class TemplateRepository {
 					? new \WP_Error( 'certloom_template_key_duplicate', __( 'That template machine key is already in use.', 'certloom' ) )
 					: new \WP_Error( 'certloom_template_update_failed', __( 'Certloom could not update the template.', 'certloom' ) );
 			}
-			return true;
+			return $this->configuration_changed( $updated, $changed );
 		} );
 	}
 
@@ -127,9 +130,9 @@ final class TemplateRepository {
 		if ( is_wp_error( $layout ) ) { return $layout; }
 		$source_type = $this->normalize_source( $source_type );
 		if ( is_wp_error( $source_type ) ) { return $source_type; }
-		$generation = ( new DomainGeneration() )->mark_before_mutation();
-		if ( is_wp_error( $generation ) ) { return $generation; }
 		return $this->transaction->run( function () use ( $template_id, $layout, $actor_user_id, $expected_revision_id, $source_type, $expected_revision_sha256 ) {
+			$generation = ( new DomainGeneration() )->mark_before_mutation();
+			if ( is_wp_error( $generation ) ) { return $generation; }
 			global $wpdb;
 			$template = $this->lock_template( $template_id );
 			if ( is_wp_error( $template ) ) { return $template; }
@@ -184,9 +187,9 @@ final class TemplateRepository {
 		if ( ! $template_id || ! $expected_revision_id || ! preg_match( '/^[a-f0-9]{64}$/', $expected_revision_sha256 ) || ! LayoutSchema::supports_version( $target_version ) ) {
 			return new \WP_Error( 'certloom_template_upgrade_review_required', __( 'Layout upgrading requires the exact reviewed revision, layout hash and supported target schema.', 'certloom' ) );
 		}
-		$generation = ( new DomainGeneration() )->mark_before_mutation();
-		if ( is_wp_error( $generation ) ) { return $generation; }
 		return $this->transaction->run( function () use ( $template_id, $expected_revision_id, $expected_revision_sha256, $actor_user_id, $target_version ) {
+			$generation = ( new DomainGeneration() )->mark_before_mutation();
+			if ( is_wp_error( $generation ) ) { return $generation; }
 			global $wpdb;
 			$template = $this->lock_template( $template_id );
 			if ( is_wp_error( $template ) ) { return $template; }
@@ -225,9 +228,9 @@ final class TemplateRepository {
 		if ( ! $expected_revision_id || ! preg_match( '/\A[a-f0-9]{64}\z/', $expected_revision_sha256 ) ) {
 			return new \WP_Error( 'certloom_template_publish_review_required', __( 'Publishing requires the exact reviewed template revision and layout hash.', 'certloom' ) );
 		}
-		$generation = ( new DomainGeneration() )->mark_before_mutation();
-		if ( is_wp_error( $generation ) ) { return $generation; }
-		return $this->transaction->run( function () use ( $template_id, $expected_revision_id, $expected_revision_sha256 ) {
+		return $this->configuration_command( function ( &$changed ) use ( $template_id, $expected_revision_id, $expected_revision_sha256 ) {
+			$generation = ( new DomainGeneration() )->mark_before_mutation();
+			if ( is_wp_error( $generation ) ) { return $generation; }
 			global $wpdb;
 			$template = $this->lock_template( $template_id );
 			if ( is_wp_error( $template ) ) { return $template; }
@@ -249,7 +252,7 @@ final class TemplateRepository {
 			$updated = $wpdb->update( SchemaManager::table( 'templates' ), array( 'published_revision_id' => $current_id, 'updated_at' => $now ), array( 'id' => $template_id ) );
 			return false === $updated || '' !== (string) $wpdb->last_error
 				? new \WP_Error( 'certloom_template_publish_failed', __( 'Certloom could not publish the template revision safely.', 'certloom' ) )
-				: true;
+				: $this->configuration_changed( $updated, $changed );
 		} );
 	}
 
@@ -257,9 +260,9 @@ final class TemplateRepository {
 	public function unpublish( $template_id, $expected_updated_at = '' ) {
 		$template_id = absint( $template_id );
 		if ( ! $template_id ) { return new \WP_Error( 'certloom_template_id_required', __( 'A valid template is required.', 'certloom' ) ); }
-		$generation = ( new DomainGeneration() )->mark_before_mutation();
-		if ( is_wp_error( $generation ) ) { return $generation; }
-		return $this->transaction->run( function () use ( $template_id, $expected_updated_at ) {
+		return $this->configuration_command( function ( &$changed ) use ( $template_id, $expected_updated_at ) {
+			$generation = ( new DomainGeneration() )->mark_before_mutation();
+			if ( is_wp_error( $generation ) ) { return $generation; }
 			global $wpdb;
 			$template = $this->lock_template( $template_id );
 			if ( is_wp_error( $template ) ) { return $template; }
@@ -273,7 +276,7 @@ final class TemplateRepository {
 			$now = current_time( 'mysql', true );
 			$wpdb->last_error = '';
 			$updated = $wpdb->update( SchemaManager::table( 'templates' ), array( 'published_revision_id' => null, 'updated_at' => $now ), array( 'id' => $template_id ) );
-			return false === $updated || '' !== (string) $wpdb->last_error ? new \WP_Error( 'certloom_template_unpublish_failed', __( 'Certloom could not move this design back to Draft safely.', 'certloom' ) ) : true;
+			return false === $updated || '' !== (string) $wpdb->last_error ? new \WP_Error( 'certloom_template_unpublish_failed', __( 'Certloom could not move this design back to Draft safely.', 'certloom' ) ) : $this->configuration_changed( $updated, $changed );
 		} );
 	}
 
@@ -281,9 +284,9 @@ final class TemplateRepository {
 	public function archive( $template_id, $expected_updated_at = '' ) {
 		$template_id = absint( $template_id );
 		if ( ! $template_id ) { return new \WP_Error( 'certloom_template_id_required', __( 'A valid template is required.', 'certloom' ) ); }
-		$generation = ( new DomainGeneration() )->mark_before_mutation();
-		if ( is_wp_error( $generation ) ) { return $generation; }
-		return $this->transaction->run( function () use ( $template_id, $expected_updated_at ) {
+		return $this->configuration_command( function ( &$changed ) use ( $template_id, $expected_updated_at ) {
+			$generation = ( new DomainGeneration() )->mark_before_mutation();
+			if ( is_wp_error( $generation ) ) { return $generation; }
 			global $wpdb;
 			$template = $this->lock_template( $template_id );
 			if ( is_wp_error( $template ) ) { return $template; }
@@ -297,7 +300,7 @@ final class TemplateRepository {
 			$now = current_time( 'mysql', true );
 			$wpdb->last_error = '';
 			$updated = $wpdb->update( SchemaManager::table( 'templates' ), array( 'archived_at' => $now, 'updated_at' => $now ), array( 'id' => $template_id ) );
-			return false === $updated || '' !== (string) $wpdb->last_error ? new \WP_Error( 'certloom_template_archive_failed', __( 'Certloom could not archive the template.', 'certloom' ) ) : true;
+			return false === $updated || '' !== (string) $wpdb->last_error ? new \WP_Error( 'certloom_template_archive_failed', __( 'Certloom could not archive the template.', 'certloom' ) ) : $this->configuration_changed( $updated, $changed );
 		} );
 	}
 
@@ -305,9 +308,9 @@ final class TemplateRepository {
 	public function restore( $template_id, $expected_updated_at = '' ) {
 		$template_id = absint( $template_id );
 		if ( ! $template_id ) { return new \WP_Error( 'certloom_template_id_required', __( 'A valid template is required.', 'certloom' ) ); }
-		$generation = ( new DomainGeneration() )->mark_before_mutation();
-		if ( is_wp_error( $generation ) ) { return $generation; }
-		return $this->transaction->run( function () use ( $template_id, $expected_updated_at ) {
+		return $this->configuration_command( function ( &$changed ) use ( $template_id, $expected_updated_at ) {
+			$generation = ( new DomainGeneration() )->mark_before_mutation();
+			if ( is_wp_error( $generation ) ) { return $generation; }
 			global $wpdb;
 			$template = $this->lock_template( $template_id );
 			if ( is_wp_error( $template ) ) { return $template; }
@@ -317,7 +320,7 @@ final class TemplateRepository {
 			$now = current_time( 'mysql', true );
 			$wpdb->last_error = '';
 			$updated = $wpdb->update( SchemaManager::table( 'templates' ), array( 'archived_at' => null, 'updated_at' => $now ), array( 'id' => $template_id ) );
-			return false === $updated || '' !== (string) $wpdb->last_error ? new \WP_Error( 'certloom_template_restore_failed', __( 'Certloom could not restore the template.', 'certloom' ) ) : true;
+			return false === $updated || '' !== (string) $wpdb->last_error ? new \WP_Error( 'certloom_template_restore_failed', __( 'Certloom could not restore the template.', 'certloom' ) ) : $this->configuration_changed( $updated, $changed );
 		} );
 	}
 
@@ -329,12 +332,13 @@ final class TemplateRepository {
 		$current_id = absint( $template['current_revision_id'] ?? 0 );
 		if ( ! absint( $expected_revision_id ) || $current_id !== absint( $expected_revision_id ) ) { return new \WP_Error( 'certloom_template_stale_revision', __( 'The source template changed after you opened it. Reload before duplicating.', 'certloom' ) ); }
 		$identity['layout'] = $template['current_revision']['layout'];
-		$created = $this->create( $identity, $actor_user_id, self::SOURCE_MANUAL );
-		if ( is_wp_error( $created ) ) { return $created; }
-		$profiles = ( new TemplateRecommendationRepository() )->get( $template_id );
-		/* Recommendation tags are presentation metadata; a copy must never become an orphaned failure after the canonical Template was created. */
-		( new TemplateRecommendationRepository() )->save( $created, $profiles );
-		return $created;
+		return $this->transaction->run( function () use ( $identity, $actor_user_id, $template_id ) {
+			$created = $this->create( $identity, $actor_user_id, self::SOURCE_MANUAL );
+			if ( is_wp_error( $created ) ) { return $created; }
+			$recommendations = new TemplateRecommendationRepository();
+			$saved = $recommendations->save( $created, $recommendations->get( $template_id ) );
+			return is_wp_error( $saved ) ? $saved : $created;
+		} );
 	}
 
 	/** @return string */
@@ -549,13 +553,16 @@ final class TemplateRepository {
 		$decoded['layout'] = $installed['layout'];
 		$recommended_profiles = isset( $decoded['recommended_profiles'] ) && is_array( $decoded['recommended_profiles'] ) ? $decoded['recommended_profiles'] : array();
 		unset( $decoded['assets'], $decoded['layout_sha256'], $decoded['recommended_profiles'] );
-		$created = $this->create( $decoded, $actor_user_id, self::SOURCE_IMPORT );
+		$created = $this->transaction->run( function () use ( $decoded, $actor_user_id, $recommended_profiles ) {
+			$id = $this->create( $decoded, $actor_user_id, self::SOURCE_IMPORT );
+			if ( is_wp_error( $id ) ) { return $id; }
+			$saved = ( new TemplateRecommendationRepository() )->save( $id, $recommended_profiles );
+			return is_wp_error( $saved ) ? $saved : $id;
+		} );
 		if ( is_wp_error( $created ) ) {
 			$media->cleanup( $installed['created_ids'] );
 			return $created;
 		}
-		/* Recommendation tags are non-authoritative. Never delete imported media after the canonical Template has already been created. */
-		( new TemplateRecommendationRepository() )->save( $created, $recommended_profiles );
 		return $created;
 	}
 
@@ -578,9 +585,9 @@ final class TemplateRepository {
 		if ( ! $exists ) { return new \WP_Error( 'certloom_template_assignment_scope_missing', __( 'The template assignment target no longer exists.', 'certloom' ) ); }
 		$compatibility = $this->validate_assignment_field_contract( $scope_type, $scope_id, (array) ( $template['current_revision']['layout'] ?? array() ) );
 		if ( is_wp_error( $compatibility ) ) { return $compatibility; }
-		$generation = ( new DomainGeneration() )->mark_before_mutation();
-		if ( is_wp_error( $generation ) ) { return $generation; }
-		return $this->transaction->run( function () use ( $template_id, $scope_type, $scope_id, $priority, $expected_assignment_id, $expected_updated_at ) {
+		return $this->configuration_command( function ( &$changed ) use ( $template_id, $scope_type, $scope_id, $priority, $expected_assignment_id, $expected_updated_at ) {
+			$generation = ( new DomainGeneration() )->mark_before_mutation();
+			if ( is_wp_error( $generation ) ) { return $generation; }
 			global $wpdb;
 			$locked_template = $this->lock_template( $template_id );
 			if ( is_wp_error( $locked_template ) ) { return $locked_template; }
@@ -599,15 +606,16 @@ final class TemplateRepository {
 			$table = SchemaManager::table( 'template_assignments' );
 			$wpdb->last_error = '';
 			if ( is_array( $existing ) ) {
+				if ( $template_id === (int) $existing['template_id'] && $priority === (int) $existing['priority'] && 1 === (int) $existing['active'] ) { return true; }
 				$updated = $wpdb->update( $table, array( 'template_id' => $template_id, 'priority' => $priority, 'active' => 1, 'updated_at' => $now ), array( 'id' => absint( $existing['id'] ) ) );
-				return false === $updated || '' !== (string) $wpdb->last_error ? new \WP_Error( 'certloom_template_assignment_save_failed', __( 'Certloom could not save the template assignment.', 'certloom' ) ) : true;
+				return false === $updated || '' !== (string) $wpdb->last_error ? new \WP_Error( 'certloom_template_assignment_save_failed', __( 'Certloom could not save the template assignment.', 'certloom' ) ) : $this->configuration_changed( $updated, $changed, 'program' === $scope_type ? $scope_id : 0 );
 			}
 			$inserted = $wpdb->insert( $table, array( 'template_id' => $template_id, 'scope_type' => $scope_type, 'scope_id' => $scope_id, 'priority' => $priority, 'active' => 1, 'created_at' => $now, 'updated_at' => $now ) );
 			if ( false === $inserted || '' !== (string) $wpdb->last_error ) {
 				if ( false !== stripos( (string) $wpdb->last_error, 'duplicate' ) ) { return new \WP_Error( 'certloom_template_assignment_stale', __( 'This template assignment changed while you were saving it. Reload before trying again.', 'certloom' ) ); }
 				return new \WP_Error( 'certloom_template_assignment_save_failed', __( 'Certloom could not save the template assignment.', 'certloom' ) );
 			}
-			return true;
+			return $this->configuration_changed( $inserted, $changed, 'program' === $scope_type ? $scope_id : 0 );
 		} );
 	}
 
@@ -623,9 +631,9 @@ final class TemplateRepository {
 			$fallback = $this->validate_batch_inherited_fallback_field_contract( $scope_id );
 			if ( is_wp_error( $fallback ) ) { return $fallback; }
 		}
-		$generation = ( new DomainGeneration() )->mark_before_mutation();
-		if ( is_wp_error( $generation ) ) { return $generation; }
-		return $this->transaction->run( function () use ( $scope_type, $scope_id, $expected_assignment_id, $expected_updated_at ) {
+		return $this->configuration_command( function ( &$changed ) use ( $scope_type, $scope_id, $expected_assignment_id, $expected_updated_at ) {
+			$generation = ( new DomainGeneration() )->mark_before_mutation();
+			if ( is_wp_error( $generation ) ) { return $generation; }
 			global $wpdb;
 			$existing = $this->lock_assignment( $scope_type, $scope_id );
 			if ( is_wp_error( $existing ) ) { return $existing; }
@@ -639,8 +647,22 @@ final class TemplateRepository {
 			if ( empty( $existing['active'] ) ) { return true; }
 			$wpdb->last_error = '';
 			$updated = $wpdb->update( SchemaManager::table( 'template_assignments' ), array( 'active' => 0, 'updated_at' => current_time( 'mysql', true ) ), array( 'id' => absint( $existing['id'] ) ) );
-			return false === $updated || '' !== (string) $wpdb->last_error ? new \WP_Error( 'certloom_template_assignment_clear_failed', __( 'Certloom could not clear the direct template assignment.', 'certloom' ) ) : true;
+			return false === $updated || '' !== (string) $wpdb->last_error ? new \WP_Error( 'certloom_template_assignment_clear_failed', __( 'Certloom could not clear the direct template assignment.', 'certloom' ) ) : $this->configuration_changed( $updated, $changed, 'program' === $scope_type ? $scope_id : 0 );
 		} );
+	}
+
+	/** Template lifecycle and assignments retain their reassessment signal atomically. */
+	private function configuration_command( callable $callback ) {
+		$changed = false;
+		$result = $this->transaction->run( static function () use ( $callback, &$changed ) { return $callback( $changed ); } );
+		if ( ! is_wp_error( $result ) && $changed ) { do_action( 'certloom_pending_configuration_changed' ); }
+		return $result;
+	}
+	private function configuration_changed( $affected, &$changed, $program_id = 0 ) {
+		if ( $affected < 1 ) { return true; }
+		$result = ( new PendingConfigurationQueue() )->changed( $program_id );
+		if ( ! is_wp_error( $result ) ) { $changed = true; }
+		return $result;
 	}
 
 	/**

@@ -22,13 +22,14 @@ final class WooCommerceBridge {
 	/** @return array<string,mixed> */
 	public static function status() {
 		$mappings = ( new WooCommerceMappingStore() )->all();
+		$pending = ( new WooCommercePendingMappingRepository() )->read(); $pending = is_wp_error( $pending ) ? array() : $pending;
 		$last = get_option( self::LAST_RESULT_OPTION, array() );
 		return array(
 			'available'            => WooCommerceAdapter::is_available(),
 			'version'              => defined( 'WC_VERSION' ) ? sanitize_text_field( (string) WC_VERSION ) : '',
 			'authority_ready'      => self::authority_ready(),
-			'mapping_count'        => count( $mappings ),
-			'active_mapping_count' => count( array_filter( $mappings, static function ( $row ) { return is_array( $row ) && ! empty( $row['active'] ); } ) ),
+			'mapping_count'        => count( $mappings ) + count( $pending ),
+			'active_mapping_count' => count( array_filter( array_merge( $mappings, $pending ), static function ( $row ) { return is_array( $row ) && ! empty( $row['active'] ); } ) ),
 			'last_result'          => is_array( $last ) ? $last : array(),
 		);
 	}
@@ -45,25 +46,35 @@ final class WooCommerceBridge {
 			return;
 		}
 		$store = new WooCommerceMappingStore();
+		$legacy = $store->all(); $pending = ( new WooCommercePendingMappingRepository() )->read();
+		if ( is_wp_error( $pending ) ) { self::record_result( 'blocked', $order_id, 0, $pending->get_error_code() ); return; }
+		$pending_products = array_column( $pending, null, 'product_id' );
 		$items = method_exists( $order, 'get_items' ) ? (array) $order->get_items( 'line_item' ) : array();
 		$mapped_products = array();
 		foreach ( $items as $item ) {
 			if ( ! is_object( $item ) ) { continue; }
 			$product_id = method_exists( $item, 'get_product_id' ) ? absint( $item->get_product_id() ) : 0;
 			if ( $product_id < 1 ) { continue; }
-			$mapping = $store->find( $product_id );
+			$mapping = $pending_products[ $product_id ] ?? null;
+			if ( ! is_array( $mapping ) || ! $mapping['active'] ) { $mapping = $legacy[ (string) $product_id ] ?? null; }
 			if ( ! is_array( $mapping ) || empty( $mapping['active'] ) ) { continue; }
-			$mapped_products[] = $product_id;
+			$mapped_products[ $product_id ] = $product_id;
 		}
 		if ( count( $mapped_products ) > self::MAX_MAPPED_ITEMS ) {
 			self::record_result( 'blocked', $order_id, 0, 'certloom_woocommerce_mapped_item_limit' );
 			return;
 		}
 		if ( ! self::authority_ready() && $mapped_products ) {
-			self::record_result( 'blocked', $order_id, (int) $mapped_products[0], 'certloom_woocommerce_authority_closed' );
+			self::record_result( 'blocked', $order_id, (int) reset( $mapped_products ), 'certloom_woocommerce_authority_closed' );
 			return;
 		}
 		foreach ( $mapped_products as $product_id ) {
+			if ( ! empty( $pending_products[ $product_id ]['active'] ) ) {
+				$result = ( new \Certloom\Application\Integration\WooCommercePendingIntake() )->receive( $order_id, $product_id, $user_id );
+				if ( is_wp_error( $result ) ) { self::record_result( 'blocked', $order_id, $product_id, $result->get_error_code() ); }
+				else { $state = 'issued' === $result['status'] ? ( ! empty( $result['idempotent_replay'] ) ? 'replayed' : 'issued' ) : ( in_array( $result['status'], array( 'received','waiting','ready','processing' ), true ) ? 'waiting' : 'blocked' ); self::record_result( $state, $order_id, $product_id, '', '', (int) ( $result['version_id'] ?? 0 ) ); }
+				continue;
+			}
 			self::issue_mapped_product( $order, $order_id, $product_id, $user_id, $store );
 		}
 	}
@@ -92,7 +103,7 @@ final class WooCommerceBridge {
 
 	/** Privacy-safe operational evidence only; never stores checkout identity or order payloads. */
 	private static function record_result( $status, $order_id, $product_id, $error_code = '', $context_sha256 = '', $version_id = 0 ) {
-		$status = in_array( $status, array( 'issued', 'replayed', 'blocked', 'failed' ), true ) ? $status : 'failed';
+		$status = in_array( $status, array( 'issued', 'replayed', 'waiting', 'blocked', 'failed' ), true ) ? $status : 'failed';
 		$error_code = sanitize_key( (string) $error_code );
 		$context_sha256 = strtolower( trim( (string) $context_sha256 ) );
 		if ( ! preg_match( '/^[a-f0-9]{64}$/', $context_sha256 ) ) { $context_sha256 = ''; }

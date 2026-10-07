@@ -1,5 +1,7 @@
 <?php
 /** Certloom 1.7 UI Phase 1 design-system contract. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $root = dirname( __DIR__ );
 
 function phase1_assert( $condition, $message ) {
@@ -34,7 +36,7 @@ phase1_assert( false !== strpos( $source['tokens'], '--cl-valid: #00734E' ), 'To
 phase1_assert( false !== strpos( $source['tokens'], '--cl-revoked: #96214A' ), 'Token authority must include revoked rose.' );
 phase1_assert( false !== strpos( $source['tokens'], '--cl-expired: #8A5A00' ), 'Token authority must include expired ochre.' );
 phase1_assert( false === strpos( $source['tokens'], '!important' ), 'Token authority must not use !important for reduced motion.' );
-phase1_assert( false === strpos( $source['foundation'], '!important' ), 'New admin foundation must contain zero !important declarations.' );
+phase1_assert( 1 === substr_count( $source['foundation'], '!important' ) && false !== strpos( $source['foundation'], '.certloom-admin-shell [hidden] { display: none !important; }' ), 'Only the scoped HTML hidden-state rule may override foundation display styles.' );
 phase1_assert( false === strpos( $source['artifact'], '!important' ), 'New artifact foundation must contain zero !important declarations.' );
 phase1_assert( ! preg_match( '/#[0-9a-fA-F]{3,8}\b/', $source['foundation'] ), 'New admin foundation must use tokens instead of raw hex colours.' );
 phase1_assert( ! preg_match( '/#[0-9a-fA-F]{3,8}\b/', $source['artifact'] ), 'New public artifact foundation must use tokens instead of raw hex colours.' );

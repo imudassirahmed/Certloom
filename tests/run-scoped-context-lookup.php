@@ -1,5 +1,7 @@
 <?php
 /** FLD-02 large-site relationship lookup source contract. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $root = dirname( __DIR__ );
 $files = array(
 	'ajax' => file_get_contents( $root . '/src/Infrastructure/Admin/ScopedFieldAdminAjax.php' ),

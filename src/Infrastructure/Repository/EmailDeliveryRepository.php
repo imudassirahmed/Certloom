@@ -38,10 +38,14 @@ final class EmailDeliveryRepository implements EmailDeliveryRepositoryInterface 
 		$evidence=(new SafeJson())->encode_array(is_array($data['evidence']??null)?$data['evidence']:array(),'certloom_email_delivery_evidence_invalid',__('Certloom could not encode email delivery evidence safely.','certloom'));if(is_wp_error($evidence)){return$evidence;}
 		$now=current_time('mysql',true);$row=array('delivery_key'=>$key,'series_id'=>$series_id,'version_id'=>$version_id,'job_key'=>null,'delivery_kind'=>$kind,'status'=>'preparing','destination_mask'=>substr((string)($data['destination_mask']??''),0,320),'destination_sha256'=>(string)($data['destination_sha256']??''),'subject_sha256'=>(string)($data['subject_sha256']??''),'html_sha256'=>(string)($data['html_sha256']??''),'text_sha256'=>(string)($data['text_sha256']??''),'composition_sha256'=>(string)($data['composition_sha256']??''),'template_version'=>max(1,absint($data['template_version']??1)),'attempt_token'=>null,'attempted_at'=>null,'accepted_at'=>null,'failed_at'=>null,'failure_code'=>null,'evidence_json'=>$evidence,'created_at'=>$now,'updated_at'=>$now);
 		foreach(array('destination_sha256','subject_sha256','html_sha256','text_sha256','composition_sha256')as$h){if(!preg_match('/^[a-f0-9]{64}$/',$row[$h])){return new \WP_Error('certloom_email_delivery_hash_invalid',__('Credential email delivery evidence requires valid SHA-256 fingerprints.','certloom'));}}
-		$wpdb->last_error='';$ok=$wpdb->insert(SchemaManager::table('email_deliveries'),$row);return false!==$ok&&''===(string)$wpdb->last_error?$key:new \WP_Error('certloom_email_delivery_create_failed',__('Certloom could not create the credential email delivery record.','certloom'));
+		return ( new DeliveryWriteBoundary( 'email_deliveries' ) )->insert( $row );
 	}
 	/** @return true|\WP_Error */
-	public function attach_job( $delivery_key, $job_key ) { return $this->update($delivery_key,array('job_key'=>(string)$job_key,'status'=>'queued','updated_at'=>current_time('mysql',true)),array('preparing')); }
+	public function attach_job( $delivery_key, $job_key ) {
+		$job_key = self::key( $job_key );
+		if ( is_wp_error( $job_key ) ) { return $job_key; }
+		return $this->update( $delivery_key, array( 'job_key' => $job_key, 'status' => 'queued', 'updated_at' => current_time( 'mysql', true ) ), array( 'preparing' ) );
+	}
 	/** @return true|\WP_Error */
 	public function mark_sending( $delivery_key, $attempt_token ) {
 		$attempt_token=strtolower(trim((string)$attempt_token));if(!preg_match('/^[a-f0-9]{32}$/',$attempt_token)){return new \WP_Error('certloom_email_attempt_token_invalid',__('The credential email attempt identifier is invalid.','certloom'));}
@@ -57,31 +61,41 @@ final class EmailDeliveryRepository implements EmailDeliveryRepositoryInterface 
 	public function list_page( $page = 1, $per_page = 50 ) { global $wpdb; $page=max(1,absint($page)); $per_page=max(1,min(100,absint($per_page))); $offset=($page-1)*$per_page; $table=SchemaManager::table('email_deliveries'); $wpdb->last_error=''; $total=$wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM %i',$table)); if(''!==(string)$wpdb->last_error){return new \WP_Error('certloom_email_delivery_list_failed',__('Certloom could not read credential email delivery history.','certloom'));} $wpdb->last_error=''; $rows=$wpdb->get_results($wpdb->prepare('SELECT * FROM %i ORDER BY id DESC LIMIT %d OFFSET %d',$table,$per_page,$offset),ARRAY_A); if(''!==(string)$wpdb->last_error||!is_array($rows)){return new \WP_Error('certloom_email_delivery_list_failed',__('Certloom could not read credential email delivery history.','certloom'));} $out=array(); foreach($rows as$r){$out[]=$this->decode($r);} return array('items'=>$out,'total'=>absint($total),'page'=>$page,'per_page'=>$per_page); }
 	/** @return true|\WP_Error */
 	private function finish( $key, $status, $failure, array $evidence, $failed ) {
-		$delivery = $this->find_delivery( $key );
-		if ( is_wp_error( $delivery ) ) { return $delivery; }
-		if ( ! is_array( $delivery ) ) { return new \WP_Error( 'certloom_email_delivery_missing', __( 'The credential email delivery record no longer exists.', 'certloom' ) ); }
+		$key = self::key( $key );
+		if ( is_wp_error( $key ) ) { return $key; }
+		return ( new DeliveryWriteBoundary( 'email_deliveries' ) )->change( $key, function ( array $row ) use ( $status, $failure, $evidence, $failed ) {
+			$delivery = $this->decode( $row );
+			if ( ! DeliveryWriteBoundary::attempt_matches( $delivery, $evidence ) ) { return new \WP_Error( 'certloom_email_delivery_state_conflict', __( 'This result belongs to a different email attempt. Refresh the delivery status.', 'certloom' ) ); }
 
-		$current = (string) ( $delivery['status'] ?? '' );
-		/* Terminal delivery truth is idempotent and never moves backwards. */
-		if ( 'sent' === $current ) {
-			return 'sent' === $status ? true : new \WP_Error( 'certloom_email_delivery_already_sent', __( 'This credential email has already been recorded as accepted by the WordPress mail transport.', 'certloom' ) );
-		}
-		if ( 'uncertain' === $current ) {
-			return 'uncertain' === $status ? true : new \WP_Error( 'certloom_email_delivery_uncertain', __( 'This credential email has uncertain delivery status and requires explicit administrator review before another send.', 'certloom' ) );
-		}
+			$current = (string) ( $delivery['status'] ?? '' );
+			/* Terminal delivery truth is idempotent and never moves backwards. */
+			if ( 'sent' === $current ) {
+				return 'sent' === $status ? true : new \WP_Error( 'certloom_email_delivery_already_sent', __( 'This credential email has already been recorded as accepted by the WordPress mail transport.', 'certloom' ) );
+			}
+			if ( 'uncertain' === $current ) {
+				return 'uncertain' === $status ? true : new \WP_Error( 'certloom_email_delivery_uncertain', __( 'This credential email has uncertain delivery status and requires explicit administrator review before another send.', 'certloom' ) );
+			}
+			if ( ! in_array( $current, array( 'preparing', 'queued', 'sending', 'failed' ), true ) || ( 'sent' === $status && 'sending' !== $current ) ) { return new \WP_Error( 'certloom_email_delivery_state_conflict', __( 'The email delivery state changed before this result could be saved.', 'certloom' ) ); }
+			if ( 'failed' === $status && 'failed' === $current ) { return true; }
 
-		$merged  = is_array( $delivery['evidence'] ?? null ) ? $delivery['evidence'] : array();
-		$merged  = array_merge( $merged, $evidence );
-		$encoded = ( new SafeJson() )->encode_array( $merged, 'certloom_email_delivery_evidence_invalid', __( 'Certloom could not encode email delivery evidence safely.', 'certloom' ) );
-		if ( is_wp_error( $encoded ) ) { return $encoded; }
-		$now     = current_time( 'mysql', true );
-		$changes = array( 'status' => $status, 'failure_code' => $failure ?: null, 'evidence_json' => $encoded, 'updated_at' => $now );
-		if ( $failed ) { $changes['failed_at'] = $now; } else { $changes['accepted_at'] = $now; $changes['failed_at'] = null; $changes['failure_code'] = null; }
-		$allowed = 'uncertain' === $status ? array( 'sending', 'queued', 'failed', 'preparing' ) : array( 'sending', 'queued', 'failed', 'preparing' );
-		return $this->update( $key, $changes, $allowed );
+			$merged  = is_array( $delivery['evidence'] ?? null ) ? $delivery['evidence'] : array();
+			$merged  = array_merge( $merged, $evidence );
+			$encoded = ( new SafeJson() )->encode_array( $merged, 'certloom_email_delivery_evidence_invalid', __( 'Certloom could not encode email delivery evidence safely.', 'certloom' ) );
+			if ( is_wp_error( $encoded ) ) { return $encoded; }
+			$now     = current_time( 'mysql', true );
+			$changes = array( 'status' => $status, 'failure_code' => $failure ?: null, 'evidence_json' => $encoded, 'updated_at' => $now );
+			if ( $failed ) { $changes['failed_at'] = $now; } else { $changes['accepted_at'] = $now; $changes['failed_at'] = null; $changes['failure_code'] = null; }
+			return $changes;
+		} );
 	}
 	/** @return true|\WP_Error */
-	private function update( $key, array $changes, array $allowed ) { global $wpdb; $key = self::key( $key ); if ( is_wp_error( $key ) ) { return $key; } $where = array( 'delivery_key' => $key ); $wpdb->last_error = ''; $current = $wpdb->get_var( $wpdb->prepare( 'SELECT status FROM %i WHERE delivery_key = %s', SchemaManager::table( 'email_deliveries' ), $key ) ); if ( '' !== (string) $wpdb->last_error ) { return new \WP_Error( 'certloom_email_delivery_read_failed', __( 'Certloom could not read the credential email delivery record.', 'certloom' ) ); } if ( ! in_array( (string) $current, $allowed, true ) ) { return new \WP_Error( 'certloom_email_delivery_state_conflict', __( 'The credential email delivery changed before this operation could be saved.', 'certloom' ) ); } $wpdb->last_error = ''; $ok = $wpdb->update( SchemaManager::table( 'email_deliveries' ), $changes, $where ); return '' === (string) $wpdb->last_error && ( 1 === (int) $ok || 0 === (int) $ok ) ? true : new \WP_Error( 'certloom_email_delivery_update_failed', __( 'Certloom could not update the credential email delivery record.', 'certloom' ) ); }
+	private function update( $key, array $changes, array $allowed ) {
+		$key = self::key( $key );
+		if ( is_wp_error( $key ) ) { return $key; }
+		return ( new DeliveryWriteBoundary( 'email_deliveries' ) )->change( $key, static function ( array $current ) use ( $changes, $allowed ) {
+			return in_array( (string) $current['status'], $allowed, true ) ? $changes : new \WP_Error( 'certloom_email_delivery_state_conflict', __( 'The credential email delivery changed before this operation could be saved.', 'certloom' ) );
+		} );
+	}
 	/** @return array<string,mixed> */ private function decode(array$r){$e=json_decode((string)($r['evidence_json']??''),true);$r['evidence']=is_array($e)?$e:array();foreach(array('id','series_id','version_id','template_version')as$k){$r[$k]=absint($r[$k]??0);}return$r;}
 	/** @return string|\WP_Error */ private static function key($v){$v=strtolower(trim((string)$v));return preg_match('/^[a-f0-9]{32}$/',$v)?$v:new \WP_Error('certloom_email_delivery_key_invalid',__('The credential email delivery identifier is invalid.','certloom'));}
 }

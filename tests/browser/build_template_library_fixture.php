@@ -1,5 +1,7 @@
 <?php
 /** TPLUX-03 Certificate Library browser fixture using production CSS/JS. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $css = file_get_contents( dirname( __DIR__, 2 ) . '/admin/assets/template-library.css' );
 $js  = file_get_contents( dirname( __DIR__, 2 ) . '/admin/assets/template-library.js' );
 function preview_page( $title, $w, $h, $rtl = false, $background = false, $logo = false ) {

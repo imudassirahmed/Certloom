@@ -4,7 +4,9 @@ namespace Certloom\Infrastructure\Repository;
 use Certloom\Application\Data\SafeJson;
 use Certloom\Application\Fields\ScopedFieldContract;
 use Certloom\Infrastructure\Data\DomainGeneration;
+use Certloom\Infrastructure\Database\Transaction;
 use Certloom\Infrastructure\Database\SchemaManager;
+use Certloom\Infrastructure\Recipient\PendingConfigurationQueue;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -14,52 +16,54 @@ if ( ! defined( 'ABSPATH' ) ) {
 final class IssuerRepository {
 	/** @param array<string,mixed> $data @return int|\WP_Error */
 	public function create( array $data ) {
-		global $wpdb;
+		return ( new Transaction() )->run( function () use ( $data ) {
+			global $wpdb;
 
-		$name = trim( (string) ( $data['name'] ?? '' ) );
-		if ( '' === $name || $this->length( $name ) > 255 ) {
-			return new \WP_Error( 'certloom_issuer_name_invalid', __( 'Issuer name is required and must be 255 characters or fewer.', 'certloom' ) );
-		}
-
-		$slug = sanitize_title( (string) ( $data['slug'] ?? $name ) );
-		if ( '' === $slug || $this->length( $slug ) > 191 ) {
-			return new \WP_Error( 'certloom_issuer_slug_invalid', __( 'Issuer slug is required and must be 191 characters or fewer.', 'certloom' ) );
-		}
-
-		$settings_json = null;
-		if ( array_key_exists( 'settings', $data ) ) {
-			$settings_json = ( new SafeJson() )->encode_array( $data['settings'], 'certloom_issuer_settings_invalid', __( 'Issuer settings could not be encoded safely.', 'certloom' ) );
-			if ( is_wp_error( $settings_json ) ) {
-				return $settings_json;
+			$name = trim( (string) ( $data['name'] ?? '' ) );
+			if ( '' === $name || $this->length( $name ) > 255 ) {
+				return new \WP_Error( 'certloom_issuer_name_invalid', __( 'Issuer name is required and must be 255 characters or fewer.', 'certloom' ) );
 			}
-		}
 
-		$now = current_time( 'mysql', true );
-		$row = array(
-			'name'               => $name,
-			'slug'               => $slug,
-			'logo_attachment_id' => ! empty( $data['logo_attachment_id'] ) ? absint( $data['logo_attachment_id'] ) : null,
-			'seal_attachment_id' => ! empty( $data['seal_attachment_id'] ) ? absint( $data['seal_attachment_id'] ) : null,
-			'settings_json'      => $settings_json,
-			'created_at'         => $now,
-			'updated_at'         => $now,
-		);
-
-		$generation = ( new DomainGeneration() )->mark_before_mutation();
-		if ( is_wp_error( $generation ) ) {
-			return $generation;
-		}
-
-		$wpdb->last_error = '';
-		$inserted         = $wpdb->insert( SchemaManager::table( 'issuers' ), $row );
-		if ( false === $inserted || '' !== (string) $wpdb->last_error ) {
-			if ( false !== stripos( (string) $wpdb->last_error, 'duplicate' ) ) {
-				return new \WP_Error( 'certloom_issuer_slug_duplicate', __( 'That issuer slug is already in use.', 'certloom' ) );
+			$slug = sanitize_title( (string) ( $data['slug'] ?? $name ) );
+			if ( '' === $slug || $this->length( $slug ) > 191 ) {
+				return new \WP_Error( 'certloom_issuer_slug_invalid', __( 'Issuer slug is required and must be 191 characters or fewer.', 'certloom' ) );
 			}
-			return new \WP_Error( 'certloom_issuer_create_failed', __( 'Certloom could not create the issuer.', 'certloom' ) );
-		}
 
-		return (int) $wpdb->insert_id;
+			$settings_json = null;
+			if ( array_key_exists( 'settings', $data ) ) {
+				$settings_json = ( new SafeJson() )->encode_array( $data['settings'], 'certloom_issuer_settings_invalid', __( 'Issuer settings could not be encoded safely.', 'certloom' ) );
+				if ( is_wp_error( $settings_json ) ) {
+					return $settings_json;
+				}
+			}
+
+			$now = current_time( 'mysql', true );
+			$row = array(
+				'name'               => $name,
+				'slug'               => $slug,
+				'logo_attachment_id' => ! empty( $data['logo_attachment_id'] ) ? absint( $data['logo_attachment_id'] ) : null,
+				'seal_attachment_id' => ! empty( $data['seal_attachment_id'] ) ? absint( $data['seal_attachment_id'] ) : null,
+				'settings_json'      => $settings_json,
+				'created_at'         => $now,
+				'updated_at'         => $now,
+			);
+
+			$generation = ( new DomainGeneration() )->mark_before_mutation();
+			if ( is_wp_error( $generation ) ) {
+				return $generation;
+			}
+
+			$wpdb->last_error = '';
+			$inserted         = $wpdb->insert( SchemaManager::table( 'issuers' ), $row );
+			if ( false === $inserted || '' !== (string) $wpdb->last_error ) {
+				if ( false !== stripos( (string) $wpdb->last_error, 'duplicate' ) ) {
+					return new \WP_Error( 'certloom_issuer_slug_duplicate', __( 'That issuer slug is already in use.', 'certloom' ) );
+				}
+				return new \WP_Error( 'certloom_issuer_create_failed', __( 'Certloom could not create the issuer.', 'certloom' ) );
+			}
+
+			return (int) $wpdb->insert_id;
+		} );
 	}
 
 	/**
@@ -70,62 +74,73 @@ final class IssuerRepository {
 	 * @return true|\WP_Error
 	 */
 	public function update( $id, array $data ) {
-		global $wpdb;
-		$id = absint( $id );
-		if ( ! $id ) {
-			return new \WP_Error( 'certloom_issuer_id_required', __( 'A valid issuer is required.', 'certloom' ) );
-		}
-
-		$row = array();
-		if ( array_key_exists( 'name', $data ) ) {
-			$name = trim( (string) $data['name'] );
-			if ( '' === $name || $this->length( $name ) > 255 ) {
-				return new \WP_Error( 'certloom_issuer_name_invalid', __( 'Issuer name is required and must be 255 characters or fewer.', 'certloom' ) );
+		$changed = false;
+		$result = ( new Transaction() )->run( function () use ( $id, $data, &$changed ) {
+			global $wpdb;
+			$id = absint( $id );
+			if ( ! $id ) {
+				return new \WP_Error( 'certloom_issuer_id_required', __( 'A valid issuer is required.', 'certloom' ) );
 			}
-			$row['name'] = $name;
-		}
 
-		if ( array_key_exists( 'slug', $data ) ) {
-			$slug = sanitize_title( (string) $data['slug'] );
-			if ( '' === $slug || $this->length( $slug ) > 191 ) {
-				return new \WP_Error( 'certloom_issuer_slug_invalid', __( 'Issuer slug is required and must be 191 characters or fewer.', 'certloom' ) );
+			$row = array();
+			if ( array_key_exists( 'name', $data ) ) {
+				$name = trim( (string) $data['name'] );
+				if ( '' === $name || $this->length( $name ) > 255 ) {
+					return new \WP_Error( 'certloom_issuer_name_invalid', __( 'Issuer name is required and must be 255 characters or fewer.', 'certloom' ) );
+				}
+				$row['name'] = $name;
 			}
-			$row['slug'] = $slug;
-		}
 
-		foreach ( array( 'logo_attachment_id', 'seal_attachment_id' ) as $key ) {
-			if ( array_key_exists( $key, $data ) ) {
-				$row[ $key ] = ! empty( $data[ $key ] ) ? absint( $data[ $key ] ) : null;
+			if ( array_key_exists( 'slug', $data ) ) {
+				$slug = sanitize_title( (string) $data['slug'] );
+				if ( '' === $slug || $this->length( $slug ) > 191 ) {
+					return new \WP_Error( 'certloom_issuer_slug_invalid', __( 'Issuer slug is required and must be 191 characters or fewer.', 'certloom' ) );
+				}
+				$row['slug'] = $slug;
 			}
-		}
 
-		if ( array_key_exists( 'settings', $data ) ) {
-			$encoded = ( new SafeJson() )->encode_array( $data['settings'], 'certloom_issuer_settings_invalid', __( 'Issuer settings could not be encoded safely.', 'certloom' ) );
-			if ( is_wp_error( $encoded ) ) {
-				return $encoded;
+			foreach ( array( 'logo_attachment_id', 'seal_attachment_id' ) as $key ) {
+				if ( array_key_exists( $key, $data ) ) {
+					$row[ $key ] = ! empty( $data[ $key ] ) ? absint( $data[ $key ] ) : null;
+				}
 			}
-			$row['settings_json'] = $encoded;
-		}
 
-		if ( empty( $row ) ) {
+			if ( array_key_exists( 'settings', $data ) ) {
+				$encoded = ( new SafeJson() )->encode_array( $data['settings'], 'certloom_issuer_settings_invalid', __( 'Issuer settings could not be encoded safely.', 'certloom' ) );
+				if ( is_wp_error( $encoded ) ) {
+					return $encoded;
+				}
+				$row['settings_json'] = $encoded;
+			}
+
+			if ( empty( $row ) ) {
+				return true;
+			}
+			$row['updated_at'] = current_time( 'mysql', true );
+
+			$generation = ( new DomainGeneration() )->mark_before_mutation();
+			if ( is_wp_error( $generation ) ) {
+				return $generation;
+			}
+
+			$wpdb->last_error = '';
+			$updated          = $wpdb->update( SchemaManager::table( 'issuers' ), $row, array( 'id' => $id ) );
+			if ( false === $updated || '' !== (string) $wpdb->last_error ) {
+				if ( false !== stripos( (string) $wpdb->last_error, 'duplicate' ) ) {
+					return new \WP_Error( 'certloom_issuer_slug_duplicate', __( 'That issuer slug is already in use.', 'certloom' ) );
+				}
+				return new \WP_Error( 'certloom_issuer_update_failed', __( 'Certloom could not update the issuer.', 'certloom' ) );
+			}
+			if ( $updated > 0 ) {
+				// Issuer branding/settings can affect requests across multiple Programs.
+				$signal = ( new PendingConfigurationQueue() )->changed();
+				if ( is_wp_error( $signal ) ) { return $signal; }
+				$changed = true;
+			}
 			return true;
-		}
-		$row['updated_at'] = current_time( 'mysql', true );
-
-		$generation = ( new DomainGeneration() )->mark_before_mutation();
-		if ( is_wp_error( $generation ) ) {
-			return $generation;
-		}
-
-		$wpdb->last_error = '';
-		$updated          = $wpdb->update( SchemaManager::table( 'issuers' ), $row, array( 'id' => $id ) );
-		if ( false === $updated || '' !== (string) $wpdb->last_error ) {
-			if ( false !== stripos( (string) $wpdb->last_error, 'duplicate' ) ) {
-				return new \WP_Error( 'certloom_issuer_slug_duplicate', __( 'That issuer slug is already in use.', 'certloom' ) );
-			}
-			return new \WP_Error( 'certloom_issuer_update_failed', __( 'Certloom could not update the issuer.', 'certloom' ) );
-		}
-		return true;
+		} );
+		if ( ! is_wp_error( $result ) && $changed ) { do_action( 'certloom_pending_configuration_changed' ); }
+		return $result;
 	}
 
 	/** @return array{items:array<int,array<string,mixed>>,total:int}|\WP_Error */
@@ -205,11 +220,11 @@ final class IssuerRepository {
 	}
 
 	/** @return array<string,mixed>|null|\WP_Error */
-	public function find( $id ) {
+	public function find( $id, $lock = false ) {
 		global $wpdb;
 		$wpdb->last_error = '';
 		$row = $wpdb->get_row(
-			$wpdb->prepare( 'SELECT * FROM %i WHERE id = %d', SchemaManager::table( 'issuers' ), absint( $id ) ),
+			$wpdb->prepare( 'SELECT * FROM %i WHERE id = %d' . ( $lock || \Certloom\Infrastructure\Recipient\RecipientCommandReadScope::active() ? ' FOR UPDATE' : '' ), SchemaManager::table( 'issuers' ), absint( $id ) ),
 			ARRAY_A
 		);
 		if ( '' !== (string) $wpdb->last_error ) {

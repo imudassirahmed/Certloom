@@ -1,5 +1,7 @@
 <?php
 /** Static regression guard: semantic restore review must independently use the bounded reader and reverify integrity. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $root=dirname(__DIR__);
 $source=file_get_contents($root.'/src/Application/Restore/DomainRestorePreflightService.php');
 if(false===$source)throw new RuntimeException('Could not read restore preflight source.');

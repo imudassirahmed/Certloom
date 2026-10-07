@@ -62,8 +62,9 @@ final class DomainDataToolsAdmin {
 		echo '<div class="wrap ecapla-certverify-admin-wrap certloom-admin-shell certloom-data-tools-workspace">';
 		echo '<section class="certloom-page-hero certloom-page-head"><div><span class="certloom-eyebrow">' . esc_html__( 'Backup and import', 'certloom' ) . '</span><h1>' . esc_html__( 'Credential data tools', 'certloom' ) . '</h1><p>' . esc_html__( 'Back up, import, or restore Program credentials. Review the result before changing existing records.', 'certloom' ) . '</p></div></section>';
 		( new AdminProductNavigation() )->render_current_subnav();
-		echo '<div class="notice notice-warning inline"><p>' . esc_html__( 'These tools back up and restore the normalized credentials used by Programs. They do not include the legacy certificate registry. Use Backup & Restore separately for legacy records before moving or restoring a site.', 'certloom' ) . '</p></div>';
+		echo '<div class="notice notice-warning inline"><p>' . esc_html__( 'These tools back up new credentials and their supporting records. Legacy certificates need a separate backup in Backup & Restore. Neither archive is a complete site backup: media, fonts, pending jobs, integrations and WordPress account links need separate recovery. Before moving or restoring a site, back up the full WordPress database and files.', 'certloom' ) . '</p><p>' . esc_html__( 'Credential-only restore cannot currently restore recipients linked to WordPress accounts. Use a full site backup for those records.', 'certloom' ) . '</p></div>';
 		$this->render_notice();
+		echo '<p><a class="button button-primary" href="' . esc_url( add_query_arg( 'page', WholeStateRecoveryAdmin::PAGE, admin_url( 'admin.php' ) ) ) . '">' . esc_html__( 'Open recovery snapshots for Certloom records, settings and artwork', 'certloom' ) . '</a></p>';
 		$this->render_backup();
 		$this->render_import();
 		$this->render_restore();

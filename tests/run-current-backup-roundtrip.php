@@ -1,5 +1,7 @@
 <?php
 /** BAK-02B canonical builder -> real restore-analyzer round-trip regression. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 error_reporting( E_ALL );
 define( 'ABSPATH', __DIR__ . '/fake-wp/' );
 define( 'MB_IN_BYTES', 1024 * 1024 );
@@ -46,13 +48,17 @@ function delete_option( $key ) { unset( $GLOBALS['roundtrip_options'][ $key ] );
 function set_transient( $key, $value, $ttl ) { $GLOBALS['roundtrip_transients'][ $key ] = $value; return true; }
 function get_transient( $key ) { return $GLOBALS['roundtrip_transients'][ $key ] ?? false; }
 function delete_transient( $key ) { unset( $GLOBALS['roundtrip_transients'][ $key ] ); return true; }
+function wp_cache_delete() { return true; }
+require __DIR__ . '/support/option-database.php';
+require dirname( __DIR__ ) . '/src/Infrastructure/Data/DatabaseOptions.php';
+$GLOBALS['wpdb'] = new CertloomOptionDatabase( $GLOBALS['roundtrip_options'] );
 
 class Ecapla_CertVerify_Fields {
 	const OPTION_KEY = 'fields_opt';
 	const RETIRED_OPTION_KEY = 'retired_opt';
-	public static function get_fields() { return array( array( 'key' => 'course', 'label' => 'Course', 'type' => 'text' ) ); }
+	public static function get_fields() { return array( array( 'key' => 'course', 'label' => 'Course', 'type' => 'text' ), array( 'key' => '__certloom_profile_visibility', 'label' => 'Public credential visibility', 'type' => 'visibility', 'core' => true, 'protected' => true ) ); }
 	public static function get_retired_fields() { return array(); }
-	public static function get_field_map() { return array( 'course' => array( 'key' => 'course', 'label' => 'Course', 'type' => 'text' ) ); }
+	public static function get_field_map() { return array( 'course' => array( 'key' => 'course', 'label' => 'Course', 'type' => 'text' ), '__certloom_profile_visibility' => array( 'key' => '__certloom_profile_visibility', 'type' => 'visibility' ) ); }
 }
 class Ecapla_CertVerify_Settings {
 	const OPTION_KEY = 'settings_opt';
@@ -70,7 +76,7 @@ class Ecapla_CertVerify_Database {
 	public static function get_export_batch( $last, $limit ) {
 		if ( $last >= 2 ) { return array(); }
 		return array(
-			array( 'id' => 1, 'cert_number' => 'CERT-ROUND-1', 'status' => 'valid', 'status_source' => 'manual', 'holder_name' => 'Ada Lovelace', 'issue_date' => '2026-01-01', 'expiry_date' => null, 'custom_fields' => array( 'course' => 'Analytical Engines' ), 'created_at' => '2026-01-01 00:00:00', 'updated_at' => '2026-01-01 00:00:00' ),
+			array( 'id' => 1, 'cert_number' => 'CERT-ROUND-1', 'status' => 'valid', 'status_source' => 'manual', 'holder_name' => 'Ada Lovelace', 'issue_date' => '2026-01-01', 'expiry_date' => null, 'custom_fields' => array( 'course' => 'Analytical Engines', '__certloom_profile_visibility' => 'private' ), 'created_at' => '2026-01-01 00:00:00', 'updated_at' => '2026-01-01 00:00:00' ),
 			array( 'id' => 2, 'cert_number' => 'CERT-ROUND-2', 'status' => 'withdrawn', 'status_source' => 'manual', 'holder_name' => 'Lin Chen', 'issue_date' => '2026-01-02', 'expiry_date' => '2027-01-02', 'custom_fields' => array( 'course' => 'Credential Operations' ), 'created_at' => '2026-01-02 00:00:00', 'updated_at' => '2026-01-02 00:00:00' ),
 		);
 	}
@@ -90,6 +96,7 @@ class Ecapla_CertVerify_Database {
 	public static function get_registry_count() { return 2; }
 }
 
+require __DIR__ . '/bootstrap-autoload.php';
 require dirname( __DIR__ ) . '/includes/class-ecapla-certverify-validator.php';
 require dirname( __DIR__ ) . '/includes/class-ecapla-certverify-backup.php';
 
@@ -108,7 +115,15 @@ rcheck( is_array( $preview ), 'real analyzer stores a bounded non-destructive re
 rcheck( 2 === ( $preview['records'] ?? -1 ), 'restore preview preserves exact backup record count' );
 rcheck( 2 === ( $preview['current_records'] ?? -1 ), 'restore preview reads the current registry count' );
 rcheck( 1 === ( $preview['conflicts'] ?? -1 ) && 1 === ( $preview['new_records'] ?? -1 ), 'restore preview computes existing/new certificate counts from canonical bytes' );
-rcheck( 1 === ( $preview['fields'] ?? -1 ) && 0 === ( $preview['backup_only_fields'] ?? -1 ), 'restore preview preserves field-definition compatibility' );
+rcheck( 2 === ( $preview['fields'] ?? -1 ) && 0 === ( $preview['backup_only_fields'] ?? -1 ), 'restore preview preserves ordinary and protected visibility definitions' );
+$chunk = is_string( $token ) ? get_transient( $token . '_records_0' ) : array();
+rcheck( 'private' === ( $chunk['records'][0]['custom_fields']['__certloom_profile_visibility'] ?? '' ), 'reviewed backup preserves the original private credential visibility' );
+$definitions = new ReflectionMethod( 'Ecapla_CertVerify_Backup', 'definitions_from_manifest' );
+if ( PHP_VERSION_ID < 80100 ) { $definitions->setAccessible( true ); }
+$bad = $definitions->invoke( null, array( 'fields' => array( array( 'key' => 'arbitrary_custom_visibility', 'type' => 'visibility' ) ), 'retired_fields' => array() ) );
+rcheck( is_wp_error( $bad ), 'visibility schema support remains restricted to the protected profile field' );
+$bad_value = Ecapla_CertVerify_Validator::custom_field_value( 'invalid-mode', Ecapla_CertVerify_Fields::get_field_map()['__certloom_profile_visibility'] );
+rcheck( is_wp_error( $bad_value ), 'invalid visibility values still fail validation' );
 
 if ( is_string( $token ) ) { Ecapla_CertVerify_Backup::delete_session( $token ); }
 rcheck( is_string( $token ) && false === get_transient( $token ), 'round-trip review session can be deleted cleanly after test' );

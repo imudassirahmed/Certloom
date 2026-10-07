@@ -1,5 +1,8 @@
 <?php
 /** UX-CORE-02 Coursera Standard xAPI source contract. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
+require_once __DIR__ . '/bootstrap-option-command-double.php';
 define( 'ABSPATH', __DIR__ . '/fake-wp/' );
 define( 'CERTLOOM_DOMAIN_WRITE_PATHS_READY', false );
 define( 'CERTLOOM_DOMAIN_ADMIN_PREVIEW', false );
@@ -66,7 +69,7 @@ $statement=array(
  'result'=>array('success'=>true,'completion'=>true,'score'=>array('scaled'=>1)),
  'context'=>array(CourseraXapiBridge::COURSE_ID_KEY=>'course-42',CourseraXapiBridge::EXTERNAL_ID_KEY=>'student-2026-001')
 );
-$ref=new ReflectionClass(CourseraXapiBridge::class);$method=$ref->getMethod('parse_statement');$method->setAccessible(true);$parsed=$method->invoke(null,$statement);
+$ref=new ReflectionClass(CourseraXapiBridge::class);$method=$ref->getMethod('parse_statement');if ( PHP_VERSION_ID < 80100 ) { $method->setAccessible(true); }$parsed=$method->invoke(null,$statement);
 cx(!is_wp_error($parsed),'official-shape Standard xAPI completion parses');
 foreach (array('false', 'true', 0, 1, null, array(true)) as $invalid_flag) {
  foreach (array('completion', 'success') as $flag) {

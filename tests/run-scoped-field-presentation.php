@@ -1,5 +1,7 @@
 <?php
 /** FLD-02 immutable frontend/privacy presentation contract. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define('ABSPATH',__DIR__.'/');
 function sanitize_key($v){return strtolower(preg_replace('/[^a-z0-9_\-]/','',(string)$v));}
 class Ecapla_CertVerify_Fields { public static $map=array(); public static function get_field_map(){return self::$map;} }

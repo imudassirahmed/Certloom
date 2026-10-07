@@ -1,5 +1,7 @@
 <?php
 /** UX-QA-01 whole-product boundary contract. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $root = dirname( __DIR__ );
 $pass = 0; $fail = 0;
 function uxqa_check( $ok, $label ) { global $pass, $fail; if ( $ok ) { ++$pass; echo "PASS  $label\n"; } else { ++$fail; echo "FAIL  $label\n"; } }
@@ -17,9 +19,9 @@ $template_admin = uxqa_src( $root, 'src/Infrastructure/Admin/TemplateAdmin.php' 
 $analytics = uxqa_src( $root, 'admin/views/analytics.php' );
 $issuance_analytics = uxqa_src( $root, 'admin/views/issuance-analytics.php' );
 $frontend = uxqa_src( $root, 'admin/views/frontend-manager.php' );
-$program = uxqa_src( $root, 'docs/ux-product-simplification-program.md' );
+$program = uxqa_src( $root, 'tests/acceptance-contract.md' );
 
-uxqa_check( false !== strpos( $program, '`UX-QA-01` | Product-wide usability/accessibility certification' ), 'UX-QA-01 remains the approved whole-product milestone' );
+uxqa_check( false !== strpos( $program, '`UX-QA-01` | Product-wide usability/accessibility certification' ), 'whole-product usability remains an explicit acceptance target' );
 uxqa_check( false !== strpos( $program, 'desktop/mobile/keyboard/RTL/mixed-direction/forced-colors/reduced-motion' ), 'UX-QA-01 keeps its complete accessibility/responsive media contract' );
 uxqa_check( false !== strpos( $program, 'end-to-end first-credential task and advanced-admin task' ), 'UX-QA-01 requires both customer journeys' );
 

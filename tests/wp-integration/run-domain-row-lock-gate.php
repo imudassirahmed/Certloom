@@ -5,6 +5,8 @@
  * Run on a disposable WordPress/MySQL installation under WP-CLI:
  *   wp eval-file wp-content/plugins/certloom/tests/wp-integration/run-domain-row-lock-gate.php
  */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 if ( ! defined( 'ABSPATH' ) ) { fwrite( STDERR, "Run inside WordPress.\n" ); exit( 1 ); }
 if ( ! ( defined( 'WP_CLI' ) && WP_CLI ) ) { wp_die( 'Certloom row-lock integration gate requires WP-CLI.' ); }
 if ( ! function_exists( 'pcntl_fork' ) || ! function_exists( 'pcntl_waitpid' ) ) {

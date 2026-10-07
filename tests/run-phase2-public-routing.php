@@ -1,5 +1,7 @@
 <?php
 /** Functional tests for Phase 2 clean routing/token behavior without WordPress. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define( 'ABSPATH', __DIR__ . '/' );
 $GLOBALS['opts'] = array( 'permalink_structure' => '/%postname%/' );
 $GLOBALS['qvars'] = array();

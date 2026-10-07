@@ -1,5 +1,7 @@
 <?php
 /** Review-unlocked safety contract: gates remain explicit without development banners in ordinary product UI. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $root = dirname( __DIR__ );
 $plugin = file_get_contents( $root . '/certloom.php' );
 $gate = file_get_contents( $root . '/src/Infrastructure/Migration/DomainFeatureGate.php' );

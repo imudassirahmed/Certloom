@@ -17,13 +17,26 @@ if ( ! defined( 'ABSPATH' ) ) {
 final class EmailDesignCompiler {
 	const MAX_BLOCKS          = 80;
 	const MAX_CONTAINER_DEPTH = 4;
+	const RESPONSIVE_CSS = '@media only screen and (max-width:600px){.certloom-email-stack-cell{display:block!important;width:100%!important;max-width:100%!important;box-sizing:border-box!important;}}';
 
 	/** Remove document CSS before WordPress HTML sanitization, which otherwise leaves visible CSS text. */
 	public static function sanitize_inline_html( $html ) {
 		$without_styles = preg_replace( '/<style\b[^>]*>.*?<\/style>/is', '', (string) $html );
 		// Repair templates previously stored after KSES removed the compiler's style tag.
-		$without_styles = preg_replace( '/@media\s+only\s+screen\s+and\s*\(max-width:600px\)\s*\{\.certloom-email-stack-cell\{[^}]*\}\}/i', '', (string) $without_styles );
+		$without_styles = self::without_legacy_compiler_css( (string) $without_styles );
 		return wp_kses_post( is_string( $without_styles ) ? $without_styles : '' );
+	}
+
+	/** Accept only known inert compiler repair and equivalent apostrophe entities. */
+	public static function same_inline_html( $stored, $normalized ) {
+		if ( ! is_string( $stored ) || ! is_string( $normalized ) ) { return false; }
+		$canonical = static function ( $html ) { return preg_replace( '/&(?:apos|#0*39|#x0*27);/i', '&#039;', self::without_legacy_compiler_css( $html ) ); };
+		return $canonical( $stored ) === $canonical( $normalized );
+	}
+
+	/** Older KSES output starts with this exact compiler-owned style tag's text. */
+	private static function without_legacy_compiler_css( $html ) {
+		return 0 === strpos( $html, self::RESPONSIVE_CSS ) ? substr( $html, strlen( self::RESPONSIVE_CSS ) ) : $html;
 	}
 
 	/** @return array<int,string> */
@@ -973,7 +986,7 @@ final class EmailDesignCompiler {
 		}
 
 		$custom_font_css = $this->custom_font_face_css( $theme, $blocks );
-		$responsive = '<style>' . $custom_font_css . '@media only screen and (max-width:600px){.certloom-email-stack-cell{display:block!important;width:100%!important;max-width:100%!important;box-sizing:border-box!important;}}</style>';
+		$responsive = '<style>' . $custom_font_css . self::RESPONSIVE_CSS . '</style>';
 		$html       = $responsive
 			. '<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"' . $page_attr . ' style="width:100%;' . $page_bg . 'margin:0;padding:0;">'
 			. '<tr><td align="center" style="padding:28px 14px;">'

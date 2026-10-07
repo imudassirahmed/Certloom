@@ -245,9 +245,12 @@ class Ecapla_CertVerify_Admin {
 			return;
 		}
 		wp_enqueue_style( 'certloom-tokens', ECAPLA_CERTVERIFY_URL . 'assets/css/certloom-tokens.css', array(), ECAPLA_CERTVERIFY_VERSION );
-		wp_enqueue_style( 'ecapla-certverify-admin', ECAPLA_CERTVERIFY_URL . 'admin/assets/admin.css', array( 'certloom-tokens' ), ECAPLA_CERTVERIFY_VERSION );
-		wp_enqueue_style( 'certloom-admin-foundation', ECAPLA_CERTVERIFY_URL . 'admin/assets/certloom-foundation.css', array( 'ecapla-certverify-admin' ), ECAPLA_CERTVERIFY_VERSION );
-		wp_enqueue_script( 'ecapla-certverify-admin', ECAPLA_CERTVERIFY_URL . 'admin/assets/admin.js', array(), ECAPLA_CERTVERIFY_VERSION, true );
+		$ui_version = ECAPLA_CERTVERIFY_VERSION;
+		if ( function_exists( 'wp_get_environment_type' ) && 'local' === wp_get_environment_type() ) { $ui_version .= '.' . max( filemtime( ECAPLA_CERTVERIFY_PATH . 'admin/assets/admin.css' ), filemtime( ECAPLA_CERTVERIFY_PATH . 'admin/assets/certloom-foundation.css' ), filemtime( ECAPLA_CERTVERIFY_PATH . 'admin/assets/admin.js' ) ); }
+		wp_enqueue_style( 'ecapla-certverify-admin', ECAPLA_CERTVERIFY_URL . 'admin/assets/admin.css', array( 'certloom-tokens' ), $ui_version );
+		wp_enqueue_style( 'certloom-admin-foundation', ECAPLA_CERTVERIFY_URL . 'admin/assets/certloom-foundation.css', array( 'ecapla-certverify-admin' ), $ui_version );
+		wp_enqueue_script( 'certloom-template-text-fit', ECAPLA_CERTVERIFY_URL . 'admin/assets/template-text-fit.js', array(), ECAPLA_CERTVERIFY_VERSION, true );
+		wp_enqueue_script( 'ecapla-certverify-admin', ECAPLA_CERTVERIFY_URL . 'admin/assets/admin.js', array( 'certloom-template-text-fit' ), $ui_version, true );
 		$usage_profile = \Certloom\Infrastructure\Admin\UsageProfilePresentation::active_profile();
 		$usage_terms = \Certloom\Infrastructure\Admin\UsageProfilePresentation::terms( $usage_profile );
 		$usage_issuance = \Certloom\Infrastructure\Admin\UsageProfilePresentation::issuance_contract( $usage_profile );
@@ -262,6 +265,14 @@ class Ecapla_CertVerify_Admin {
 			'usageIssuance' => $usage_issuance,
 			'restNonce' => wp_create_nonce( 'wp_rest' ),
 			'restContextUrl' => rest_url( 'certloom/v1/admin/context' ),
+			'restSetupCheckUrl' => rest_url( 'certloom/v1/admin/setup/field-check' ),
+			'restSetupReadinessUrl' => rest_url( 'certloom/v1/admin/setup/readiness-check' ),
+			'setupCheckingReadiness' => __( 'Checking setup and preparing an example...', 'certloom' ),
+			'setupReviewStep' => __( 'Review this step', 'certloom' ),
+			'setupStatusReady' => __( 'Checked', 'certloom' ),
+			'setupStatusBlocked' => __( 'Needs attention', 'certloom' ),
+			'setupStatusNext' => __( 'Next step', 'certloom' ),
+			'setupCheckChanged' => __( 'Setup changed during the check. Run it again to review your saved choices.', 'certloom' ),
 			'restCredentialsUrl' => rest_url( 'certloom/v1/admin/credentials' ),
 			'restTemplatePreviewUrl' => rest_url( 'certloom/v1/admin/template-preview' ),
 			'restIssuancePreviewUrl' => rest_url( 'certloom/v1/admin/issuance-preview' ),
@@ -442,16 +453,17 @@ class Ecapla_CertVerify_Admin {
 			if ( is_array( $network_choice ) && array_key_exists( 'delete_data', $network_choice ) ) { $delete_data = ! empty( $network_choice['delete_data'] ); }
 		}
 		?>
-		<dialog id="certloom-plugin-lifecycle-dialog" class="certloom-plugin-lifecycle-dialog" data-certloom-plugin-file="<?php echo esc_attr( $plugin_file ); ?>">
+		<dialog id="certloom-plugin-lifecycle-dialog" class="certloom-plugin-lifecycle-dialog" aria-labelledby="certloom-plugin-lifecycle-title" aria-describedby="certloom-plugin-lifecycle-description" data-certloom-plugin-file="<?php echo esc_attr( $plugin_file ); ?>">
 			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" data-certloom-lifecycle-form>
 				<input type="hidden" name="action" value="certloom_prepare_deactivation"><input type="hidden" name="redirect_to" value="" data-certloom-deactivate-redirect><input type="hidden" name="certloom_network_wide" value="<?php echo $network_wide ? '1' : '0'; ?>"><?php wp_nonce_field( 'certloom_prepare_deactivation' ); ?>
-				<div class="certloom-lifecycle-dialog-head"><div><span class="certloom-eyebrow"><?php esc_html_e( 'Data & verification', 'certloom' ); ?></span><h2><?php esc_html_e( 'Before deactivating Certloom', 'certloom' ); ?></h2></div><button type="button" class="button-link certloom-dialog-close" data-certloom-dialog-close aria-label="<?php esc_attr_e( 'Close', 'certloom' ); ?>">×</button></div>
-				<p><?php esc_html_e( 'Public verification pages, credential QR destinations and the recipient portal stop working while Certloom is inactive.', 'certloom' ); ?></p>
+				<div class="certloom-lifecycle-dialog-head"><div><span class="certloom-eyebrow"><?php esc_html_e( 'Data & verification', 'certloom' ); ?></span><h2 id="certloom-plugin-lifecycle-title"><?php esc_html_e( 'Before deactivating Certloom', 'certloom' ); ?></h2></div><button type="button" class="button-link certloom-dialog-close" data-certloom-dialog-close aria-label="<?php esc_attr_e( 'Close', 'certloom' ); ?>">×</button></div>
+				<p id="certloom-plugin-lifecycle-description"><?php esc_html_e( 'Public verification pages, credential QR destinations and the recipient portal stop working while Certloom is inactive.', 'certloom' ); ?></p>
 				<p class="description"><?php esc_html_e( 'WordPress can only delete a plugin after it is inactive, when Certloom code is no longer running. Choose now what should happen if you later delete the plugin.', 'certloom' ); ?></p>
-				<div class="certloom-lifecycle-options">
-					<label><input type="radio" name="delete_data_on_uninstall" value="0" <?php checked( ! $delete_data ); ?>><span><strong><?php esc_html_e( 'Keep certificate data', 'certloom' ); ?></strong><small><?php esc_html_e( 'Recommended. Data stays in WordPress so reinstalling Certloom can restore service. Verification still remains unavailable while the plugin is inactive.', 'certloom' ); ?></small></span></label>
+				<div class="certloom-lifecycle-options" role="radiogroup" aria-label="<?php esc_attr_e( 'If the plugin is deleted', 'certloom' ); ?>">
+					<label><input type="radio" name="delete_data_on_uninstall" value="0" <?php checked( ! $delete_data ); ?>><span><strong><?php esc_html_e( 'Keep certificate data', 'certloom' ); ?></strong><small><?php esc_html_e( 'Recommended. Saved credentials, certificate and email designs stay in WordPress for reinstalling Certloom. Verification remains unavailable while the plugin is inactive.', 'certloom' ); ?></small></span></label>
 					<label class="is-destructive"><input type="radio" name="delete_data_on_uninstall" value="1" <?php checked( $delete_data ); ?>><span><strong><?php esc_html_e( 'Delete Certloom data if the plugin is deleted', 'certloom' ); ?></strong><small><?php esc_html_e( 'Permanently removes Certloom certificate data and settings during WordPress plugin deletion. This cannot be undone without a backup.', 'certloom' ); ?></small></span></label>
 				</div>
+				<p class="description"><?php esc_html_e( 'If you later delete the plugin, connections, automation rules, pending jobs and verification analytics are cleared for either choice. Reconnect integrations after reinstalling. Deactivation alone keeps these settings.', 'certloom' ); ?></p>
 				<div class="certloom-lifecycle-dialog-actions"><button type="button" class="button" data-certloom-dialog-close><?php esc_html_e( 'Cancel', 'certloom' ); ?></button><button type="submit" class="button button-primary"><?php esc_html_e( 'Save choice & deactivate', 'certloom' ); ?></button></div>
 			</form>
 		</dialog>
@@ -739,6 +751,14 @@ class Ecapla_CertVerify_Admin {
 		$this->require_writes_available( admin_url( 'admin.php?page=certloom-setup' ) );
 		$action = sanitize_key( wp_unslash( $_POST['certloom_setup_wizard_action'] ) );
 		$base = admin_url( 'admin.php?page=certloom-setup' );
+		$run_id = isset( $_POST['certloom_draft_run'] ) && is_string( $_POST['certloom_draft_run'] ) ? wp_unslash( $_POST['certloom_draft_run'] ) : '';
+		$revision = isset( $_POST['certloom_draft_base_revision'] ) && is_string( $_POST['certloom_draft_base_revision'] ) ? filter_var( wp_unslash( $_POST['certloom_draft_base_revision'] ), FILTER_VALIDATE_INT, array( 'options' => array( 'min_range' => 0 ) ) ) : false;
+		if ( false === $revision || '' === $run_id ) { $this->redirect_error( __( 'Reload Setup to continue with the current saved draft.', 'certloom' ), $base ); }
+		$result = \Certloom\Application\Admin\DraftWorkspace::run_if_current( 'setup', $run_id, $revision, function () use ( $action, $base ) { return $this->handle_setup_wizard_action_owned( $action, $base ); } );
+		if ( is_wp_error( $result ) ) { $this->redirect_error( $result->get_error_message(), $base ); }
+	}
+
+	private function handle_setup_wizard_action_owned( $action, $base ) {
 
 		if ( 'restart' === $action ) {
 			$result = Ecapla_CertVerify_Onboarding::restart_wizard();
@@ -760,7 +780,7 @@ class Ecapla_CertVerify_Admin {
 				}
 				$state = Ecapla_CertVerify_Onboarding::get_state();
 				$merged = array_merge( is_array( $state['wizard_draft'] ?? null ) ? $state['wizard_draft'] : array(), $patch );
-				$required = $this->validate_setup_wizard_context_requirements( $merged );
+				$required = $this->validate_setup_wizard_context_requirements( $merged, false );
 				if ( is_wp_error( $required ) ) { $this->redirect_error( $required->get_error_message(), add_query_arg( 'step', 'context', $base ) ); }
 			}
 			if ( 'save_step' === $action && 'issue' === $step ) {
@@ -773,7 +793,14 @@ class Ecapla_CertVerify_Admin {
 				}
 				$this->issue_setup_wizard_first_credential( $base );
 			}
-			$patch = 'skip_step' === $action ? array() : $this->setup_wizard_draft_request( $step );
+			$patch = 'skip_step' === $action ? ( 'email' === $step ? array( 'setup_email_mode' => 'inherit', 'setup_email_design_id' => '' ) : array() ) : $this->setup_wizard_draft_request( $step );
+			if ( is_wp_error( $patch ) ) { $this->redirect_error( $patch->get_error_message(), $base ); }
+			if ( 'fields' === $step && 'skip_step' !== $action && isset( $patch['setup_field_plan'] ) ) {
+				$program_id = absint( Ecapla_CertVerify_Onboarding::get_state()['wizard_draft']['setup_program_id'] ?? 0 );
+				$program = $program_id ? ( new \Certloom\Infrastructure\Repository\ProgramRepository() )->find( $program_id ) : null;
+				$valid = is_wp_error( $program ) ? $program : ( new \Certloom\Application\Setup\WizardFieldSetup() )->build( $patch['setup_field_plan'], Ecapla_CertVerify_Fields::get_field_map(), Ecapla_CertVerify_Fields::get_retired_fields(), $program );
+				if ( is_wp_error( $valid ) ) { $this->redirect_error( $valid->get_error_message(), $base ); }
+			}
 			$onboarding_before = ( 'profile' === $step && 'skip_step' !== $action ) ? Ecapla_CertVerify_Onboarding::snapshot() : null;
 			$result = Ecapla_CertVerify_Onboarding::save_wizard_step( $step, $patch, $next, 'skip_step' === $action );
 			if ( is_wp_error( $result ) ) { $this->redirect_error( $result->get_error_message(), $base ); }
@@ -798,6 +825,17 @@ class Ecapla_CertVerify_Admin {
 				exit;
 			}
 			wp_safe_redirect( add_query_arg( array( 'certloom_wizard_saved' => '1', 'step' => $state['wizard_step'] ), $base ) );
+			exit;
+		}
+
+		if ( 'apply_guided_setup' === $action ) {
+			if ( ! empty( $_POST['wizard_finish_later'] ) ) {
+				$result = Ecapla_CertVerify_Onboarding::save_wizard_draft_only( 'configuration', array() );
+			} else {
+				$result = $this->apply_guided_setup_configuration();
+			}
+			if ( is_wp_error( $result ) ) { $this->redirect_error( $result->get_error_message(), add_query_arg( 'step', 'configuration', $base ) ); }
+			wp_safe_redirect( ! empty( $_POST['wizard_finish_later'] ) ? admin_url( 'admin.php?page=' . self::DASHBOARD_PAGE ) : add_query_arg( 'step', 'issue', $base ) );
 			exit;
 		}
 
@@ -826,119 +864,26 @@ class Ecapla_CertVerify_Admin {
 		);
 	}
 
+	/** Read-only artwork guidance for the current administrator's staged field choices. */
+	private function setup_wizard_design_coverage( ?array $template, array $draft ) {
+		$catalog = Ecapla_CertVerify_Fields::get_field_map();
+		$keys = $draft['selected_fields'] ?? array();
+		if ( isset( $draft['setup_field_plan'] ) ) {
+			$id = absint( $draft['setup_program_id'] ?? 0 );
+			$program = $id ? ( new \Certloom\Infrastructure\Repository\ProgramRepository() )->find( $id ) : null;
+			$plan = is_wp_error( $program ) ? $program : ( new \Certloom\Application\Setup\WizardFieldSetup() )->build( $draft['setup_field_plan'], $catalog, Ecapla_CertVerify_Fields::get_retired_fields(), $program );
+			if ( ! is_wp_error( $plan ) ) { $catalog = $plan['catalog']; $keys = array(); foreach ( $plan['review'] as $row ) { if ( 'exclude' !== $row['requirement'] ) { $keys[] = $row['key']; } } }
+		}
+		return ( new \Certloom\Application\Setup\WizardDesignCoverage() )->inspect( $template, $keys, $catalog );
+	}
+
 	/** @return true|\WP_Error */
-	private function validate_setup_wizard_context_requirements( array $draft ) {
-		$plan = $this->setup_wizard_first_credential_plan( $draft );
-		$terms = \Certloom\Infrastructure\Admin\UsageProfilePresentation::terms( (string) ( $draft['usage_profile'] ?? 'general_other' ) );
-		$context = is_array( $plan['context_required'] ?? null ) ? $plan['context_required'] : array();
-		$context_fields = is_array( $plan['context_fields'] ?? null ) ? $plan['context_fields'] : array();
-		$program_id = absint( $draft['setup_program_id'] ?? 0 );
-		$new_program = trim( (string) ( $draft['setup_new_program_title'] ?? '' ) );
-		$issuer_id = absint( $draft['setup_issuer_id'] ?? 0 );
-		$new_issuer = trim( (string) ( $draft['setup_new_issuer_name'] ?? '' ) );
-		$batch_id = absint( $draft['setup_batch_id'] ?? 0 );
-		$new_batch = trim( (string) ( $draft['setup_new_batch_name'] ?? '' ) );
-		$signer_id = absint( $draft['setup_signer_id'] ?? 0 );
-		$new_signer = trim( (string) ( $draft['setup_new_signer_name'] ?? '' ) );
-
-		$program_repo = new \Certloom\Infrastructure\Repository\ProgramRepository();
-		$issuer_repo = new \Certloom\Infrastructure\Repository\IssuerRepository();
-		$batch_repo = new \Certloom\Infrastructure\Repository\BatchRepository();
-		$signer_repo = new \Certloom\Infrastructure\Repository\SignerRepository();
-
-		$program = null;
-		if ( $program_id ) {
-			$program = $program_repo->find( $program_id );
-			if ( is_wp_error( $program ) ) { return $program; }
-			if ( ! is_array( $program ) ) { return new \WP_Error( 'certloom_setup_program_missing', __( 'The selected Program is no longer available.', 'certloom' ) ); }
-		}
-		if ( ! empty( $context['program'] ) && ! $program_id && '' === $new_program ) {
-			return new \WP_Error( 'certloom_setup_design_program_required', sprintf( /* translators: %s: profile-specific Program-equivalent relationship label. */ __( 'The selected design needs %s information. Choose an existing one or add it here.', 'certloom' ), (string) ( $terms['program']['singular'] ?? __( 'Program', 'certloom' ) ) ) );
-		}
-
-		$program_issuer_id = is_array( $program ) ? absint( $program['issuer_id'] ?? 0 ) : 0;
-		$effective_issuer_id = $program_issuer_id ?: $issuer_id;
-		$issuer = null;
-		if ( $effective_issuer_id ) {
-			$issuer = $issuer_repo->find( $effective_issuer_id );
-			if ( is_wp_error( $issuer ) ) { return $issuer; }
-			if ( ! is_array( $issuer ) ) { return new \WP_Error( 'certloom_setup_issuer_missing', __( 'The selected Issuer is no longer available.', 'certloom' ) ); }
-		}
-		if ( ! empty( $context['issuer'] ) && ! $effective_issuer_id && '' === $new_issuer ) {
-			return new \WP_Error( 'certloom_setup_design_issuer_required', sprintf( /* translators: %s: profile-specific Program-equivalent relationship label. */ __( 'The selected design needs %s information. Choose an existing one or add it here.', 'certloom' ), (string) ( $terms['issuer']['singular'] ?? __( 'Issuer', 'certloom' ) ) ) );
-		}
-
-		$batch = null;
-		if ( $batch_id ) {
-			$batch = $batch_repo->find( $batch_id );
-			if ( is_wp_error( $batch ) ) { return $batch; }
-			if ( ! is_array( $batch ) ) { return new \WP_Error( 'certloom_setup_batch_missing', __( 'The selected Batch or cycle is no longer available.', 'certloom' ) ); }
-			if ( $program_id && absint( $batch['program_id'] ?? 0 ) !== $program_id ) { return new \WP_Error( 'certloom_setup_batch_program_mismatch', __( 'Choose a Batch or cycle that belongs to the selected Program context.', 'certloom' ) ); }
-		}
-		if ( ! empty( $context['batch'] ) && ! $batch_id && '' === $new_batch ) {
-			return new \WP_Error( 'certloom_setup_design_batch_required', sprintf( /* translators: %s: profile-specific Program-equivalent relationship label. */ __( 'The selected design needs %s information. Choose an existing one or add it here.', 'certloom' ), (string) ( $terms['batch']['singular'] ?? __( 'Batch', 'certloom' ) ) ) );
-		}
-
-		$signer = null;
-		if ( $signer_id ) {
-			$signer = $signer_repo->find( $signer_id );
-			if ( is_wp_error( $signer ) ) { return $signer; }
-			if ( ! is_array( $signer ) ) { return new \WP_Error( 'certloom_setup_signer_missing', __( 'The selected Signer is no longer available.', 'certloom' ) ); }
-		}
-		if ( ! empty( $context['signer'] ) && ! $signer_id && '' === $new_signer ) {
-			return new \WP_Error( 'certloom_setup_design_signer_required', sprintf( /* translators: %s: profile-specific Program-equivalent relationship label. */ __( 'The selected design needs %s information. Choose an existing one or add it here.', 'certloom' ), (string) ( $terms['signer']['singular'] ?? __( 'Signer', 'certloom' ) ) ) );
-		}
-
-		// Validate the exact sub-fields required by the published design, rather
-		// than treating an entity selection as proof that all of its merge data exists.
-		$issuer_fields = is_array( $context_fields['issuer'] ?? null ) ? $context_fields['issuer'] : array();
-		if ( ! empty( $issuer_fields['title'] ) ) {
-			$issuer_title = is_array( $issuer ) ? trim( (string) ( $issuer['settings']['title'] ?? '' ) ) : trim( (string) ( $draft['setup_new_issuer_title'] ?? '' ) );
-			if ( '' === $issuer_title ) { return new \WP_Error( 'certloom_setup_design_issuer_title_required', sprintf( /* translators: %s: profile-specific Issuer-equivalent relationship label. */ __( 'The selected design uses the %s title. Add that title to the selected record or create a new one with a title.', 'certloom' ), (string) ( $terms['issuer']['singular'] ?? __( 'Issuer', 'certloom' ) ) ) ); }
-		}
-		$program_fields = is_array( $context_fields['program'] ?? null ) ? $context_fields['program'] : array();
-		if ( ! empty( $program_fields['code'] ) ) {
-			$program_code = is_array( $program ) ? trim( (string) ( $program['code'] ?? '' ) ) : trim( (string) ( $draft['setup_new_program_code'] ?? '' ) );
-			if ( '' === $program_code ) { return new \WP_Error( 'certloom_setup_design_program_code_required', sprintf( /* translators: %s: profile-specific Program- or Batch-equivalent relationship label. */ __( 'The selected design uses the %s code. Enter a code before continuing.', 'certloom' ), (string) ( $terms['program']['singular'] ?? __( 'Program', 'certloom' ) ) ) ); }
-		}
-		$batch_fields = is_array( $context_fields['batch'] ?? null ) ? $context_fields['batch'] : array();
-		if ( ! empty( $batch_fields['code'] ) ) {
-			$batch_code = is_array( $batch ) ? trim( (string) ( $batch['code'] ?? '' ) ) : trim( (string) ( $draft['setup_new_batch_code'] ?? '' ) );
-			if ( '' === $batch_code ) { return new \WP_Error( 'certloom_setup_design_batch_code_required', sprintf( /* translators: %s: profile-specific Program- or Batch-equivalent relationship label. */ __( 'The selected design uses the %s code. Enter a code before continuing.', 'certloom' ), (string) ( $terms['batch']['singular'] ?? __( 'Batch', 'certloom' ) ) ) ); }
-		}
-		$signer_fields = is_array( $context_fields['signer'] ?? null ) ? $context_fields['signer'] : array();
-		$signer_checks = array(
-			'title' => array( is_array( $signer ) ? trim( (string) ( $signer['title'] ?? '' ) ) : trim( (string) ( $draft['setup_new_signer_title'] ?? '' ) ), __( 'position / designation', 'certloom' ) ),
-			'email' => array( is_array( $signer ) ? trim( (string) ( $signer['email'] ?? '' ) ) : trim( (string) ( $draft['setup_new_signer_email'] ?? '' ) ), __( 'email', 'certloom' ) ),
-			'signature' => array( is_array( $signer ) ? absint( $signer['signature_attachment_id'] ?? 0 ) : absint( $draft['setup_new_signer_signature_id'] ?? 0 ), __( 'signature image', 'certloom' ) ),
-		);
-		foreach ( $signer_checks as $field_key => $check ) {
-			if ( empty( $signer_fields[ $field_key ] ) || ! empty( $check[0] ) ) { continue; }
-			return new \WP_Error( 'certloom_setup_design_signer_field_required', sprintf( /* translators: 1: profile-specific relationship label; 2: required field label. */ __( 'The selected design uses the %1$s %2$s. Add that value before continuing.', 'certloom' ), (string) ( $terms['signer']['singular'] ?? __( 'Signer', 'certloom' ) ), (string) $check[1] ) );
-		}
-
-		$values = is_array( $draft['setup_credential_values'] ?? null ) ? $draft['setup_credential_values'] : array();
-		foreach ( (array) ( $plan['credential_fields'] ?? array() ) as $field ) {
-			if ( empty( $field['required_by_design'] ) ) { continue; }
-			$key = sanitize_key( (string) ( $field['key'] ?? '' ) );
-			if ( '' !== $key && '' === trim( (string) ( $values[ $key ] ?? '' ) ) ) {
-				return new \WP_Error( 'certloom_setup_design_field_required', sprintf( /* translators: %s: required credential field label. */ __( 'Enter %s because the selected design uses this field.', 'certloom' ), (string) ( $field['label'] ?? $key ) ) );
-			}
-		}
-		if ( ! empty( $plan['grade_required'] ) && '' === trim( (string) ( $draft['first_grade'] ?? '' ) ) ) {
-			return new \WP_Error( 'certloom_setup_design_grade_required', __( 'Enter the grade because the selected design uses it.', 'certloom' ) );
-		}
-		$repeat = is_array( $draft['setup_repeating_data'] ?? null ) ? $draft['setup_repeating_data'] : array();
-		foreach ( array( 'subjects', 'results' ) as $rowset ) {
-			if ( ! empty( $plan['repeating'][ $rowset ] ) && empty( $repeat[ $rowset ] ) ) {
-				return new \WP_Error( 'certloom_setup_design_repeating_required', sprintf( /* translators: %s: repeating Data Table label, such as Subjects or Results. */ __( 'Add at least one %s row because the selected design uses that Data Table.', 'certloom' ), 'results' === $rowset ? __( 'result', 'certloom' ) : __( 'subject', 'certloom' ) ) );
-			}
-		}
-		return true;
+	private function validate_setup_wizard_context_requirements( array $draft, $require_issuance_values = true ) {
+		return ( new \Certloom\Infrastructure\Admin\WizardContextRequirementsCheck() )->validate( $draft, $this->setup_wizard_first_credential_plan( $draft ), $require_issuance_values );
 	}
 
 	/** @return array<string,mixed>|\WP_Error */
-	private function materialize_setup_wizard_context( array $draft ) {
+	private function materialize_setup_wizard_context( array $draft, ?array $field_plan = null ) {
 		$issuer_id = absint( $draft['setup_issuer_id'] ?? 0 );
 		$program_id = absint( $draft['setup_program_id'] ?? 0 );
 		$batch_id = absint( $draft['setup_batch_id'] ?? 0 );
@@ -958,7 +903,12 @@ class Ecapla_CertVerify_Admin {
 				$issuer_settings = array();
 				$issuer_title = trim( (string) ( $draft['setup_new_issuer_title'] ?? '' ) );
 				if ( '' !== $issuer_title ) { $issuer_settings['title'] = $issuer_title; }
-				$created = $issuer_repo->create( array( 'name' => $name, 'slug' => $slug, 'settings' => $issuer_settings ) );
+				$is_organization = $name === trim( (string) ( $draft['organization_name'] ?? '' ) );
+				if ( $is_organization ) {
+					$issuer_settings['website'] = (string) ( $draft['organization_website'] ?? '' );
+					$issuer_settings['contact'] = (string) ( $draft['organization_contact'] ?? '' );
+				}
+				$created = $issuer_repo->create( array( 'name' => $name, 'slug' => $slug, 'settings' => $issuer_settings, 'logo_attachment_id' => $is_organization ? absint( $draft['organization_logo_id'] ?? 0 ) : 0 ) );
 				if ( ! is_wp_error( $created ) || 'certloom_issuer_slug_duplicate' !== $created->get_error_code() ) { break; }
 			}
 			if ( is_wp_error( $created ) ) { return $created; }
@@ -967,10 +917,16 @@ class Ecapla_CertVerify_Admin {
 
 		$program = null;
 		if ( $program_id ) {
-			$program = $program_repo->find( $program_id );
+			$program = null !== $field_plan ? $program_repo->find_for_update( $program_id ) : $program_repo->find( $program_id );
 			if ( is_wp_error( $program ) ) { return $program; }
 			if ( ! is_array( $program ) ) { return new \WP_Error( 'certloom_setup_program_missing', __( 'The selected Program is no longer available.', 'certloom' ) ); }
 			if ( ! empty( $program['issuer_id'] ) ) { $issuer_id = absint( $program['issuer_id'] ); }
+			if ( null !== $field_plan ) {
+				$valid = ( new \Certloom\Infrastructure\Admin\ScopedFieldConfigurationGuard() )->validate_program_change( $program_id, $field_plan['contract'], $program['profile'], $issuer_id );
+				if ( is_wp_error( $valid ) ) { return $valid; }
+				$saved = $program_repo->update( $program_id, array( 'metadata' => $field_plan['metadata'] ) );
+				if ( is_wp_error( $saved ) ) { return $saved; }
+			}
 		} elseif ( '' !== trim( (string) ( $draft['setup_new_program_title'] ?? '' ) ) ) {
 			$program_id = $program_repo->create( array(
 				'title' => trim( (string) $draft['setup_new_program_title'] ),
@@ -978,10 +934,15 @@ class Ecapla_CertVerify_Admin {
 				'issuer_id' => $issuer_id ?: null,
 				'validity_days' => null,
 				'active' => true,
+				'metadata' => null !== $field_plan ? $field_plan['metadata'] : array(),
 			) );
 			if ( is_wp_error( $program_id ) ) { return $program_id; }
 			$program = $program_repo->find( $program_id );
 			if ( is_wp_error( $program ) ) { return $program; }
+			if ( null !== $field_plan ) {
+				$valid = ( new \Certloom\Infrastructure\Admin\ScopedFieldConfigurationGuard() )->validate_program_change( $program_id, $field_plan['contract'], $program['profile'], $issuer_id );
+				if ( is_wp_error( $valid ) ) { return $valid; }
+			}
 		}
 
 		if ( $batch_id ) {
@@ -1056,7 +1017,10 @@ class Ecapla_CertVerify_Admin {
 		$state = Ecapla_CertVerify_Onboarding::get_state();
 		$draft = is_array( $state['wizard_draft'] ?? null ) ? array_merge( $state['wizard_draft'], $patch ) : $patch;
 		$context_valid = $this->validate_setup_wizard_context_requirements( $draft );
-		if ( is_wp_error( $context_valid ) ) { $this->redirect_error( $context_valid->get_error_message(), add_query_arg( 'step', 'context', $base ) ); }
+		if ( is_wp_error( $context_valid ) ) {
+			$value_error = in_array( $context_valid->get_error_code(), array( 'certloom_setup_design_field_required', 'certloom_setup_design_grade_required', 'certloom_setup_design_repeating_required' ), true );
+			$this->redirect_error( $context_valid->get_error_message(), $value_error ? $issue_url : add_query_arg( 'step', 'context', $base ) );
+		}
 
 		$materialized = $this->materialize_setup_wizard_context( $draft );
 		if ( is_wp_error( $materialized ) ) { $this->redirect_error( $materialized->get_error_message(), add_query_arg( 'step', 'context', $base ) ); }
@@ -1145,6 +1109,11 @@ class Ecapla_CertVerify_Admin {
 					'organization_contact' => isset( $_POST['organization_contact'] ) ? sanitize_text_field( wp_unslash( $_POST['organization_contact'] ) ) : '',
 				);
 			case 'fields':
+				if ( array_key_exists( 'setup_fields_version', $_POST ) || array_key_exists( 'setup_field', $_POST ) ) {
+					$intent = ( new \Certloom\Application\Setup\WizardFieldSetup() )->from_form( wp_unslash( $_POST ) );
+					if ( is_wp_error( $intent ) ) { return $intent; }
+					return array( 'setup_field_plan' => $intent, 'selected_fields' => array_column( $intent['rows'], 'key' ), 'custom_fields' => array() );
+				}
 				$selected = isset( $_POST['selected_fields'] ) && is_array( $_POST['selected_fields'] ) ? array_map( 'sanitize_key', wp_unslash( $_POST['selected_fields'] ) ) : array();
 				$custom = isset( $_POST['custom_fields'] ) && is_array( $_POST['custom_fields'] ) ? array_map( 'sanitize_text_field', wp_unslash( $_POST['custom_fields'] ) ) : array();
 				return array( 'selected_fields' => $selected, 'custom_fields' => $custom );
@@ -1155,11 +1124,14 @@ class Ecapla_CertVerify_Admin {
 				if ( 'image' === $mode ) { $template_id = 0; }
 				elseif ( 'design' === $mode ) { $image_id = 0; }
 				else { $image_id = 0; $template_id = 0; }
-				return array( 'presentation_mode' => $mode, 'certificate_image_id' => $image_id, 'design_template_id' => $template_id );
-			case 'context':
-				$credential_values = isset( $_POST['setup_credential_values'] ) && is_array( $_POST['setup_credential_values'] ) ? wp_unslash( $_POST['setup_credential_values'] ) : array();
-				$repeating = isset( $_POST['setup_repeating_data'] ) && is_array( $_POST['setup_repeating_data'] ) ? wp_unslash( $_POST['setup_repeating_data'] ) : array();
+				return array( 'presentation_mode' => $mode, 'certificate_image_id' => $image_id, 'design_template_id' => $template_id, 'setup_design_default' => ! empty( $_POST['setup_design_default'] ) ? 1 : 0 );
+			case 'email':
 				return array(
+					'setup_email_mode' => isset( $_POST['setup_email_mode'] ) ? sanitize_key( wp_unslash( $_POST['setup_email_mode'] ) ) : 'inherit',
+					'setup_email_design_id' => isset( $_POST['setup_email_design_id'] ) ? sanitize_key( wp_unslash( $_POST['setup_email_design_id'] ) ) : '',
+				);
+			case 'context':
+				return array_merge( array(
 					'setup_issuer_id' => isset( $_POST['setup_issuer_id'] ) ? absint( $_POST['setup_issuer_id'] ) : 0,
 					'setup_program_id' => isset( $_POST['setup_program_id'] ) ? absint( $_POST['setup_program_id'] ) : 0,
 					'setup_batch_id' => isset( $_POST['setup_batch_id'] ) ? absint( $_POST['setup_batch_id'] ) : 0,
@@ -1174,13 +1146,10 @@ class Ecapla_CertVerify_Admin {
 					'setup_new_signer_title' => isset( $_POST['setup_new_signer_title'] ) ? sanitize_text_field( wp_unslash( $_POST['setup_new_signer_title'] ) ) : '',
 					'setup_new_signer_email' => isset( $_POST['setup_new_signer_email'] ) ? sanitize_text_field( wp_unslash( $_POST['setup_new_signer_email'] ) ) : '',
 					'setup_new_signer_signature_id' => isset( $_POST['setup_new_signer_signature_id'] ) ? absint( $_POST['setup_new_signer_signature_id'] ) : 0,
-					'setup_credential_values' => $credential_values,
-					'first_grade' => isset( $_POST['first_grade'] ) ? sanitize_text_field( wp_unslash( $_POST['first_grade'] ) ) : '',
-					'setup_repeating_data' => $repeating,
-				);
+				), $this->setup_wizard_credential_values_request() );
 			case 'issue':
 				$recipient_custom = isset( $_POST['first_recipient_custom'] ) && is_array( $_POST['first_recipient_custom'] ) ? wp_unslash( $_POST['first_recipient_custom'] ) : array();
-				return array(
+				return array_merge( array(
 					'first_recipient_name' => isset( $_POST['first_recipient_name'] ) ? sanitize_text_field( wp_unslash( $_POST['first_recipient_name'] ) ) : '',
 					'first_recipient_email' => isset( $_POST['first_recipient_email'] ) ? sanitize_text_field( wp_unslash( $_POST['first_recipient_email'] ) ) : '',
 					'first_recipient_first_name' => isset( $_POST['first_recipient_first_name'] ) ? sanitize_text_field( wp_unslash( $_POST['first_recipient_first_name'] ) ) : '',
@@ -1191,9 +1160,20 @@ class Ecapla_CertVerify_Admin {
 					'credential_title' => isset( $_POST['credential_title'] ) ? sanitize_text_field( wp_unslash( $_POST['credential_title'] ) ) : '',
 					'display_number' => isset( $_POST['display_number'] ) ? sanitize_text_field( wp_unslash( $_POST['display_number'] ) ) : '',
 					'issue_date' => isset( $_POST['issue_date'] ) ? sanitize_text_field( wp_unslash( $_POST['issue_date'] ) ) : '',
-				);
+				), $this->setup_wizard_credential_values_request() );
 		}
 		return array();
+	}
+
+	/** Preserve old draft values when a reduced or older form omits their controls. */
+	private function setup_wizard_credential_values_request() {
+		$patch = array();
+		$present = isset( $_POST['setup_values_present'] ) && '1' === $_POST['setup_values_present'];
+		foreach ( array( 'setup_credential_values', 'setup_repeating_data' ) as $key ) {
+			if ( $present || array_key_exists( $key, $_POST ) ) { $patch[ $key ] = isset( $_POST[ $key ] ) && is_array( $_POST[ $key ] ) ? wp_unslash( $_POST[ $key ] ) : array(); }
+		}
+		if ( $present || array_key_exists( 'first_grade', $_POST ) ) { $patch['first_grade'] = isset( $_POST['first_grade'] ) ? sanitize_text_field( wp_unslash( $_POST['first_grade'] ) ) : ''; }
+		return $patch;
 	}
 
 	/**
@@ -1203,6 +1183,71 @@ class Ecapla_CertVerify_Admin {
 	 *
 	 * @return true|\WP_Error
 	 */
+	/** Apply only the choices shown in guided setup; record IDs atomically for safe retries. */
+	private function apply_guided_setup_configuration() {
+		$option_keys = array( Ecapla_CertVerify_Settings::OPTION_KEY, Ecapla_CertVerify_Onboarding::OPTION_KEY, \Certloom\Infrastructure\Email\EmailDesignAssignmentRepository::OPTION );
+		$result = ( new \Certloom\Infrastructure\Database\Transaction() )->run( function () {
+			$draft = Ecapla_CertVerify_Onboarding::get_state()['wizard_draft'];
+			if ( empty( $draft['organization_name'] ) ) { return new \WP_Error( 'certloom_setup_organization_required', __( 'Enter an issuer name before saving setup.', 'certloom' ) ); }
+			$valid = $this->validate_setup_wizard_context_requirements( $draft, false );
+			if ( is_wp_error( $valid ) ) { return $valid; }
+			if ( isset( $draft['setup_field_plan'] ) ) {
+				$valid = ( new \Certloom\Infrastructure\Admin\WizardFieldSetupCheck() )->inspect( $draft );
+				if ( is_wp_error( $valid ) ) { return $valid; }
+			}
+			$field_plan = ( new \Certloom\Infrastructure\Admin\WizardFieldSetupCommand() )->prepare( $draft );
+			if ( is_wp_error( $field_plan ) ) { return $field_plan; }
+			$email_id = 'selected' === ( $draft['setup_email_mode'] ?? 'inherit' ) ? (string) ( $draft['setup_email_design_id'] ?? '' ) : '';
+			if ( $email_id ) {
+				$email = ( new \Certloom\Infrastructure\Email\EmailTemplateCatalogRepository() )->get( $email_id );
+				if ( ! is_array( $email ) || empty( $email['active'] ) || \Certloom\Infrastructure\Email\EmailDesignPurposes::ISSUED !== ( $email['purpose'] ?? '' ) ) { return new \WP_Error( 'certloom_setup_email_design_unavailable', __( 'Choose a published credential-issued email design before saving setup.', 'certloom' ) ); }
+			} elseif ( 'selected' === ( $draft['setup_email_mode'] ?? 'inherit' ) ) {
+				return new \WP_Error( 'certloom_setup_email_design_required', __( 'Choose an email design or keep the current email design.', 'certloom' ) );
+			}
+			$template_id = 'design' === ( $draft['presentation_mode'] ?? '' ) && ! empty( $draft['setup_design_default'] ) ? absint( $draft['design_template_id'] ?? 0 ) : 0;
+			if ( $template_id ) {
+				$valid = ( new \Certloom\Infrastructure\Admin\DesignHierarchyConfigurationGuard() )->validate_global( $template_id );
+				if ( is_wp_error( $valid ) ) { return $valid; }
+			}
+			// The organization is the issuer when no existing context supplies one.
+			if ( empty( $draft['setup_issuer_id'] ) && empty( $draft['setup_program_id'] ) && empty( $draft['setup_new_issuer_name'] ) ) { $draft['setup_new_issuer_name'] = $draft['organization_name']; }
+			$ids = $this->materialize_setup_wizard_context( $draft, $field_plan );
+			if ( is_wp_error( $ids ) ) { return $ids; }
+			if ( $template_id ) {
+				$repo = new \Certloom\Infrastructure\Repository\TemplateRepository();
+				$current = $repo->get_assignment( 'global', 0 );
+				if ( is_wp_error( $current ) ) { return $current; }
+				$assigned = $repo->assign( $template_id, 'global', 0, 100, is_array( $current ) ? absint( $current['id'] ) : 0, is_array( $current ) ? (string) $current['updated_at'] : '' );
+				if ( is_wp_error( $assigned ) ) { return $assigned; }
+			}
+			if ( $email_id ) {
+				$saved = ( new \Certloom\Infrastructure\Email\EmailDesignAssignmentRepository() )->save( 'global', 0, \Certloom\Infrastructure\Email\EmailDesignPurposes::ISSUED, $email_id );
+				if ( is_wp_error( $saved ) ) { return $saved; }
+			}
+			$saved = Ecapla_CertVerify_Onboarding::save_profile( $draft['organization_name'], absint( $draft['verification_page_id'] ?? 0 ) );
+			if ( is_wp_error( $saved ) ) { return $saved; }
+			$ids['setup_configuration_applied'] = 1;
+			if ( null !== $field_plan ) {
+				$planner = new \Certloom\Application\Setup\WizardFieldSetup();
+				$intent = $draft['setup_field_plan'];
+				$intent['program_id'] = (string) $ids['setup_program_id'];
+				$intent['catalog_revision'] = $planner->catalog_revision( Ecapla_CertVerify_Fields::get_field_map(), Ecapla_CertVerify_Fields::get_retired_fields() );
+				$applied_program = ( new \Certloom\Infrastructure\Repository\ProgramRepository() )->find( $ids['setup_program_id'] );
+				if ( is_wp_error( $applied_program ) || ! is_array( $applied_program ) ) { return is_wp_error( $applied_program ) ? $applied_program : new \WP_Error( 'certloom_setup_program_missing', __( 'The saved Program could not be confirmed.', 'certloom' ) ); }
+				$intent['program_revision'] = $planner->program_revision( $applied_program );
+				$ids['setup_field_plan'] = $intent;
+			}
+			// Clear materialized names so revisiting Program cannot duplicate them.
+			foreach ( array_keys( $draft ) as $key ) { if ( 0 === strpos( $key, 'setup_new_' ) ) { $ids[ $key ] = 'setup_new_signer_signature_id' === $key ? 0 : ''; } }
+			return Ecapla_CertVerify_Onboarding::save_wizard_step( 'configuration', $ids, 'issue' );
+		} );
+		if ( is_wp_error( $result ) ) {
+			\Certloom\Infrastructure\Data\DatabaseOptions::invalidate( $option_keys );
+			wp_cache_delete( get_current_user_id(), 'user_meta' );
+		}
+		return $result;
+	}
+
 	private function apply_setup_wizard_review() {
 		$state = Ecapla_CertVerify_Onboarding::get_state();
 		$draft = isset( $state['wizard_draft'] ) && is_array( $state['wizard_draft'] ) ? $state['wizard_draft'] : array();
@@ -1331,17 +1376,29 @@ class Ecapla_CertVerify_Admin {
 			wp_send_json_error( array( 'message' => __( 'You do not have permission to save this Setup draft.', 'certloom' ) ), 403 );
 		}
 		check_ajax_referer( 'certloom_setup_wizard' );
+		foreach ( array( 'wizard_step', 'certloom_draft_revision', 'certloom_draft_run', 'certloom_draft_base_revision' ) as $key ) {
+			if ( ! isset( $_POST[ $key ] ) || ! is_string( $_POST[ $key ] ) ) {
+				wp_send_json_error( array( 'message' => __( 'The draft request is incomplete. Keep your edits on this page and reload Setup in another tab.', 'certloom' ) ), 400 );
+			}
+		}
+		$base_revision = filter_var( wp_unslash( $_POST['certloom_draft_base_revision'] ), FILTER_VALIDATE_INT, array( 'options' => array( 'min_range' => 0 ) ) );
+		if ( false === $base_revision ) {
+			wp_send_json_error( array( 'message' => __( 'The draft revision is invalid. Keep your edits on this page and reload Setup in another tab.', 'certloom' ) ), 400 );
+		}
 		$step = isset( $_POST['wizard_step'] ) ? sanitize_key( wp_unslash( $_POST['wizard_step'] ) ) : '';
 		$client_revision = isset( $_POST['certloom_draft_revision'] ) ? max( 0, (int) wp_unslash( $_POST['certloom_draft_revision'] ) ) : 0;
 		$patch = $this->setup_wizard_draft_request( $step );
-		$result = Ecapla_CertVerify_Onboarding::autosave_wizard_draft( $step, $patch, $client_revision );
+		if ( is_wp_error( $patch ) ) { wp_send_json_error( array( 'message' => $patch->get_error_message(), 'code' => $patch->get_error_code() ), 400 ); }
+		$result = Ecapla_CertVerify_Onboarding::autosave_wizard_draft( $step, $patch, $client_revision, array( 'expected_revision' => $base_revision, 'run_id' => wp_unslash( $_POST['certloom_draft_run'] ) ) );
 		if ( is_wp_error( $result ) ) {
-			wp_send_json_error( array( 'message' => $result->get_error_message() ), 409 );
+			wp_send_json_error( array( 'message' => $result->get_error_message(), 'code' => $result->get_error_code() ), 409 );
 		}
 		wp_send_json_success( array(
 			'run_id'     => (string) ( $result['run_id'] ?? '' ),
 			'step'       => (string) ( $result['step'] ?? $step ),
 			'updated_at' => (string) ( $result['updated_at'] ?? '' ),
+			'client_revision' => (int) ( $result['client_revision'] ?? 0 ),
+			'revision' => (int) ( $result['revision'] ?? 0 ),
 			'message'    => __( 'Draft saved', 'certloom' ),
 		) );
 	}
@@ -1368,15 +1425,16 @@ class Ecapla_CertVerify_Admin {
 		check_ajax_referer( 'certloom_setup_wizard_preview', 'nonce' );
 		if ( ! \Certloom\Infrastructure\Migration\DomainFeatureGate::admin_preview_ready() ) { wp_send_json_error( array( 'message' => __( 'Template Preview is not available while Template administration is protected.', 'certloom' ) ), 403 ); }
 		$template_id = isset( $_POST['template_id'] ) ? absint( $_POST['template_id'] ) : 0;
-		if ( ! $template_id ) { wp_send_json_success( array( 'template_id' => 0, 'name' => __( 'None', 'certloom' ), 'description' => __( 'Choose designs per Program, Batch or Issuer later.', 'certloom' ), 'html' => '' ) ); }
+		$draft = Ecapla_CertVerify_Onboarding::get_state()['wizard_draft'];
+		if ( ! $template_id ) { wp_send_json_success( array( 'template_id' => 0, 'name' => __( 'None', 'certloom' ), 'description' => __( 'Choose designs per Program, Batch or Issuer later.', 'certloom' ), 'html' => '', 'coverage' => $this->setup_wizard_design_coverage( null, Ecapla_CertVerify_Onboarding::get_state()['wizard_draft'] ) ) ); }
 		$template = ( new \Certloom\Infrastructure\Repository\TemplateRepository() )->find_published( $template_id );
 		if ( is_wp_error( $template ) ) { wp_send_json_error( array( 'message' => $template->get_error_message() ), 400 ); }
 		if ( ! is_array( $template ) ) { wp_send_json_error( array( 'message' => __( 'That published Template is no longer available.', 'certloom' ) ), 404 ); }
-		$plan = ( new \Certloom\Infrastructure\Rendering\TemplatePreviewService() )->build( $template, 'published' );
+		$plan = ( new \Certloom\Infrastructure\Rendering\TemplatePreviewService() )->build( $template, 'published', 'standard', (string) ( $draft['usage_profile'] ?? '' ) );
 		if ( is_wp_error( $plan ) ) { wp_send_json_error( array( 'message' => $plan->get_error_message() ), 400 ); }
 		try { $preview = ( new \Certloom\Infrastructure\Rendering\RenderPlanHtmlPreview() )->present( $plan['render_plan'] ); }
 		catch ( \Throwable $error ) { wp_send_json_error( array( 'message' => __( 'Certloom could not build that Template preview.', 'certloom' ) ), 400 ); }
-		wp_send_json_success( array( 'template_id' => $template_id, 'name' => (string) ( $template['name'] ?? '' ), 'description' => (string) ( $template['description'] ?? '' ), 'revision' => absint( $plan['revision_number'] ?? 0 ), 'html' => (string) ( $preview['html'] ?? '' ) ) );
+		wp_send_json_success( array( 'template_id' => $template_id, 'name' => (string) ( $template['name'] ?? '' ), 'description' => (string) ( $template['description'] ?? '' ), 'revision' => absint( $plan['revision_number'] ?? 0 ), 'html' => (string) ( $preview['html'] ?? '' ), 'coverage' => $this->setup_wizard_design_coverage( $template, Ecapla_CertVerify_Onboarding::get_state()['wizard_draft'] ) ) );
 	}
 
 	public function handle_registry_columns_save() {
@@ -1422,9 +1480,15 @@ class Ecapla_CertVerify_Admin {
 
 		$existing = Ecapla_CertVerify_Fields::get_field_map();
 		$submitted = isset( $_POST['fields'] ) && is_array( $_POST['fields'] ) ? wp_unslash( $_POST['fields'] ) : array(); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Each nested field key and value is allow-listed and sanitized below.
+		foreach ( $submitted as $row ) {
+			if ( is_array( $row ) && array_key_exists( 'collection', $row ) && '1' !== ( $_POST['certloom_fields_collection_form_complete'] ?? null ) ) {
+				$this->redirect_error( __( 'The server received an incomplete field settings form. No settings were saved. Increase the server’s form input limit and try again.', 'certloom' ), admin_url( 'admin.php?page=certloom-fields' ) );
+			}
+		}
 		$new_fields = array();
 		$order = 0;
 		foreach ( $submitted as $row ) {
+			if ( ! is_array( $row ) ) { continue; }
 			$key = isset( $row['key'] ) ? sanitize_key( $row['key'] ) : '';
 			if ( '' === $key || ! isset( $existing[ $key ] ) ) {
 				continue;
@@ -1440,6 +1504,14 @@ class Ecapla_CertVerify_Admin {
 			if ( Ecapla_CertVerify_Fields::is_required_core_field( $key ) ) { $field['sensitivity'] = 'public_safe'; }
 			$field['public_exposure'] = in_array( $exposure, $exposure_options, true ) ? $exposure : 'private';
 			if ( ! empty( $field['locked_visibility'] ) || 'internal' === $field['sensitivity'] ) { $field['public_exposure'] = 'private'; }
+			if ( isset( $field['collection_policy'] ) && is_array( $field['collection_policy'] ) && ! in_array( $field['public_exposure'], array( 'profile', 'both' ), true ) ) {
+				$field['collection_policy']['show_on_certificate'] = false;
+			}
+			if ( array_key_exists( 'collection', $row ) ) {
+				$policy = ( new \Certloom\Application\Fields\FieldCollectionForm() )->normalize( $row['collection'], $field );
+				if ( is_wp_error( $policy ) ) { $this->redirect_error( $field['label'] . ': ' . $policy->get_error_message(), admin_url( 'admin.php?page=certloom-fields' ) ); }
+				if ( null === $policy ) { unset( $field['collection_policy'] ); } else { $field['collection_policy'] = $policy; }
+			}
 			$field['show_on_frontend'] = ! empty( $field['locked_visibility'] ) ? false : 'private' !== $field['public_exposure'];
 			$field['order']            = $order++;
 			$new_fields[]              = $field;
@@ -1742,6 +1814,8 @@ class Ecapla_CertVerify_Admin {
 			'delete_data_on_uninstall' => ! empty( $_POST['delete_data_on_uninstall'] ),
 			'privacy_erasure_policy'   => isset( $_POST['privacy_erasure_policy'] ) && 'anonymize_mutable_recipient' === sanitize_key( wp_unslash( $_POST['privacy_erasure_policy'] ) ) ? 'anonymize_mutable_recipient' : 'retain',
 			'recipient_user_sync_enabled' => ! empty( $_POST['recipient_user_sync_enabled'] ),
+			'certificate_name_source' => isset( $_POST['certificate_name_source'] ) && is_string( $_POST['certificate_name_source'] ) ? sanitize_key( wp_unslash( $_POST['certificate_name_source'] ) ) : Ecapla_CertVerify_Settings::get( 'certificate_name_source', 'profile' ),
+			'certificate_name_field_key' => isset( $_POST['certificate_name_field_key'] ) && is_string( $_POST['certificate_name_field_key'] ) ? sanitize_key( wp_unslash( $_POST['certificate_name_field_key'] ) ) : Ecapla_CertVerify_Settings::get( 'certificate_name_field_key', '' ),
 			'verification_branding_enabled' => ! empty( $_POST['verification_branding_enabled'] ),
 			'verification_brand_name'    => isset( $_POST['verification_brand_name'] ) ? sanitize_text_field( wp_unslash( $_POST['verification_brand_name'] ) ) : '',
 			'verification_brand_tagline' => isset( $_POST['verification_brand_tagline'] ) ? sanitize_text_field( wp_unslash( $_POST['verification_brand_tagline'] ) ) : '',
@@ -1751,6 +1825,8 @@ class Ecapla_CertVerify_Admin {
 			'verification_qr_enabled' => ! empty( $_POST['verification_qr_enabled'] ),
 			'verification_qr_logo_enabled' => ! empty( $_POST['verification_qr_logo_enabled'] ),
 			'verification_barcode_enabled' => ! empty( $_POST['verification_barcode_enabled'] ),
+			'certificate_layout' => isset( $_POST['certificate_layout'] ) && is_string( $_POST['certificate_layout'] ) ? sanitize_key( wp_unslash( $_POST['certificate_layout'] ) ) : Ecapla_CertVerify_Settings::get( 'certificate_layout', 'right' ),
+			'certificate_center_width' => isset( $_POST['certificate_center_width'] ) && is_scalar( $_POST['certificate_center_width'] ) ? wp_unslash( $_POST['certificate_center_width'] ) : Ecapla_CertVerify_Settings::get( 'certificate_center_width', 960 ),
 			'numbering_mode'             => isset( $_POST['numbering_mode'] ) ? sanitize_key( wp_unslash( $_POST['numbering_mode'] ) ) : 'manual',
 			'numbering_prefix'           => isset( $_POST['numbering_prefix'] ) ? sanitize_text_field( wp_unslash( $_POST['numbering_prefix'] ) ) : 'CERT-',
 			'numbering_suffix'           => isset( $_POST['numbering_suffix'] ) ? sanitize_text_field( wp_unslash( $_POST['numbering_suffix'] ) ) : '',
@@ -1774,6 +1850,15 @@ class Ecapla_CertVerify_Admin {
 			$this->redirect_error( $numbering_policy->get_error_message(), admin_url( 'admin.php?page=certloom-settings' ) );
 		}
 		$data = array_merge( $data, $numbering_policy );
+		$name_policy_service = new \Certloom\Application\Recipient\CertificateNamePolicy();
+		$name_catalog = 'approved_field' === $data['certificate_name_source'] ? Ecapla_CertVerify_Fields::get_field_map() : array();
+		$name_policy = $name_policy_service->normalize( $data['certificate_name_source'], $data['certificate_name_field_key'], $name_catalog );
+		if ( ! is_wp_error( $name_policy ) && 'approved_field' === $name_policy['source'] && ( Ecapla_CertVerify_Settings::get( 'certificate_name_source', 'profile' ) !== $name_policy['source'] || Ecapla_CertVerify_Settings::get( 'certificate_name_field_key', '' ) !== $name_policy['field_key'] ) ) {
+			$name_policy = $name_policy_service->validate_change( $name_policy, $name_catalog );
+		}
+		if ( is_wp_error( $name_policy ) ) {
+			$this->redirect_error( $name_policy->get_error_message(), admin_url( 'admin.php?page=certloom-settings' ) );
+		}
 
 		if ( ! Ecapla_CertVerify_Settings::save( $data ) ) {
 			$this->redirect_error( __( 'The settings could not be saved. Role access was not changed.', 'certloom' ), admin_url( 'admin.php?page=certloom-settings' ) );
@@ -2416,7 +2501,7 @@ class Ecapla_CertVerify_Admin {
 		$wizard_state = $setup_summary['state'];
 		$wizard_draft = is_array( $wizard_state['wizard_draft'] ) ? $wizard_state['wizard_draft'] : array();
 		$wizard_profiles = $wizard_engine->profiles();
-		$wizard_profile = isset( $wizard_draft['usage_profile'] ) ? $wizard_engine->normalize_profile( $wizard_draft['usage_profile'] ) : 'general_other';
+		$wizard_profile = isset( $wizard_draft['usage_profile'] ) ? $wizard_engine->normalize_profile( $wizard_draft['usage_profile'] ) : Ecapla_CertVerify_Settings::get( 'usage_profile', 'general_other' );
 		$wizard_recommendation = $wizard_engine->recommend( $wizard_profile );
 		if ( is_wp_error( $wizard_recommendation ) ) { $wizard_profile = 'general_other'; $wizard_recommendation = $wizard_engine->recommend( $wizard_profile ); }
 		$wizard_selected_fields = isset( $wizard_draft['selected_fields'] ) && is_array( $wizard_draft['selected_fields'] ) ? array_values( $wizard_draft['selected_fields'] ) : array_values( array_map( static function ( $field ) { return sanitize_key( (string) ( $field['key'] ?? '' ) ); }, (array) ( $wizard_recommendation['recommended_fields'] ?? array() ) ) );
@@ -2428,6 +2513,8 @@ class Ecapla_CertVerify_Admin {
 		$wizard_organization_logo_id = absint( $wizard_draft['organization_logo_id'] ?? 0 );
 		$wizard_organization_logo_url = $wizard_organization_logo_id ? (string) wp_get_attachment_image_url( $wizard_organization_logo_id, 'thumbnail' ) : '';
 		$wizard_template_candidates = array();
+		$wizard_profile_bundle = ( new \Certloom\Application\Setup\ProfileStarterBundle() )->get( $wizard_profile );
+		$wizard_recommended_template_id = 0;
 		$wizard_template = null;
 		$wizard_template_preview_html = '';
 		$wizard_template_preview_error = '';
@@ -2438,11 +2525,17 @@ class Ecapla_CertVerify_Admin {
 			$wizard_starter_publication = $wizard_factory_service->ensure_starter_publications( get_current_user_id(), 10 );
 			$wizard_factory_candidates = $wizard_template_repo->search_published_candidates( 'certloom-preset-', 50 );
 			$wizard_all_candidates = $wizard_template_repo->search_published_candidates( '', 50 );
+			$wizard_profile_candidate = $wizard_template_repo->find_published_by_machine_key( 'certloom-preset-profile-' . $wizard_profile . '-essential' );
+			$wizard_profile_candidates = array();
+			if ( is_array( $wizard_profile_candidate ) && empty( $wizard_profile_candidate['archived_at'] ) ) {
+				$wizard_recommended_template_id = absint( $wizard_profile_candidate['id'] ?? 0 );
+				$wizard_profile_candidates[] = $wizard_profile_candidate;
+			}
 			if ( is_wp_error( $wizard_factory_candidates ) ) { $wizard_factory_candidates = array(); }
 			if ( is_wp_error( $wizard_all_candidates ) ) { $wizard_all_candidates = array(); }
 			$wizard_template_candidates = array();
 			$wizard_candidate_ids = array();
-			foreach ( array_merge( $wizard_factory_candidates, $wizard_all_candidates ) as $wizard_candidate ) {
+			foreach ( array_merge( $wizard_profile_candidates, $wizard_factory_candidates, $wizard_all_candidates ) as $wizard_candidate ) {
 				$wizard_candidate_id = absint( $wizard_candidate['id'] ?? 0 );
 				if ( ! $wizard_candidate_id || isset( $wizard_candidate_ids[ $wizard_candidate_id ] ) ) { continue; }
 				$wizard_candidate_ids[ $wizard_candidate_id ] = true;
@@ -2456,7 +2549,7 @@ class Ecapla_CertVerify_Admin {
 						$wizard_template_candidates[] = array( 'id' => $wizard_selected_template_id, 'name' => (string) ( $wizard_template['name'] ?? __( 'Selected design', 'certloom' ) ), 'machine_key' => (string) ( $wizard_template['machine_key'] ?? '' ) );
 						$wizard_candidate_ids[ $wizard_selected_template_id ] = true;
 					}
-					$wizard_plan = ( new \Certloom\Infrastructure\Rendering\TemplatePreviewService() )->build( $wizard_template, 'published' );
+					$wizard_plan = ( new \Certloom\Infrastructure\Rendering\TemplatePreviewService() )->build( $wizard_template, 'published', 'standard', $wizard_profile );
 					if ( is_wp_error( $wizard_plan ) ) { $wizard_template_preview_error = $wizard_plan->get_error_message(); }
 					else {
 						try { $wizard_preview = ( new \Certloom\Infrastructure\Rendering\RenderPlanHtmlPreview() )->present( $wizard_plan['render_plan'] ); $wizard_template_preview_html = (string) ( $wizard_preview['html'] ?? '' ); }
@@ -2495,10 +2588,18 @@ class Ecapla_CertVerify_Admin {
 		$wizard_selected_program = $wizard_context_ids['program'] ? $wizard_program_repo->find( $wizard_context_ids['program'] ) : null;
 		if ( is_wp_error( $wizard_selected_program ) ) { $wizard_selected_program = null; }
 		$wizard_program_title = is_array( $wizard_selected_program ) ? (string) ( $wizard_selected_program['title'] ?? '' ) : trim( (string) ( $wizard_draft['setup_new_program_title'] ?? '' ) );
+		$wizard_field_planner = new \Certloom\Application\Setup\WizardFieldSetup();
+		$wizard_field_catalog = Ecapla_CertVerify_Fields::get_field_map();
+		$wizard_field_retired = Ecapla_CertVerify_Fields::get_retired_fields();
+		$wizard_field_rows = array_slice( $wizard_field_planner->candidates( $wizard_draft, $wizard_recommendation, $wizard_field_catalog, $wizard_field_retired, $wizard_selected_program ), 0, 150 );
+		$wizard_field_plan = isset( $wizard_draft['setup_field_plan'] ) ? $wizard_field_planner->build( $wizard_draft['setup_field_plan'], $wizard_field_catalog, $wizard_field_retired, $wizard_selected_program ) : null;
+		$wizard_design_coverage = $this->setup_wizard_design_coverage( is_array( $wizard_template ) ? $wizard_template : null, $wizard_draft );
 		$wizard_first_issuance_ready = \Certloom\Infrastructure\Migration\DomainFeatureGate::write_paths_ready();
 		$wizard_first_issuance_reason = $wizard_first_issuance_ready
 			? __( 'The first credential uses the same canonical issuance workflow as the main Credential workspace, including the context and design-required data collected during Setup.', 'certloom' )
 			: __( 'Credential issuance is temporarily unavailable because the credential store is not ready.', 'certloom' );
+		$wizard_email_designs = ( new \Certloom\Infrastructure\Email\EmailTemplateCatalogRepository() )->for_purpose( \Certloom\Infrastructure\Email\EmailDesignPurposes::ISSUED, true );
+		$wizard_email_current = ( new \Certloom\Infrastructure\Email\EmailDesignAssignmentRepository() )->resolve( $wizard_context_ids['issuer'], $wizard_context_ids['program'], $wizard_context_ids['batch'] );
 		include ECAPLA_CERTVERIFY_PATH . 'admin/views/setup-wizard.php';
 	}
 
@@ -2598,6 +2699,7 @@ class Ecapla_CertVerify_Admin {
 		$coursera = $coursera_admin->screen_data();
 		$webhook_admin = new \Certloom\Infrastructure\Admin\WebhookIntegrationAdmin();
 		$webhooks = $webhook_admin->screen_data();
+		$webhooks_v2 = ( new \Certloom\Infrastructure\Admin\WebhookV2IntegrationAdmin() )->screen_data();
 		$credly_admin = new \Certloom\Infrastructure\Admin\CredlyIntegrationAdmin();
 		$credly = $credly_admin->screen_data();
 		include ECAPLA_CERTVERIFY_PATH . 'admin/views/integrations.php';

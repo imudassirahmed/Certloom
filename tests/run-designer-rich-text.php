@@ -1,5 +1,7 @@
 <?php
 /** DSN-07 Schema 4 rich inline text/token-run architecture and v1-v3 immutability gate. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define( 'ABSPATH', __DIR__ . '/' );
 if ( ! class_exists( 'WP_Error' ) ) { class WP_Error { private $c,$m,$d; public function __construct($c='',$m='',$d=null){$this->c=$c;$this->m=$m;$this->d=$d;} public function get_error_code(){return $this->c;} public function get_error_message(){return $this->m;} public function get_error_data(){return $this->d;} } }
 function is_wp_error($v){return $v instanceof WP_Error;} function __($v){return $v;} function absint($v){return abs((int)$v);} function sanitize_key($v){return strtolower(preg_replace('/[^a-z0-9_\-]/','',(string)$v));} function sanitize_html_class($v){return preg_replace('/[^A-Za-z0-9_-]/','',(string)$v);} function esc_attr($v){return htmlspecialchars((string)$v,ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8');} function esc_html($v){return htmlspecialchars((string)$v,ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8');} function esc_attr__($v){return esc_attr($v);} function esc_html__($v){return esc_html($v);} function wp_json_encode($v,$flags=0){return json_encode($v,$flags);} 
@@ -29,7 +31,7 @@ dsn7(LayoutSchema::element_types(2)===array('text','merge','image','logo','signa
 dsn7(LayoutSchema::element_types(3)===array('text','merge','image','logo','signature','shape','line','qr','barcode','list'),'schema 3 primitive inventory is frozen');
 dsn7(LayoutSchema::element_types(4)===array('text','merge','rich_text','image','logo','signature','shape','line','qr','barcode','list','table','data_table'),'schema 4 retains rich_text and now adds the separately certified Table/Data Table architecture without changing schemas 1-3');
 
-$v1=(new PresetCatalog())->get('classic-a4-landscape')['layout']; $v2=$u->upgrade($v1,2); $v3=$u->upgrade($v1,3); $v4=$u->upgrade($v1,4);
+$v1=(new PresetCatalog())->get('classic-a4-landscape',1)['layout']; $v2=$u->upgrade($v1,2); $v3=$u->upgrade($v1,3); $v4=$u->upgrade($v1,4);
 dsn7('163509ccdba3fe4ab754479dbb28ff3bb46029c2729d4c08699dd270eeb4ebf8'===$c->hash($v->normalize($v1)),'schema 1 historical canonical hash is unchanged');
 dsn7('117460445b920b2fee63e018b3c0a0b55442a04395895d148fd0cc252090bc34'===$c->hash($v2),'schema 2 historical canonical hash is unchanged');
 dsn7('8e9c71e7903cb427f19cdb71454db47ca03000c847d0ff32d261142070137596'===$c->hash($v3),'schema 3 historical canonical hash is unchanged');

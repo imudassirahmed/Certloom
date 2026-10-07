@@ -19,7 +19,7 @@ $certloom_scopable_fields = Ecapla_CertVerify_Fields::get_scopable_fields();
 		<div>
 			<span class="certloom-eyebrow"><?php esc_html_e( 'Data schema', 'certloom' ); ?></span>
 			<h1 id="certloom-fields-title"><?php esc_html_e( 'Field manager', 'certloom' ); ?></h1>
-			<p><?php esc_html_e( 'Manage the global field catalog used across Certloom. Program- and Batch-specific field sets are not configured on this screen.', 'certloom' ); ?></p>
+			<p><?php esc_html_e( 'Choose the details your organization uses, who supplies them, and where customers are asked. Each Program selects the fields it needs.', 'certloom' ); ?></p>
 		</div>
 		<div class="certloom-page-actions">
 			<a class="button button-secondary button-hero" href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-certificates' ) ); ?>"><span class="dashicons dashicons-awards" aria-hidden="true"></span><?php esc_html_e( 'Open registry', 'certloom' ); ?></a>
@@ -96,7 +96,8 @@ $certloom_scopable_fields = Ecapla_CertVerify_Fields::get_scopable_fields();
 				</form>
 			<?php endif; ?>
 		</div>
-		<p class="certloom-section-intro"><?php esc_html_e( 'Reorder with drag-and-drop or the keyboard-friendly Move controls. Labels are reused across the registry, editor, imports, exports, and public presentation.', 'certloom' ); ?></p>
+		<p class="certloom-section-intro"><?php esc_html_e( 'Open “Choose who supplies this field” to enable a customer form. For example, ask learners for a father’s name or CNIC; keep scores and results supplied by your staff or connected course app.', 'certloom' ); ?></p>
+		<p class="description"><?php esc_html_e( 'Customers complete their own details in My Credentials, their WooCommerce account, or a page containing [certloom_my_details]. These settings belong to the organization; answers belong to each customer.', 'certloom' ); ?></p>
 
 		<form method="post" action="">
 			<?php wp_nonce_field( 'certverify_save_fields' ); ?>
@@ -149,10 +150,12 @@ $certloom_scopable_fields = Ecapla_CertVerify_Fields::get_scopable_fields();
 						<?php else : ?>
 							<span class="ecapla-certverify-core-field"><?php esc_html_e( 'Core field', 'certloom' ); ?></span>
 						<?php endif; ?>
+						<?php ( new \Certloom\Infrastructure\Admin\FieldCollectionControls() )->render( $field, $index ); ?>
 					</div>
 				<?php endforeach; ?>
 			</div>
-			<?php submit_button( __( 'Save field layout', 'certloom' ), 'primary', 'certverify_save_fields' ); ?>
+			<input type="hidden" name="certloom_fields_collection_form_complete" value="1" />
+			<?php submit_button( __( 'Save field settings', 'certloom' ), 'primary', 'certverify_save_fields' ); ?>
 		</form>
 	</section>
 

@@ -1,5 +1,7 @@
 <?php
 /** Run with WP-CLI against a disposable local WordPress site. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 if ( ! defined( 'WP_CLI' ) || ! WP_CLI || ! function_exists( 'wp_get_environment_type' ) || ! in_array( wp_get_environment_type(), array( 'local', 'development' ), true ) ) {
 	exit( 1 );
 }

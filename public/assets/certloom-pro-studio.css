@@ -1,0 +1,73 @@
+/* Pro presentation only. Verdicts, certificate layout and lookup stay shared. */
+.certloom-pro-frame {
+  container: certloom-studio / inline-size;
+  --cls-width: 1120px; --cls-padding: 40px; --cls-gap: 40px; --cls-radius: 24px;
+  --cls-title-size: 36px; --cls-text-size: 16px; --cls-input-height: 52px;
+  --cls-button-radius: 12px; --cls-intro-width: 48%; --cls-align: left; --cls-border-width: 1px;
+  --cls-font: var(--cl-sans,system-ui); --cls-heading-weight: 700; --cls-shadow: var(--cl-shadow-soft);
+  --cls-columns: minmax(0,var(--cls-intro-width)) minmax(0,1fr);
+  --cls-form-columns: minmax(0,1fr) auto; --cls-button-row: 1; --cls-button-column: -2 / -1;
+  --cls-accent: var(--cl-blue); --cls-background: var(--cl-studio-campus); --cls-ink: var(--cl-ink);
+  --cls-muted: var(--cl-ink-soft); --cls-border: var(--cl-rule); --cls-input-surface: var(--cl-surface); --cls-button-text: var(--cl-surface);
+  width: 100%; max-width: var(--cls-width); margin-inline: auto;
+}
+.certloom-pro-frame > .cv-widget { max-width: none; width: 100%; min-width: 0; font-family: var(--cls-font); font-weight: 400; }
+.certloom-pro-frame .cv-widget .cv-search-card {
+  display: grid; grid-template-columns: var(--cls-columns); gap: var(--cls-gap); align-items: center;
+  padding: var(--cls-padding); border: var(--cls-border-width) solid var(--cls-border); border-radius: var(--cls-radius);
+  background: var(--cls-background); box-shadow: var(--cls-shadow); overflow: visible;
+}
+.certloom-pro-frame .cv-widget.certloom-has-design > .cv-search-card { display: none; }
+.certloom-pro-frame .cv-widget :is(.cv-heading,.cv-eyebrow,.cv-description,.cv-search-input,.cv-search-btn,.certloom-verification-label,.certloom-verification-code-disclosure) { font-family: inherit; }
+.certloom-pro-frame .certloom-studio-intro { min-width: 0; text-align: var(--cls-align); }
+.certloom-pro-frame .cv-widget .cv-heading { font-size: var(--cls-title-size); font-weight: var(--cls-heading-weight); color: var(--cls-ink); line-height: 1.16; letter-spacing: -.025em; text-align: inherit; text-wrap: balance; }
+.certloom-pro-frame .cv-widget .cv-eyebrow { color: var(--cls-accent); font-size: 12px; letter-spacing: .09em; text-align: inherit; }
+.certloom-pro-frame .cv-widget .cv-description { font-size: var(--cls-text-size); color: var(--cls-muted); margin-bottom: 0; text-align: inherit; line-height: 1.65; }
+.certloom-pro-frame .cv-widget .cv-search-form { display: grid; grid-template-columns: var(--cls-form-columns); gap: 12px; align-items: end; min-width: 0; margin: 0; }
+.certloom-pro-frame .certloom-verification-field { min-width: 0; width: 100%; }
+.certloom-pro-frame .cv-widget .certloom-verification-label { color: var(--cls-ink); }
+.certloom-pro-frame .cv-widget .cv-search-input { width: 100%; min-height: var(--cls-input-height); color: var(--cls-ink); background: var(--cls-input-surface); border-color: var(--cls-border); border-radius: var(--cls-button-radius); font-size: var(--cls-text-size); margin: 0; }
+.certloom-pro-frame .cv-widget .cv-search-btn { grid-column: var(--cls-button-column); grid-row: var(--cls-button-row); min-height: var(--cls-input-height); border-radius: var(--cls-button-radius); background: var(--cls-accent); color: var(--cls-button-text); border-color: var(--cls-accent); padding-inline: 22px; margin: 0; font-size: var(--cls-text-size); }
+.certloom-pro-frame .cv-widget .certloom-verification-code-disclosure { grid-column: 1 / -1; grid-row: 2; color: var(--cls-muted); margin: 0; }
+.certloom-pro-frame .cv-widget .certloom-verification-code-disclosure summary { min-height: 32px; display: list-item; cursor: pointer; }
+.certloom-pro-frame .cv-widget .cv-guide { padding-inline: 0; margin-top: 24px; }
+.certloom-pro-frame .cv-widget .cv-guide-grid { gap: 12px; }
+.certloom-pro-frame .cv-widget .cv-guide-card { border-radius: var(--cl-r-card); padding: 16px; }
+.certloom-pro-frame .cv-widget .cv-search-input:focus-visible, .certloom-pro-frame .cv-widget .cv-search-btn:focus-visible { outline: 3px solid var(--cl-focus); outline-offset: 3px; }
+.certloom-pro-frame .cv-widget .cv-search-btn:hover { filter: brightness(.94); }
+.certloom-pro-frame .cv-widget .cv-search-btn:active { transform: translateY(1px); }
+.certloom-pro-authority { --cls-padding: 32px; --cls-radius: 12px; --cls-gap: 32px; --cls-title-size: 30px; --cls-background: var(--cl-surface); --cls-accent: var(--cl-blue-deep); --cls-columns: minmax(0,1fr); }
+.certloom-pro-authority .cv-widget .cv-search-card { border-top: 4px solid var(--cls-accent); }
+.certloom-pro-authority .cv-widget .cv-heading { letter-spacing: -.015em; }
+.certloom-pro-executive { --cls-width: 800px; --cls-padding: 48px; --cls-columns: minmax(0,1fr); --cls-align: center; --cls-gap: 28px; --cls-background: var(--cl-surface); --cls-radius: 28px; }
+.certloom-pro-executive .cv-search-form { width: 100%; max-width: 640px; margin-inline: auto !important; }
+.certloom-pro-celebration { --cls-width: 960px; --cls-padding: 56px; --cls-title-size: 44px; --cls-columns: minmax(0,1fr); --cls-align: center; --cls-background: var(--cl-studio-celebration-surface); --cls-accent: var(--cl-studio-celebration-accent); --cls-border: var(--cl-studio-celebration-rule); --cls-gap: 32px; --cls-radius: 8px; }
+.certloom-pro-celebration .cv-widget .cv-search-card { border-top: 4px solid var(--cls-accent); }
+.certloom-pro-celebration .cv-search-form { max-width: 680px; width: 100%; margin-inline: auto !important; }
+.certloom-pro-essential { --cls-padding: 24px; --cls-radius: 16px; --cls-title-size: 26px; --cls-gap: 24px; --cls-background: var(--cl-surface); --cls-columns: minmax(0,1fr) minmax(0,1.3fr); }
+.certloom-pro-custom { --cls-background: var(--cl-surface); --cls-width: 960px; --cls-padding: 32px; --cls-gap: 32px; --cls-radius: 20px; }
+@container certloom-studio (max-width: 700px) {
+  .certloom-pro-frame > .cv-widget { --cls-columns: minmax(0,1fr); --cls-padding: 28px; --cls-gap: 24px; --cls-title-size: 30px; }
+}
+@container certloom-studio (max-width: 440px) {
+  .certloom-pro-frame > .cv-widget { --cls-padding: 20px; --cls-gap: 20px; --cls-title-size: 26px; --cls-form-columns: minmax(0,1fr); --cls-button-row: 3; --cls-button-column: 1 / -1; }
+  .certloom-pro-frame .cv-widget .cv-search-btn { width: 100%; }
+}
+@media (max-width: 700px) {
+  .certloom-pro-frame > .cv-widget { --cls-columns: minmax(0,1fr); --cls-padding: 28px; --cls-gap: 24px; --cls-title-size: 30px; }
+}
+@media (max-width: 440px) {
+  .certloom-pro-frame > .cv-widget { --cls-padding: 20px; --cls-gap: 20px; --cls-title-size: 26px; --cls-form-columns: minmax(0,1fr); --cls-button-row: 3; --cls-button-column: 1 / -1; }
+  .certloom-pro-frame .cv-widget .cv-search-btn { width: 100%; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .certloom-pro-frame .cv-widget .cv-search-btn { transition: filter 120ms ease, transform 120ms ease; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .certloom-pro-frame .cv-widget :is(.cv-search-btn,.cv-search-input) { transition: none; }
+  .certloom-pro-frame .cv-widget .cv-search-btn:active { transform: none; }
+}
+@media (forced-colors: active) {
+  .certloom-pro-frame .cv-widget .cv-search-card { border-color: CanvasText; box-shadow: none; }
+  .certloom-pro-frame .cv-widget .cv-search-btn { background: ButtonFace; color: ButtonText; border-color: ButtonText; }
+}

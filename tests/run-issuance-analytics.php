@@ -1,5 +1,7 @@
 <?php
 /** ANL-02 issuance analytics truth, forecasting, privacy and roadmap-boundary acceptance. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define( 'ABSPATH', __DIR__ . '/webroot/' );
 define( 'DAY_IN_SECONDS', 86400 );
 class WP_Error { private $c; private $m; public function __construct($c,$m){$this->c=$c;$this->m=$m;} public function get_error_code(){return $this->c;} public function get_error_message(){return $this->m;} }

@@ -1,5 +1,7 @@
 <?php
 /** Regression tests for consistent, font-independent admin action button icons. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $root = dirname( __DIR__ );
 $dashboard = file_get_contents( $root . '/admin/views/dashboard.php' );
 $registry  = file_get_contents( $root . '/admin/views/list-certificates.php' );

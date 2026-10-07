@@ -1,5 +1,7 @@
 <?php
 /** Static compatibility guard for the Elementor verification widgets shipped before the new-domain cutover. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $root = dirname( __DIR__ );
 $plugin = file_get_contents( $root . '/certloom.php' );
 $base   = file_get_contents( $root . '/elementor/class-ecapla-certverify-elementor-widget.php' );

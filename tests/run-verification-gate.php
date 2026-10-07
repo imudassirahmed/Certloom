@@ -1,9 +1,13 @@
 <?php
 /** Operational-readiness tests for normalized public Credential Series verification. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define( 'ABSPATH', __DIR__ . '/fake-wp/' );
 define( 'DAY_IN_SECONDS', 86400 );
 define( 'MINUTE_IN_SECONDS', 60 );
 $GLOBALS['vg_options'] = array();
+require __DIR__ . '/support/option-database.php';
+$GLOBALS['wpdb'] = new CertloomOptionDatabase( $GLOBALS['vg_options'] );
 if ( ! class_exists( 'WP_Error' ) ) {
 	class WP_Error { private $code; private $message; public function __construct($c='',$m=''){ $this->code=$c; $this->message=$m; } public function get_error_code(){return $this->code;} public function get_error_message(){return $this->message;} }
 }

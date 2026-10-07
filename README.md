@@ -16,6 +16,12 @@ Certloom allows organizations to manage certificate records and publish secure e
 - Self-hosted verification
 - No external certificate-processing service required
 
+## Guides
+
+[Recipient details and certificate requests](guides/recipient-details-and-certificate-requests.md) explains organization setup, customer-owned answers, staff review and the current pending-flow limits.
+
+[App results and signed webhooks](guides/app-results-and-signed-webhooks-v2.md) explains trusted third-party results and signed requests. [Backup and recovery](guides/backup-and-recovery.md) covers complete snapshots and reviewed recovery.
+
 ## Publisher
 
 Certloom is developed by Ecapla.

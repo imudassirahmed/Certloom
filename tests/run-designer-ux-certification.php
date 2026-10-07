@@ -1,5 +1,7 @@
 <?php
 /** DSX-QA-01 Designer usability/accessibility certification source contract. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define( 'ABSPATH', __DIR__ . '/' );
 function __($v){return $v;} function absint($v){return abs((int)$v);} function sanitize_key($v){return strtolower(preg_replace('/[^a-z0-9_\-]/','',(string)$v));}
 require_once __DIR__ . '/bootstrap-autoload.php';

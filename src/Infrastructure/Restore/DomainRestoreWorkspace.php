@@ -36,11 +36,13 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 
 	/** @var DomainRestoreMapRepository */
 	private $restore_maps;
+	private $account_proof;
 
-	public function __construct( ?DomainMaintenanceLock $maintenance = null, ?DomainGeneration $generation = null, ?DomainRestoreMapRepository $restore_maps = null ) {
+	public function __construct( ?DomainMaintenanceLock $maintenance = null, ?DomainGeneration $generation = null, ?DomainRestoreMapRepository $restore_maps = null, ?\Certloom\Application\Restore\WholeStateAccountMappingProof $account_proof = null ) {
 		$this->maintenance  = $maintenance ?: new DomainMaintenanceLock();
 		$this->generation   = $generation ?: new DomainGeneration();
 		$this->restore_maps = $restore_maps ?: new DomainRestoreMapRepository();
+		$this->account_proof = $account_proof;
 	}
 
 	/** @return array<string,mixed>|\WP_Error */
@@ -67,7 +69,8 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 		}
 
 		$workspace = $this->workspace( $owner_token );
-		$current   = get_option( self::BUILD_OPTION, array() );
+		$current   = $this->read_option( self::BUILD_OPTION, array() );
+		if ( is_wp_error( $current ) ) { return $current; }
 		if ( is_array( $current ) && isset( $current['owner_token'] ) && hash_equals( $owner_token, (string) $current['owner_token'] ) ) {
 			if ( $this->workspace_exists( $workspace ) ) {
 				if ( ! $this->save_build_marker( $workspace ) ) {
@@ -138,6 +141,7 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 		if ( $allowed !== $keys ) {
 			return new \WP_Error( 'certloom_domain_restore_columns_invalid', __( 'The restore record does not match the expected Certloom schema.', 'certloom' ) );
 		}
+		if ( 'recipients' === $entity && ! empty( $row['wp_user_id'] ) && ( ! $this->account_proof || ! $this->account_proof->permits_projected( $row ) ) ) { return \Certloom\Application\Restore\DomainRestoreRowValidator::unverified_account_links(); }
 		$id = absint( $row['id'] ?? 0 );
 		if ( $id < 1 ) {
 			return new \WP_Error( 'certloom_domain_restore_id_invalid', __( 'The restore record contains an invalid internal identifier.', 'certloom' ) );
@@ -174,10 +178,32 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 		if ( is_wp_error( $valid ) ) {
 			return $valid;
 		}
+		// Explicitly unlinked restores still depend on the reviewed archive and
+		// target generation. An empty linked-row set does not waive that proof.
+		if ( $this->account_proof ) {
+			$current = $this->account_proof->assert_current();
+			if ( is_wp_error( $current ) ) { return $current; }
+		}
 
 		$t = array();
 		foreach ( DomainBackupRepository::entity_types() as $entity ) {
 			$t[ $entity ] = $this->table_name( $workspace, $kind, $entity );
+		}
+		// Also reject workspaces created before this guard was installed. Check
+		// the uploaded source, not existing linked recipients copied for Merge.
+		$wpdb->last_error = '';
+		$linked = $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM %i WHERE COALESCE(wp_user_id,0) <> 0', $this->table_name( $workspace, 'stage', 'recipients' ) ) );
+		if ( '' !== (string) $wpdb->last_error || null === $linked ) { return new \WP_Error( 'certloom_domain_restore_relationship_check_failed', __( 'Certloom could not validate the staged credential relationships.', 'certloom' ) ); }
+		if ( (int) $linked > 0 ) {
+			if ( ! $this->account_proof ) { return \Certloom\Application\Restore\DomainRestoreRowValidator::unverified_account_links(); }
+			$cursor = 0; $seen = 0;
+			do {
+				$wpdb->last_error = '';
+				$rows = $wpdb->get_results( $wpdb->prepare( 'SELECT * FROM %i WHERE wp_user_id IS NOT NULL AND id>%d ORDER BY id LIMIT 100', $this->table_name( $workspace, 'stage', 'recipients' ), $cursor ), ARRAY_A );
+				if ( '' !== (string) $wpdb->last_error || ! is_array( $rows ) ) { return \Certloom\Application\Restore\DomainRestoreRowValidator::unverified_account_links(); }
+				foreach ( $rows as $row ) { ++$seen; if ( $seen > \Certloom\Application\Restore\WholeStateAccountMappingProof::MAX_REVIEW_ACCOUNTS || ! $this->account_proof->permits_projected( $row ) ) { return \Certloom\Application\Restore\DomainRestoreRowValidator::unverified_account_links(); } $cursor = (int) $row['id']; }
+			} while ( count( $rows ) === 100 );
+			if ( $seen !== (int) $linked ) { return \Certloom\Application\Restore\DomainRestoreRowValidator::unverified_account_links(); }
 		}
 		$checks = array(
 			'program_issuer_missing' => array( "SELECT COUNT(*) FROM %i p LEFT JOIN %i i ON i.id=p.issuer_id WHERE p.issuer_id IS NOT NULL AND i.id IS NULL", array( $t['programs'], $t['issuers'] ) ),
@@ -209,6 +235,17 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 			'number_first_version_invalid' => array( "SELECT COUNT(*) FROM %i n LEFT JOIN %i v ON v.id=n.first_version_id AND v.series_id=n.series_id WHERE n.first_version_id IS NOT NULL AND v.id IS NULL", array( $t['credential_numbers'], $t['credential_versions'] ) ),
 			'event_series_missing' => array( "SELECT COUNT(*) FROM %i e LEFT JOIN %i s ON s.id=e.series_id WHERE s.id IS NULL", array( $t['credential_events'], $t['credential_series'] ) ),
 			'event_version_invalid' => array( "SELECT COUNT(*) FROM %i e LEFT JOIN %i v ON v.id=e.version_id AND v.series_id=e.series_id WHERE e.version_id IS NOT NULL AND v.id IS NULL", array( $t['credential_events'], $t['credential_versions'] ) ),
+			'registration_recipient_missing' => array( 'SELECT COUNT(*) FROM %i a LEFT JOIN %i r ON r.id=a.recipient_id WHERE r.id IS NULL', array( $t['program_registrations'], $t['recipients'] ) ),
+			'registration_program_missing' => array( 'SELECT COUNT(*) FROM %i a LEFT JOIN %i p ON p.id=a.program_id WHERE p.id IS NULL', array( $t['program_registrations'], $t['programs'] ) ),
+			'registration_batch_invalid' => array( 'SELECT COUNT(*) FROM %i a LEFT JOIN %i b ON b.id=a.batch_id AND b.program_id=a.program_id WHERE a.batch_id IS NOT NULL AND b.id IS NULL', array( $t['program_registrations'], $t['batches'] ) ),
+			'submission_recipient_missing' => array( 'SELECT COUNT(*) FROM %i s LEFT JOIN %i r ON r.id=s.recipient_id WHERE r.id IS NULL OR (s.scope_kind=\'recipient\' AND s.scope_id<>s.recipient_id)', array( $t['field_submissions'], $t['recipients'] ) ),
+			'submission_registration_invalid' => array( 'SELECT COUNT(*) FROM %i s LEFT JOIN %i a ON a.id=s.scope_id AND a.recipient_id=s.recipient_id WHERE s.scope_kind=\'registration\' AND a.id IS NULL', array( $t['field_submissions'], $t['program_registrations'] ) ),
+			'request_recipient_missing' => array( 'SELECT COUNT(*) FROM %i q LEFT JOIN %i r ON r.id=q.recipient_id WHERE r.id IS NULL', array( $t['issuance_requests'], $t['recipients'] ) ),
+			'request_program_missing' => array( 'SELECT COUNT(*) FROM %i q LEFT JOIN %i p ON p.id=q.program_id WHERE p.id IS NULL', array( $t['issuance_requests'], $t['programs'] ) ),
+			'request_batch_invalid' => array( 'SELECT COUNT(*) FROM %i q LEFT JOIN %i b ON b.id=q.batch_id AND b.program_id=q.program_id WHERE q.batch_id IS NOT NULL AND b.id IS NULL', array( $t['issuance_requests'], $t['batches'] ) ),
+			'request_registration_invalid' => array( 'SELECT COUNT(*) FROM %i q LEFT JOIN %i a ON a.id=q.registration_id AND a.recipient_id=q.recipient_id AND a.program_id=q.program_id AND COALESCE(a.batch_id,0)=COALESCE(q.batch_id,0) WHERE q.registration_id IS NOT NULL AND a.id IS NULL', array( $t['issuance_requests'], $t['program_registrations'] ) ),
+			'request_receipt_invalid' => array( 'SELECT COUNT(*) FROM %i q LEFT JOIN %i s ON s.id=q.series_id AND s.recipient_id=q.recipient_id AND s.program_id=q.program_id LEFT JOIN %i v ON v.id=q.version_id AND v.series_id=q.series_id WHERE q.version_id IS NOT NULL AND (s.id IS NULL OR v.id IS NULL)', array( $t['issuance_requests'], $t['credential_series'], $t['credential_versions'] ) ),
+			'request_event_missing' => array( 'SELECT COUNT(*) FROM %i e LEFT JOIN %i q ON q.id=e.request_id WHERE q.id IS NULL', array( $t['issuance_request_events'], $t['issuance_requests'] ) ),
 		);
 
 		foreach ( $checks as $code => $check ) {
@@ -449,7 +486,9 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 			return $normalized_receipt;
 		}
 		$old_configuration = $this->configuration_snapshot();
-		$old_generation    = $this->generation->current();
+		if ( is_wp_error( $old_configuration ) ) { return $old_configuration; }
+		$old_generation    = $this->generation->read_current();
+		if ( is_wp_error( $old_generation ) ) { return $old_generation; }
 		$journal = array(
 			'state'             => 'prepared',
 			'owner_token'       => $workspace['owner_token'],
@@ -462,6 +501,13 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 		);
 		if ( ! $this->save_journal( $journal ) ) {
 			return new \WP_Error( 'certloom_domain_restore_journal_failed', __( 'Certloom could not save the restore rollback journal, so no live data was changed.', 'certloom' ) );
+		}
+		if ( $this->account_proof ) {
+			$current = $this->account_proof->assert_current();
+			if ( is_wp_error( $current ) ) {
+				$cleared = $this->delete_journal_if_owned( $workspace['owner_token'] );
+				return is_wp_error( $cleared ) ? $cleared : $current;
+			}
 		}
 
 		$swapped = $this->swap_workspace( $workspace, $source_kind );
@@ -518,7 +564,8 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 	}
 
 	private function recover_interrupted_commit_locked() {
-		$journal = get_option( self::JOURNAL_OPTION, array() );
+		$journal = $this->read_option( self::JOURNAL_OPTION, array() );
+		if ( is_wp_error( $journal ) ) { return $journal; }
 		if ( ! is_array( $journal ) || empty( $journal['owner_token'] ) || empty( $journal['suffix'] ) ) {
 			return $this->recover_stale_build();
 		}
@@ -598,7 +645,8 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 	private function resume_completion_receipt( $owner_token ) {
 		$receipt = $this->read_completion_receipt( $owner_token );
 		if ( null !== $receipt ) { return $receipt; }
-		$journal = get_option( self::JOURNAL_OPTION, array() );
+		$journal = $this->read_option( self::JOURNAL_OPTION, array() );
+		if ( is_wp_error( $journal ) ) { return $journal; }
 		if ( ! is_array( $journal ) || 'committed' !== ( $journal['state'] ?? '' ) || ( $journal['owner_token'] ?? '' ) !== $this->owner_token( $owner_token ) ) { return null; }
 		$saved = $this->save_completion_receipt( $owner_token, (array) ( $journal['receipt'] ?? array() ) );
 		return is_wp_error( $saved ) ? $saved : $this->read_completion_receipt( $owner_token );
@@ -610,10 +658,12 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 		if ( is_wp_error( $owner_token ) ) {
 			return $owner_token;
 		}
-		$receipts = get_option( self::RECEIPTS_OPTION, array() );
-		if ( ! is_array( $receipts ) || ! isset( $receipts[ $owner_token ] ) || ! is_array( $receipts[ $owner_token ] ) ) {
+		$receipts = $this->read_option( self::RECEIPTS_OPTION, array() );
+		if ( is_wp_error( $receipts ) ) { return $receipts; }
+		if ( ! array_key_exists( $owner_token, $receipts ) ) {
 			return null;
 		}
+		if ( ! is_array( $receipts[ $owner_token ] ) ) { return new \WP_Error( 'certloom_domain_restore_receipt_corrupt', __( 'Certloom found an invalid restore completion receipt and refused to trust it.', 'certloom' ) ); }
 		$receipt = $receipts[ $owner_token ];
 		$committed_at = absint( $receipt['committed_at'] ?? 0 );
 		if ( ! $committed_at || $committed_at > time() + 300 ) {
@@ -667,6 +717,8 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 			'templates' => 't', 'template_revisions' => 'u', 'template_assignments' => 'y',
 			'credential_series' => 's', 'credential_numbers' => 'n',
 			'credential_versions' => 'v', 'credential_events' => 'e',
+			'program_registrations' => 'pr', 'field_submissions' => 'fs',
+			'issuance_requests' => 'ir', 'issuance_request_events' => 'ie',
 		);
 		$prefix = 'rollback' === $kind ? 'certloom_rb_' : ( 'merge' === $kind ? 'certloom_rm_' : 'certloom_rs_' );
 		return $wpdb->prefix . $prefix . $workspace['suffix'] . '_' . $codes[ $entity ];
@@ -815,7 +867,8 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 		if ( is_wp_error( $rolled ) ) {
 			return $rolled;
 		}
-		$journal = get_option( self::JOURNAL_OPTION, array() );
+		$journal = $this->read_option( self::JOURNAL_OPTION, array() );
+		if ( is_wp_error( $journal ) ) { return $journal; }
 		$journal['state'] = 'rolled_back';
 		if ( ! $this->save_journal( $journal ) ) {
 			return new \WP_Error( 'certloom_domain_restore_journal_failed', __( 'Certloom could not save its recovery progress. Credential writes remain paused until recovery succeeds.', 'certloom' ) );
@@ -883,12 +936,15 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 
 	/** @return true|\WP_Error */
 	private function delete_journal_if_owned( $owner_token ) {
-		$journal = get_option( self::JOURNAL_OPTION, array() );
+		$journal = $this->read_option( self::JOURNAL_OPTION, array() );
+		if ( is_wp_error( $journal ) ) { return $journal; }
 		if ( ! is_array( $journal ) || ! isset( $journal['owner_token'] ) || ! hash_equals( (string) $owner_token, (string) $journal['owner_token'] ) ) {
 			return true;
 		}
+		\Certloom\Infrastructure\Data\DatabaseOptions::invalidate( array( self::JOURNAL_OPTION ) );
 		delete_option( self::JOURNAL_OPTION );
-		$after = get_option( self::JOURNAL_OPTION, null );
+		$after = $this->read_option( self::JOURNAL_OPTION, null );
+		if ( is_wp_error( $after ) ) { return $after; }
 		if ( null === $after || ! is_array( $after ) || ! isset( $after['owner_token'] ) || ! hash_equals( (string) $owner_token, (string) $after['owner_token'] ) ) {
 			return true;
 		}
@@ -911,15 +967,21 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 		);
 	}
 
-	/** @return array<string,mixed> */
+	/** Read durable restore state without treating a failed read or corrupt record as absence. */
+	private function read_option( $key, $default ) {
+		$values = \Certloom\Infrastructure\Data\DatabaseOptions::read( array( $key ) );
+		if ( is_wp_error( $values ) ) { return $values; }
+		if ( ! $values[ $key ]['exists'] ) { return $default; }
+		$value = $values[ $key ]['value'];
+		return ! is_array( $value ) || ( self::RECEIPTS_OPTION !== $key && empty( $value ) )
+			? new \WP_Error( 'certloom_domain_restore_state_corrupt', __( 'Certloom restore recovery state is corrupt. Changes remain paused until the saved state is reviewed.', 'certloom' ) )
+			: $value;
+	}
+
+	/** @return array<string,mixed>|\WP_Error */
 	private function configuration_snapshot() {
-		$values = array();
-		foreach ( DomainBackupRepository::configuration_keys() as $key ) {
-			$sentinel = array( '__certloom_missing_option__' => $key );
-			$value = get_option( $key, $sentinel );
-			$values[ $key ] = $value === $sentinel ? array( 'exists' => false, 'value' => null ) : array( 'exists' => true, 'value' => $value );
-		}
-		return $values;
+		$snapshot = ( new DomainBackupRepository() )->configuration_snapshot();
+		return is_wp_error( $snapshot ) ? $snapshot : $snapshot['values'];
 	}
 
 	/** @return true|\WP_Error */
@@ -928,15 +990,16 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 			if ( ! isset( $configuration[ $key ] ) || ! is_array( $configuration[ $key ] ) || ! array_key_exists( 'exists', $configuration[ $key ] ) || ! array_key_exists( 'value', $configuration[ $key ] ) ) {
 				return new \WP_Error( 'certloom_domain_restore_configuration_invalid', __( 'The restore configuration is incomplete.', 'certloom' ) );
 			}
+			foreach ( array( $key, 'alloptions', 'notoptions' ) as $cache_key ) { wp_cache_delete( $cache_key, 'options' ); }
 			if ( ! empty( $configuration[ $key ]['exists'] ) ) {
 				update_option( $key, $configuration[ $key ]['value'], false );
-				$result = $configuration[ $key ]['value'] === get_option( $key, null );
 			} else {
-				$sentinel = array( '__certloom_restore_missing__' => $key );
 				delete_option( $key );
-				$result = $sentinel === get_option( $key, $sentinel );
 			}
-			if ( ! $result ) {
+			$fresh = \Certloom\Infrastructure\Data\DatabaseOptions::read( array( $key ) );
+			if ( is_wp_error( $fresh ) ) { return $fresh; }
+			$expected = array( 'exists' => ! empty( $configuration[ $key ]['exists'] ), 'value' => ! empty( $configuration[ $key ]['exists'] ) ? $configuration[ $key ]['value'] : null );
+			if ( $fresh[ $key ] !== $expected ) {
 				return new \WP_Error( 'certloom_domain_restore_configuration_save_failed', __( 'Certloom could not save restored configuration.', 'certloom' ) );
 			}
 		}
@@ -950,8 +1013,10 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 
 	/** @return true|\WP_Error */
 	private function restore_generation( $value ) {
+		foreach ( array( DomainGeneration::OPTION, 'alloptions', 'notoptions' ) as $key ) { wp_cache_delete( $key, 'options' ); }
 		update_option( DomainGeneration::OPTION, (string) $value, false );
-		return hash_equals( (string) $value, (string) get_option( DomainGeneration::OPTION, '' ) )
+		$current = $this->generation->read_current();
+		return ! is_wp_error( $current ) && hash_equals( (string) $value, $current )
 			? true
 			: new \WP_Error( 'certloom_domain_restore_generation_restore_failed', __( 'Certloom could not restore its previous data-generation marker.', 'certloom' ) );
 	}
@@ -1007,7 +1072,8 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 		}
 
 		$now      = time();
-		$receipts = get_option( self::RECEIPTS_OPTION, array() );
+		$receipts = $this->read_option( self::RECEIPTS_OPTION, array() );
+		if ( is_wp_error( $receipts ) ) { return $receipts; }
 		$receipts = is_array( $receipts ) ? $receipts : array();
 		foreach ( $receipts as $key => $stored ) {
 			if ( ! is_array( $stored ) || ( $now - absint( $stored['committed_at'] ?? 0 ) ) > self::RECEIPT_TTL ) {
@@ -1017,7 +1083,9 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 		$receipt = $this->normalize_receipt( $receipt );
 		if ( is_wp_error( $receipt ) ) { return $receipt; }
 		$receipt['committed_at'] = $now;
-		$receipt['generation']   = $this->generation->current();
+		$generation = $this->generation->read_current();
+		if ( is_wp_error( $generation ) ) { return $generation; }
+		$receipt['generation']   = $generation;
 		$receipts[ $owner_token ] = $receipt;
 
 		if ( count( $receipts ) > self::MAX_RECEIPTS ) {
@@ -1029,28 +1097,33 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 			}
 		}
 
+		\Certloom\Infrastructure\Data\DatabaseOptions::invalidate( array( self::RECEIPTS_OPTION ) );
 		update_option( self::RECEIPTS_OPTION, $receipts, false );
-		return $receipts === get_option( self::RECEIPTS_OPTION, array() )
+		return $receipts === $this->read_option( self::RECEIPTS_OPTION, array() )
 			? true
 			: new \WP_Error( 'certloom_domain_restore_receipt_failed', __( 'Certloom could not save the durable restore completion receipt exactly as committed.', 'certloom' ) );
 	}
 
 	/** @return true|\WP_Error */
 	private function delete_completion_receipt( $owner_token ) {
-		$receipts = get_option( self::RECEIPTS_OPTION, array() );
+		$receipts = $this->read_option( self::RECEIPTS_OPTION, array() );
+		if ( is_wp_error( $receipts ) ) { return $receipts; }
 		if ( ! is_array( $receipts ) || ! isset( $receipts[ $owner_token ] ) ) {
 			return true;
 		}
 		unset( $receipts[ $owner_token ] );
 		if ( empty( $receipts ) ) {
+			\Certloom\Infrastructure\Data\DatabaseOptions::invalidate( array( self::RECEIPTS_OPTION ) );
 			delete_option( self::RECEIPTS_OPTION );
-			$stored = get_option( self::RECEIPTS_OPTION, null );
+			$stored = $this->read_option( self::RECEIPTS_OPTION, null );
+			if ( is_wp_error( $stored ) ) { return $stored; }
 			return null === $stored
 				? true
 				: new \WP_Error( 'certloom_domain_restore_receipt_cleanup_failed', __( 'Certloom could not remove a rolled-back restore completion receipt safely.', 'certloom' ) );
 		}
+		\Certloom\Infrastructure\Data\DatabaseOptions::invalidate( array( self::RECEIPTS_OPTION ) );
 		update_option( self::RECEIPTS_OPTION, $receipts, false );
-		return $receipts === get_option( self::RECEIPTS_OPTION, array() )
+		return $receipts === $this->read_option( self::RECEIPTS_OPTION, array() )
 			? true
 			: new \WP_Error( 'certloom_domain_restore_receipt_cleanup_failed', __( 'Certloom could not update restore completion receipts after rollback.', 'certloom' ) );
 	}
@@ -1058,18 +1131,22 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 	/** @return bool */
 	private function save_build_marker( array $workspace ) {
 		$value = array( 'owner_token' => $workspace['owner_token'], 'suffix' => $workspace['suffix'], 'updated_at' => time() );
+		\Certloom\Infrastructure\Data\DatabaseOptions::invalidate( array( self::BUILD_OPTION ) );
 		update_option( self::BUILD_OPTION, $value, false );
-		return $value === get_option( self::BUILD_OPTION, array() );
+		return $value === $this->read_option( self::BUILD_OPTION, array() );
 	}
 
 	/** @return true|\WP_Error */
 	private function delete_build_marker( $owner_token ) {
-		$current = get_option( self::BUILD_OPTION, array() );
+		$current = $this->read_option( self::BUILD_OPTION, array() );
+		if ( is_wp_error( $current ) ) { return $current; }
 		if ( ! is_array( $current ) || ! isset( $current['owner_token'] ) || ! hash_equals( (string) $owner_token, (string) $current['owner_token'] ) ) {
 			return true;
 		}
+		\Certloom\Infrastructure\Data\DatabaseOptions::invalidate( array( self::BUILD_OPTION ) );
 		delete_option( self::BUILD_OPTION );
-		$after = get_option( self::BUILD_OPTION, null );
+		$after = $this->read_option( self::BUILD_OPTION, null );
+		if ( is_wp_error( $after ) ) { return $after; }
 		if ( null === $after || ! is_array( $after ) || ! isset( $after['owner_token'] ) || ! hash_equals( (string) $owner_token, (string) $after['owner_token'] ) ) {
 			return true;
 		}
@@ -1078,7 +1155,8 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 
 	/** @return true|\WP_Error */
 	private function recover_stale_build() {
-		$current = get_option( self::BUILD_OPTION, array() );
+		$current = $this->read_option( self::BUILD_OPTION, array() );
+		if ( is_wp_error( $current ) ) { return $current; }
 		if ( ! is_array( $current ) || empty( $current['owner_token'] ) || empty( $current['suffix'] ) ) {
 			return true;
 		}
@@ -1110,7 +1188,8 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 
 	/** @return bool */
 	private function save_journal( array $journal ) {
+		\Certloom\Infrastructure\Data\DatabaseOptions::invalidate( array( self::JOURNAL_OPTION ) );
 		update_option( self::JOURNAL_OPTION, $journal, false );
-		return $journal === get_option( self::JOURNAL_OPTION, array() );
+		return $journal === $this->read_option( self::JOURNAL_OPTION, array() );
 	}
 }

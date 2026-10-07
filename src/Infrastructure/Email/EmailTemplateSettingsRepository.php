@@ -35,6 +35,9 @@ final class EmailTemplateSettingsRepository {
 
 	/** @return true|\WP_Error */
 	public function save( array $template ) {
+		return ( new \Certloom\Infrastructure\Database\Transaction() )->run( function () use ( $template ) { return $this->save_atomically( $template ); } );
+	}
+	private function save_atomically( array $template ) {
 		$service = new EmailTemplateService();
 		$clean   = $service->normalize_template( $template );
 		if ( is_wp_error( $clean ) ) {
@@ -57,9 +60,6 @@ final class EmailTemplateSettingsRepository {
 		}
 
 		// Keep the historic option synchronized for rollback/read compatibility.
-		$saved = update_option( self::OPTION, $clean, false );
-		return $saved || $clean === get_option( self::OPTION, array() )
-			? true
-			: new \WP_Error( 'certloom_email_template_save_failed', __( 'Certloom could not save the credential email template.', 'certloom' ) );
+		return ( new \Certloom\Infrastructure\Data\DurableOptionMutation() )->set( self::OPTION, $clean );
 	}
 }

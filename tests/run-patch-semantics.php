@@ -1,12 +1,23 @@
 <?php
 /** Pure repository PATCH-semantics tests for hidden/omitted field preservation. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define( 'ABSPATH', __DIR__ . '/fake-wp/' );
 define( 'DAY_IN_SECONDS', 86400 );
 define( 'MINUTE_IN_SECONDS', 60 );
 class FakePatchWpdb {
 	public $prefix = 'wp_';
+	public $options = 'wp_options';
 	public $last_error = '';
 	public $updates = array();
+	public function prepare( $query, ...$args ) { return array( $query, $args ); }
+	public function get_var( $prepared ) {
+		$this->last_error = ''; list( $query, $args ) = $prepared;
+		if ( strpos( $query, 'SELECT ENGINE' ) === 0 ) { return 'InnoDB'; }
+		if ( strpos( $query, 'SELECT option_value' ) === 0 ) { return 'certloom_domain_write_fence' === ( $args[1] ?? '' ) ? '1' : ( $GLOBALS['patch_options'][ $args[1] ] ?? null ); }
+		return null;
+	}
+	public function query( $query ) { $this->last_error = ''; return 0; }
 	public function update( $table, $data, $where ) {
 		$this->updates[] = array( 'table' => $table, 'data' => $data, 'where' => $where );
 		return 1;

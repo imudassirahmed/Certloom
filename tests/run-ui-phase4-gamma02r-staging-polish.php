@@ -1,5 +1,7 @@
 <?php
 /** Phase 4 Gamma-02R staging-feedback polish contract. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $root  = dirname( __DIR__ );
 $admin = file_get_contents( $root . '/src/Infrastructure/Admin/TemplateAdmin.php' );
 $nav   = file_get_contents( $root . '/src/Infrastructure/Admin/AdminProductNavigation.php' );

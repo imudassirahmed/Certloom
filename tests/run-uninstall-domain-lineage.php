@@ -1,5 +1,7 @@
 <?php
 /** Static guard: retained future-domain credential data must retain migration/cutover lineage across uninstall/reinstall. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $source = file_get_contents( dirname( __DIR__ ) . '/uninstall.php' );
 if ( false === $source ) { throw new RuntimeException( 'Could not read uninstall.php' ); }
 $required = array(

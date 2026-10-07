@@ -1,5 +1,7 @@
 <?php
 /** Static premium acceptance for Phase 2 frontend architecture. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $root=dirname(__DIR__);
 $files=array(
  'bootstrap'=>file_get_contents($root.'/certloom.php'),
@@ -16,7 +18,7 @@ $files=array(
  'elementor'=>file_get_contents($root.'/elementor/class-ecapla-certverify-credential-widget.php'),
  'js'=>file_get_contents($root.'/public/assets/certloom-public.js'),
  'css'=>file_get_contents($root.'/public/assets/certloom-public.css'),
- 'inventory'=>file_get_contents($root.'/docs/public-surface-inventory.md'),
+ 'inventory'=>file_get_contents($root.'/tests/acceptance-contract.md'),
 );
 foreach($files as $n=>$v){if(!is_string($v)||$v==='')throw new RuntimeException('missing '.$n);}
 function qa2($c,$m){if(!$c)throw new RuntimeException($m);}

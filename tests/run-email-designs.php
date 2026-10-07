@@ -1,5 +1,8 @@
 <?php
 /** Email Design library, package and designer separation contract tests. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
+require_once __DIR__ . '/bootstrap-option-command-double.php';
 define( 'ABSPATH', __DIR__ . '/' );
 $GLOBALS['certloom_test_options'] = array();
 if ( ! class_exists( 'WP_Error' ) ) {

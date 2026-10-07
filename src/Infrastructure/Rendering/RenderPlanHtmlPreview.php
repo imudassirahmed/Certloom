@@ -54,7 +54,7 @@ final class RenderPlanHtmlPreview {
 		$classes = 'certloom-template-preview-op certloom-template-preview-op-' . sanitize_html_class( $type );
 		switch ( $type ) {
 			case 'text':
-				return '<div class="' . esc_attr( $classes ) . '" style="' . esc_attr( $style . $this->text_style( (array) ( $operation['text'] ?? array() ) ) ) . '"><span>' . esc_html( (string) ( $operation['text']['value'] ?? '' ) ) . '</span></div>';
+				return '<div class="' . esc_attr( $classes ) . '"' . $this->text_fit_attributes( (array) ( $operation['text'] ?? array() ) ) . ' style="' . esc_attr( $style . $this->text_style( (array) ( $operation['text'] ?? array() ) ) ) . '"><span>' . esc_html( (string) ( $operation['text']['value'] ?? '' ) ) . '</span></div>';
 			case 'rich_text':
 				return $this->rich_text( $operation, $style, $classes );
 			case 'table':
@@ -88,6 +88,13 @@ final class RenderPlanHtmlPreview {
 	}
 
 	/** @return string */
+	private function text_fit_attributes( array $text ) {
+		$overflow = (string) ( $text['overflow'] ?? 'shrink' );
+		if ( ! in_array( $overflow, array( 'shrink', 'wrap', 'clip' ), true ) ) { $overflow = 'clip'; }
+		return ' data-certloom-text-overflow="' . esc_attr( $overflow ) . '" data-certloom-text-min-px="' . esc_attr( $this->num( $this->px( 5.0 * 25.4 / 72.0 ) ) ) . '"';
+	}
+
+	/** @return string */
 	private function text_style( array $text ) {
 		$font = isset( $text['font'] ) && is_array( $text['font'] ) ? $text['font'] : array();
 		$vertical = (string) ( $text['vertical_align'] ?? 'middle' );
@@ -117,7 +124,7 @@ final class RenderPlanHtmlPreview {
 			$run_style = 'font-family:' . $family_css . ';font-size:' . $this->num( $this->px( (float) ( $font['size_mm'] ?? 0 ) ) ) . 'px;font-weight:' . (int) ( $font['weight'] ?? 400 ) . ';font-style:' . ( ! empty( $font['italic'] ) ? 'italic' : 'normal' ) . ';letter-spacing:' . $this->num( $this->px( (float) ( $font['letter_spacing_mm'] ?? 0 ) ) ) . 'px;color:' . $this->css_color( (array) ( $run['color'] ?? array() ) ) . ';';
 			$spans .= '<span style="' . esc_attr( $run_style ) . '">' . esc_html( (string) ( $run['value'] ?? '' ) ) . '</span>';
 		}
-		return '<div class="' . esc_attr( $classes ) . '" style="' . esc_attr( $style . $this->text_style( $base ) . 'white-space:pre-wrap;' ) . '"><span>' . $spans . '</span></div>';
+		return '<div class="' . esc_attr( $classes ) . '"' . $this->text_fit_attributes( $base ) . ' style="' . esc_attr( $style . $this->text_style( $base ) ) . '"><span>' . $spans . '</span></div>';
 	}
 
 	/** @return string */
@@ -138,7 +145,7 @@ final class RenderPlanHtmlPreview {
 				if ( ! isset( $box['x_mm'], $box['y_mm'], $box['width_mm'], $box['height_mm'], $content['x_mm'], $content['y_mm'], $content['width_mm'], $content['height_mm'] ) ) { continue; }
 				$cell_style = 'position:absolute;left:' . $this->num( $this->px( (float) $box['x_mm'] ) ) . 'px;top:' . $this->num( $this->px( (float) $box['y_mm'] ) ) . 'px;width:' . $this->num( $this->px( (float) $box['width_mm'] ) ) . 'px;height:' . $this->num( $this->px( (float) $box['height_mm'] ) ) . 'px;background:' . $fill . ';border:' . $this->num( $border ) . 'px solid ' . $border_color . ';box-sizing:border-box;overflow:hidden;';
 				$content_style = 'position:absolute;left:' . $this->num( $this->px( (float) $content['x_mm'] ) ) . 'px;top:' . $this->num( $this->px( (float) $content['y_mm'] ) ) . 'px;width:' . $this->num( $this->px( (float) $content['width_mm'] ) ) . 'px;height:' . $this->num( $this->px( (float) $content['height_mm'] ) ) . 'px;' . $this->text_style( $text );
-				$rows_html .= '<div class="certloom-template-preview-table-cell" style="' . esc_attr( $cell_style ) . '"></div><div class="certloom-template-preview-table-text" style="' . esc_attr( $content_style ) . '"><span>' . esc_html( (string) ( $text['value'] ?? '' ) ) . '</span></div>';
+				$rows_html .= '<div class="certloom-template-preview-table-cell" style="' . esc_attr( $cell_style ) . '"></div><div class="certloom-template-preview-table-text"' . $this->text_fit_attributes( $text ) . ' style="' . esc_attr( $content_style ) . '"><span>' . esc_html( (string) ( $text['value'] ?? '' ) ) . '</span></div>';
 			}
 		}
 		return '<div class="' . esc_attr( $classes ) . '" style="' . esc_attr( $style . 'overflow:hidden;box-sizing:border-box;' ) . '">' . $rows_html . '</div>';
@@ -184,7 +191,7 @@ final class RenderPlanHtmlPreview {
 			return '<div class="' . esc_attr( $classes . ' certloom-template-preview-asset-placeholder' ) . '" style="' . esc_attr( $style ) . '"><span>' . esc_html__( 'Local image', 'certloom' ) . '</span></div>';
 		}
 		$bytes = file_get_contents( $path );
-		if ( ! is_string( $bytes ) || strlen( $bytes ) !== $size ) {
+		if ( ! is_string( $bytes ) || strlen( $bytes ) !== $size || ! hash_equals( $hash, hash( 'sha256', $bytes ) ) ) {
 			$warnings[] = __( 'A local image could not be read completely for browser Preview.', 'certloom' );
 			return '<div class="' . esc_attr( $classes . ' certloom-template-preview-asset-placeholder' ) . '" style="' . esc_attr( $style ) . '"><span>' . esc_html__( 'Local image', 'certloom' ) . '</span></div>';
 		}

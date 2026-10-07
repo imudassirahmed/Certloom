@@ -1,4 +1,6 @@
 <?php
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 if ( ! defined( 'ABSPATH' ) ) { fwrite( STDERR, "Run inside WordPress.\n" ); exit( 1 ); }
 require_once __DIR__ . '/domain-acceptance-bundle-lib.php';
 function certloom_wp_integration_evidence( $gate_id, $gate_file ) {

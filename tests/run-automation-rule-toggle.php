@@ -1,5 +1,7 @@
 <?php
 /** Check that an existing automation can be paused and resumed without losing its scope. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 if ( ! defined( 'ABSPATH' ) ) { define( 'ABSPATH', __DIR__ . '/fake-wp/' ); }
 class WP_Error {
 	private $code;

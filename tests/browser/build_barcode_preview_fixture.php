@@ -1,5 +1,7 @@
 <?php
 /** Production-path browser fixture for certloom-layout v2 Code 128 Preview. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define('ABSPATH',__DIR__.'/');
 function __($v){return $v;} function sanitize_html_class($v){return preg_replace('/[^A-Za-z0-9_-]/','',(string)$v);} function esc_attr($v){return htmlspecialchars((string)$v,ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8');} function esc_html($v){return htmlspecialchars((string)$v,ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8');} function esc_attr__($v){return esc_attr($v);} function esc_html__($v){return esc_html($v);}
 require_once dirname(__DIR__).'/bootstrap-autoload.php';

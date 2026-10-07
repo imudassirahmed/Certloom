@@ -1,5 +1,7 @@
 <?php
 /** POR-01 authenticated Recipient Portal ownership/privacy/authority gate. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define( 'ABSPATH', __DIR__ . '/webroot/' );
 function __( $v ){ return $v; }
 function is_wp_error( $v ){ return $v instanceof WP_Error; }

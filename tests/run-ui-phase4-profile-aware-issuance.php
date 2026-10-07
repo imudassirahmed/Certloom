@@ -1,5 +1,7 @@
 <?php
 /** Alpha.4.36 profile-aware issuance and design-driven detail source contract. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $root = dirname( __DIR__ );
 $settings = file_get_contents( $root . '/includes/class-ecapla-certverify-settings.php' );
 $presentation = file_get_contents( $root . '/src/Infrastructure/Admin/UsageProfilePresentation.php' );

@@ -31,7 +31,7 @@ final class TemplatePreviewService {
 	}
 
 	/** @return array<string,mixed>|\WP_Error */
-	public function build( array $template, $revision_mode = 'current', $sample_profile = TemplatePreviewSamples::STANDARD ) {
+	public function build( array $template, $revision_mode = 'current', $sample_profile = TemplatePreviewSamples::STANDARD, $usage_profile = '' ) {
 		$revision_mode = 'published' === (string) $revision_mode ? 'published' : 'current';
 		$sample_profile = in_array( (string) $sample_profile, TemplatePreviewSamples::profiles(), true ) ? (string) $sample_profile : TemplatePreviewSamples::STANDARD;
 		$key = $revision_mode . '_revision';
@@ -42,7 +42,7 @@ final class TemplatePreviewService {
 			return new \WP_Error( 'certloom_template_preview_revision_unavailable', 'The selected Template revision is unavailable for Preview.' );
 		}
 		try {
-			$snapshot = $this->samples->snapshot_for_layout( $revision['layout'], $sample_profile );
+			$snapshot = $this->samples->snapshot_for_layout( $revision['layout'], $sample_profile, $usage_profile );
 			$resolved = $this->resolver->resolve( $revision['layout'], $snapshot, $this->samples->verification_url( $sample_profile ), $this->assets );
 			$font_manifest = $this->fonts->for_document( $resolved );
 			$plan = $this->plans->build( $resolved, array( 'font_manifest' => $font_manifest ) );

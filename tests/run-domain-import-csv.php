@@ -1,5 +1,7 @@
 <?php
 /** Pure/resumable CSV reader tests using actual private-file storage. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 if ( ! class_exists( 'WP_Error' ) ) {
 	class WP_Error { private $c,$m; function __construct($c='',$m=''){ $this->c=$c;$this->m=$m;} function get_error_code(){return $this->c;} function get_error_message(){return $this->m;} }
 }

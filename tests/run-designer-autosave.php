@@ -1,5 +1,7 @@
 <?php
 /** DSN-07 Designer recovery autosave + optimistic-concurrency gate. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define( 'ABSPATH', __DIR__ . '/' );
 define( 'ARRAY_A', 'ARRAY_A' );
 define( 'MINUTE_IN_SECONDS', 60 );
@@ -7,7 +9,8 @@ define( 'DAY_IN_SECONDS', 86400 );
 if ( ! class_exists( 'WP_Error' ) ) { class WP_Error { private $c,$m,$d; public function __construct($c='',$m='',$d=null){$this->c=$c;$this->m=$m;$this->d=$d;} public function get_error_code(){return $this->c;} public function get_error_message(){return $this->m;} public function get_error_data(){return $this->d;} } }
 function is_wp_error($v){return $v instanceof WP_Error;} function __($v){return $v;} function absint($v){return abs((int)$v);} function sanitize_key($v){return strtolower(preg_replace('/[^a-z0-9_\-]/','',(string)$v));} function wp_json_encode($v,$flags=0){return json_encode($v,$flags);} function get_current_blog_id(){return 4;}
 function wp_slash($v){return addslashes($v);}
-$GLOBALS['dsn7_meta']=array(); function update_user_meta($u,$k,$v){$GLOBALS['dsn7_meta'][$u][$k]=stripslashes($v);return true;} function get_user_meta($u,$k,$single=true){return $GLOBALS['dsn7_meta'][$u][$k]??'';} function delete_user_meta($u,$k){unset($GLOBALS['dsn7_meta'][$u][$k]);return true;}
+$GLOBALS['dsn7_meta']=array(); function update_user_meta($u,$k,$v){if(!empty($GLOBALS['dsn7_deny_write'])){return false;}$GLOBALS['dsn7_meta'][$u][$k]=stripslashes($v);return true;} function get_user_meta($u,$k,$single=true){$value=$GLOBALS['dsn7_meta'][$u][$k]??'';if(isset($GLOBALS['dsn7_on_read'])){$hook=$GLOBALS['dsn7_on_read'];unset($GLOBALS['dsn7_on_read']);$hook();}return $value;} function delete_user_meta($u,$k){unset($GLOBALS['dsn7_meta'][$u][$k]);return true;}
+function wp_cache_delete($key,$group){return true;}
 require_once __DIR__ . '/bootstrap-autoload.php';
 
 use Certloom\Application\Rendering\CanonicalJson;
@@ -17,9 +20,15 @@ use Certloom\Domain\Rendering\LayoutSchema;
 use Certloom\Infrastructure\Admin\TemplateDesignerAutosave;
 
 final class Dsn7Wpdb {
- public $prefix='wp_'; public $last_error=''; public $template; public $revision;
+ public $prefix='wp_'; public $usermeta='wp_usermeta'; public $last_error=''; public $template; public $revision; public $release_error=false;
  public function prepare($query,...$args){return array($query,$args);}
  public function get_row($prepared,$output=null){$args=$prepared[1];$table=$args[0]??''; if('wp_certloom_templates'===$table){return $this->template;} if('wp_certloom_template_revisions'===$table){return $this->revision;} return null;}
+ public function get_var($prepared){
+  $query=$prepared[0];$name=$prepared[1][0];$owner=spl_object_id($this);$held=$GLOBALS['dsn7_locks'][$name]??null;
+  if(str_contains($query,'GET_LOCK')){if($held&&$held['owner']!==$owner){return '0';}$GLOBALS['dsn7_locks'][$name]=array('owner'=>$owner,'depth'=>($held['depth']??0)+1);return '1';}
+  if(str_contains($query,'RELEASE_LOCK')){if(!$held||$held['owner']!==$owner){return null;}if(1===$held['depth']){unset($GLOBALS['dsn7_locks'][$name]);}else{$GLOBALS['dsn7_locks'][$name]['depth']--;}return $this->release_error?null:'1';}
+  return null;
+ }
 }
 $pass=0;$fail=0; function dsn7($ok,$label){global$pass,$fail;if($ok){$pass++;echo"PASS  $label\n";}else{$fail++;echo"FAIL  $label\n";}} function dsn7has($s,$n,$l){dsn7(false!==strpos($s,$n),$l);} 
 
@@ -78,6 +87,29 @@ $wpdb->template['current_revision_id']=11; $wpdb->revision=array('id'=>11,'templ
 $service->save(7,5,11,$sha,$session,$changed,$state); $tampered=json_decode(get_user_meta(5,$key,true),true); $tampered['layout_sha256']=str_repeat('0',64); update_user_meta(5,$key,wp_slash(json_encode($tampered)));
 dsn7('invalid'===($service->inspect(7,5)['status']??''),'tampered recovery layout/hash fails closed');
 $invalidPrepared=$service->prepare_for_editor(7,5); dsn7('none'===($invalidPrepared['status']??'')&&'invalid'===($invalidPrepared['retired_status']??'')&&''===get_user_meta(5,$key,true),'invalid recovery is retired before Studio opens instead of repeating a warning on every reload');
+
+// Pause the first read and let a genuinely separate database-session fixture
+// attempt the same empty slot. Both requests used to succeed, losing one tab.
+$firstConnection=$wpdb;$secondConnection=clone $wpdb;$secondResult=null;
+$GLOBALS['dsn7_on_read']=static function()use($secondConnection,$firstConnection,$service,$sha,$changed,$state,&$secondResult){
+ $GLOBALS['wpdb']=$secondConnection;
+ try{$secondResult=$service->save(7,5,11,$sha,'22222222-2222-4222-8222-222222222222',$changed,$state);}finally{$GLOBALS['wpdb']=$firstConnection;}
+};
+$firstResult=$service->save(7,5,11,$sha,$session,$changed,$state);
+dsn7(!is_wp_error($firstResult)&&is_wp_error($secondResult)&&'certloom_designer_autosave_busy'===$secondResult->get_error_code(),'overlapping first saves cannot both claim the same empty recovery slot');
+$retry=$service->save(7,5,11,$sha,'22222222-2222-4222-8222-222222222222',$changed,$state);
+dsn7(is_wp_error($retry)&&'certloom_designer_autosave_session_conflict'===$retry->get_error_code(),'a competing tab retry preserves the first owning session');
+$retireReady=$service->retire_active(7,5,'stale');
+dsn7(is_wp_error($retireReady)&&'ready'===$service->inspect(7,5)['status'],'retirement rechecks current eligibility and cannot delete recoverable work');
+$service->discard(7,5,$session);
+$GLOBALS['dsn7_deny_write']=true;
+$denied=$service->save(7,5,11,$sha,$session,$changed,$state);
+dsn7(is_wp_error($denied)&&'certloom_designer_autosave_store_failed'===$denied->get_error_code()&&empty($GLOBALS['dsn7_locks']),'denied persistence releases all acquired session locks');
+$GLOBALS['dsn7_deny_write']=false;$wpdb->release_error=true;
+$uncertain=$service->save(7,5,11,$sha,$session,$changed,$state);
+dsn7(is_wp_error($uncertain)&&'certloom_designer_autosave_lock_release_failed'===$uncertain->get_error_code(),'uncertain database ownership never returns a successful recovery receipt');
+$wpdb->release_error=false;$service->discard(7,5,$session);
+dsn7(empty($GLOBALS['dsn7_locks']),'nested recovery cleanup releases every lock acquisition');
 
 $root=dirname(__DIR__); $admin=file_get_contents($root.'/src/Infrastructure/Admin/TemplateAdmin.php'); $repo=file_get_contents($root.'/src/Infrastructure/Repository/TemplateRepository.php'); $js=file_get_contents($root.'/admin/assets/designer.js'); $autosave=file_get_contents($root.'/src/Infrastructure/Admin/TemplateDesignerAutosave.php'); $uninstall=file_get_contents($root.'/uninstall.php');
 dsn7has($admin,"wp_ajax_certloom_template_designer_autosave",'authenticated AJAX autosave endpoint is explicitly registered');

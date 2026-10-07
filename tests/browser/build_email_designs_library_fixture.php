@@ -1,5 +1,7 @@
 <?php
 /** Browser fixture for Email Designs Library / My Templates. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define( 'ABSPATH', __DIR__ . '/' );
 define( 'CERTLOOM_PATH', dirname( __DIR__, 2 ) . '/' );
 function add_query_arg($args,$url){$sep=strpos($url,'?')===false?'?':'&';return $url.$sep.http_build_query((array)$args);} function is_wp_error($v){return false;} function wp_nonce_url($url,$action){return add_query_arg(array('_wpnonce'=>'fixture-'.$action),$url);}

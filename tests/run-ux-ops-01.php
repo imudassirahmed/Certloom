@@ -1,5 +1,7 @@
 <?php
 /** UX-OPS-01 1.6.98 setup/operations corrective contract. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $root = dirname( __DIR__ );
 $pass = 0; $fail = 0;
 function uxops_check( $ok, $label ) { global $pass, $fail; if ( $ok ) { ++$pass; echo "PASS  {$label}\n"; } else { ++$fail; echo "FAIL  {$label}\n"; } }

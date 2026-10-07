@@ -1,5 +1,7 @@
 <?php
 /** Static guard for uninstall ownership and ephemeral cleanup coverage. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $source = file_get_contents( dirname( __DIR__ ) . '/uninstall.php' );
 if ( false === $source ) { throw new RuntimeException( 'Could not read uninstall.php' ); }
 $required = array(
@@ -13,6 +15,7 @@ $required = array(
 	"'certloom_manage_batches'",
 	"'certloom_manage_signers'",
 	"delete_option( 'certloom_domain_data_generation' )",
+	"delete_option( 'certloom_domain_write_fence' )",
 	"delete_option( 'certloom_job_retention_last_run' )",
 	"delete_option( 'certloom_database_proof_lock' )",
 	"delete_option( 'certloom_database_proof_last' )",

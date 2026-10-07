@@ -1,4 +1,5 @@
 <?php
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 /** TPL-02 + PRESET-01 premium factory-template contract tests. */
 define( 'ABSPATH', __DIR__ . '/' );
 if ( ! class_exists( 'WP_Error' ) ) {
@@ -22,14 +23,14 @@ function p16has($source,$needle,$message){p16(false!==strpos($source,$needle),$m
 $catalog=new PresetCatalog();
 $all=$catalog->all();
 p16(is_array($catalog->get('modern-a4-landscape',1))&&1===$catalog->get('modern-a4-landscape',1)['preset_version'],'factory preset v1 remains reproducible for safe advancement');
-p16(is_array($catalog->get('modern-a4-landscape',2))&&2===$catalog->get('modern-a4-landscape',2)['preset_version'],'factory preset v2 is current');
+p16(is_array($catalog->get('modern-a4-landscape',2))&&2===$catalog->get('modern-a4-landscape',2)['preset_version'],'factory preset v2 remains reproducible');
 p16(6===count(PresetCatalog::families()),'six premium families');
 p16(4===count(PresetCatalog::variants()),'four page/orientation variants');
 p16(24===count($all),'24 canonical starter layouts');
 
 $validator=new LayoutValidator(); $canonical=new CanonicalJson(); $keys=array(); $hashes=array(); $families=array(); $variant_counts=array();
 foreach($all as $d){
-	p16(2===$d['preset_version'],'factory preset version 2');
+	p16(3===$d['preset_version'],'factory preset version 3');
 	p16(0===strpos($d['machine_key'],'certloom-preset-'),'factory namespace reserved');
 	p16(!isset($keys[$d['preset_key']]),'preset key unique '.$d['preset_key']); $keys[$d['preset_key']]=true;
 	p16(!isset($hashes[$d['layout_sha256']]),'layout hash unique '.$d['preset_key']); $hashes[$d['layout_sha256']]=true;
@@ -61,14 +62,13 @@ p16(is_file($manifest_path),'visual reference manifest exists');
 $manifest=json_decode(file_get_contents($manifest_path),true); p16(is_array($manifest),'visual manifest JSON valid');
 p16('certloom-template-preset-reference'===($manifest['schema']??''),'visual reference schema exact');
 p16(24===count($manifest['presets']??array()),'visual reference covers all 24 presets');
-foreach($all as $d){$m=$manifest['presets'][$d['preset_key']]??null;p16(is_array($m),'visual ref exists '.$d['preset_key']);p16(hash_equals($d['layout_sha256'],(string)$m['layout_sha256']),'visual ref bound to canonical layout '.$d['preset_key']);$dir=__DIR__.'/fixtures/templates/reference/'.$d['preset_key'];$png=$dir.'/reference.png';$svg=$dir.'/reference.svg';p16(is_file($png)&&is_file($svg),'reference files exist '.$d['preset_key']);p16(hash_equals((string)$m['png_sha256'],hash_file('sha256',$png)),'PNG file matches manifest '.$d['preset_key']);p16(hash_equals((string)$m['svg_sha256'],hash_file('sha256',$svg)),'SVG file matches manifest '.$d['preset_key']);$image=@getimagesize($png);p16(is_array($image)&&array((int)$image[0],(int)$image[1])===array_map('intval',$m['png_px']),'PNG geometry matches manifest '.$d['preset_key']);}
+foreach($all as $d){$m=$manifest['presets'][$d['preset_key']]??null;p16(is_array($m),'visual ref exists '.$d['preset_key']);$reference=$catalog->get($d['preset_key'],(int)$manifest['catalog_version']);p16(hash_equals($reference['layout_sha256'],(string)$m['layout_sha256']),'historical visual ref bound to canonical layout '.$d['preset_key']);$dir=__DIR__.'/fixtures/templates/reference/'.$d['preset_key'];$png=$dir.'/reference.png';$svg=$dir.'/reference.svg';p16(is_file($png)&&is_file($svg),'reference files exist '.$d['preset_key']);p16(hash_equals((string)$m['png_sha256'],hash_file('sha256',$png)),'PNG file matches manifest '.$d['preset_key']);p16(hash_equals((string)$m['svg_sha256'],hash_file('sha256',$svg)),'SVG file matches manifest '.$d['preset_key']);$image=@getimagesize($png);p16(is_array($image)&&array((int)$image[0],(int)$image[1])===array_map('intval',$m['png_px']),'PNG geometry matches manifest '.$d['preset_key']);}
 
 $root=dirname(__DIR__);$files=array(
  'repo'=>file_get_contents($root.'/src/Infrastructure/Repository/TemplateRepository.php'),
  'service'=>file_get_contents($root.'/src/Application/Templates/FactoryPresetService.php'),
  'admin'=>file_get_contents($root.'/src/Infrastructure/Admin/TemplateAdmin.php'),
  'catalog'=>file_get_contents($root.'/src/Application/Templates/PresetCatalog.php'),
- 'plan'=>file_get_contents($root.'/docs/roadmap-1.6.15-delta.md'),
 );
 foreach($files as $k=>$v){p16(is_string($v)&&''!==$v,'source '.$k.' available');}
 p16has($files['service'],'customer_revision','customer-edited factory draft is preserved');
@@ -81,7 +81,6 @@ p16has($files['repo'],'r.revision_number AS current_revision_number','template l
 p16has($files['admin'],'Install / synchronize factory drafts','gated admin exposes explicit preset installation');
 p16has($files['admin'],'Restore current factory design','gated admin exposes explicit non-destructive reset');
 p16has($files['catalog'],"'classic'",'Classic family');p16has($files['catalog'],"'modern'",'Modern family');p16has($files['catalog'],"'corporate'",'Corporate family');p16has($files['catalog'],"'academic'",'Academic family');p16has($files['catalog'],"'elegant'",'Elegant family');p16has($files['catalog'],"'minimal'",'Minimal family');
-p16has($files['plan'],'TPL-02 + PRESET-01','release follows planned TPL-02/PRESET-01 slice');
 
 echo "PASS  TPL-02 ships six premium families across A4/Letter portrait/landscape candidates\n";
 echo "PASS  PRESET-01 uses stable identities, immutable revisions, deterministic references and non-destructive customer customization semantics\n\n";

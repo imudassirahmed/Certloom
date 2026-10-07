@@ -1,13 +1,17 @@
 <?php
 /** 1.6.32 independent PDF-04 verifier resource-boundary regression. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
+require_once __DIR__ . '/support/python-process.php';
 $checks = 0;
 function rvrb_check( $condition, $message ) { global $checks; $checks++; if ( ! $condition ) { throw new RuntimeException( $message ); } }
 $script = __DIR__ . '/renderer-candidate/test-verifier-resource-boundary.py';
 rvrb_check( is_file( $script ), 'Focused verifier resource-boundary test must ship in source.' );
-$cmd = 'python3 ' . escapeshellarg( $script ) . ' 2>&1';
-$output = array(); $rc = 0; exec( $cmd, $output, $rc );
-rvrb_check( 0 === $rc, "Focused verifier resource-boundary test failed:\n" . implode( "\n", $output ) );
-rvrb_check( false !== strpos( implode( "\n", $output ), '11 checks, 0 failures' ), 'Focused verifier resource-boundary proof count drifted.' );
+list( $rc, $output ) = certloom_test_python( array( $script ) );
+rvrb_check( 0 === $rc, "Focused verifier resource-boundary test failed:\n" . $output );
+preg_match( '/(\d+) checks, 0 failures, (\d+) platform skips/', $output, $counts );
+rvrb_check( isset( $counts[2] ) && 11 === (int) $counts[1] + (int) $counts[2], 'Focused verifier resource-boundary proof count drifted.' );
+echo $output;
 $verifier = file_get_contents( __DIR__ . '/renderer-candidate/verify-bundle.py' );
 rvrb_check( false !== strpos( $verifier, 'MAX_ARTIFACT_BYTES = 50 * 1024 * 1024' ), 'Verifier artifact byte cap must remain explicit.' );
 rvrb_check( false !== strpos( $verifier, 'MAX_RASTER_PIXELS = 5_000_000' ), 'Verifier raster pixel cap must remain explicit.' );

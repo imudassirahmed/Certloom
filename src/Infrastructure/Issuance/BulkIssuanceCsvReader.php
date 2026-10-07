@@ -91,7 +91,7 @@ final class BulkIssuanceCsvReader {
 	/** @return array<int,string>|\WP_Error */
 	private function normalize_header( array $raw ) {
 		if ( empty( $raw ) || count( $raw ) > self::MAX_COLUMNS ) { return new \WP_Error( 'certloom_bulk_csv_columns_invalid', __( 'The Bulk Issuance CSV header has an unsupported number of columns.', 'certloom' ) ); }
-		$allowed = array( 'recipient_id', 'display_name', 'first_name', 'middle_name', 'last_name', 'email', 'external_id', 'grade', 'certificate_number' );
+		$allowed = array( 'recipient_id', 'registration_id', 'display_name', 'first_name', 'middle_name', 'last_name', 'email', 'external_id', 'grade', 'certificate_number' );
 		$out = array(); $seen = array();
 		foreach ( array_values( $raw ) as $i => $value ) {
 			$value = null === $value ? '' : (string) $value; if ( 0 === $i ) { $value = preg_replace( '/^\xEF\xBB\xBF/', '', $value ); }
@@ -109,7 +109,10 @@ final class BulkIssuanceCsvReader {
 	private function map_row( array $raw, array $header, array $shared ) {
 		if ( count( $raw ) > count( $header ) ) { return new \WP_Error( 'certloom_bulk_csv_row_columns_invalid', __( 'A Bulk Issuance CSV row contains more values than its header.', 'certloom' ) ); }
 		$values = array(); foreach ( $header as $i => $key ) { $v = array_key_exists( $i, $raw ) && null !== $raw[ $i ] ? (string) $raw[ $i ] : ''; if ( strlen( $v ) > self::MAX_CELL_BYTES || ! $this->valid_utf8( $v ) || false !== strpos( $v, "\0" ) ) { return new \WP_Error( 'certloom_bulk_csv_cell_invalid', __( 'A Bulk Issuance CSV cell contains invalid or oversized text.', 'certloom' ) ); } $v = trim( $v ); if ( '' !== $v && $this->formula_like( $v ) ) { return new \WP_Error( 'certloom_bulk_csv_formula_like', __( 'Bulk Issuance rejects spreadsheet-formula-like cell values. Store the intended literal value without a leading =, +, -, or @ character.', 'certloom' ) ); } $values[ $key ] = $v; }
-		$recipient_id = absint( $values['recipient_id'] ?? 0 );
+		$recipient_id = $this->identifier( $values['recipient_id'] ?? '' );
+		$registration_id = $this->identifier( $values['registration_id'] ?? '' );
+		if ( is_wp_error( $recipient_id ) || is_wp_error( $registration_id ) ) { return is_wp_error( $recipient_id ) ? $recipient_id : $registration_id; }
+		if ( $registration_id && ! $recipient_id ) { return new \WP_Error( 'certloom_bulk_csv_registration_recipient_required', __( 'An exact Program registration needs its existing Recipient ID in the same CSV row.', 'certloom' ) ); }
 		$new_fields = array( 'display_name', 'first_name', 'middle_name', 'last_name', 'email', 'external_id' ); $has_new = false; foreach ( $new_fields as $key ) { if ( '' !== (string) ( $values[ $key ] ?? '' ) ) { $has_new = true; } }
 		if ( $recipient_id && $has_new ) { return new \WP_Error( 'certloom_bulk_csv_recipient_ambiguous', __( 'Use either recipient_id or new Recipient identity columns in one Bulk Issuance row, not both.', 'certloom' ) ); }
 		if ( ! $recipient_id && ! $has_new ) { return new \WP_Error( 'certloom_bulk_csv_recipient_required', __( 'Each Bulk Issuance row must provide recipient_id or new Recipient identity fields.', 'certloom' ) ); }
@@ -119,11 +122,20 @@ final class BulkIssuanceCsvReader {
 		$custom = array(); foreach ( $values as $key => $value ) { if ( 0 === strpos( $key, 'custom:' ) && '' !== $value ) { $custom[ substr( $key, 7 ) ] = $value; } } ksort( $custom, SORT_STRING );
 		return array(
 			'recipient_mode' => $recipient_id ? 'existing' : 'new', 'recipient_id' => $recipient_id, 'new_recipient' => $new,
+			'registration_id' => $registration_id,
 			'program_id' => $shared['program_id'] ?? 0, 'batch_id' => $shared['batch_id'] ?? 0, 'template_id' => $shared['template_id'] ?? 0,
 			'valid_from' => (string) ( $shared['valid_from'] ?? '' ), 'expiry_mode' => (string) ( $shared['expiry_mode'] ?? 'program' ), 'expires_at' => (string) ( $shared['expires_at'] ?? '' ),
 			'grade' => '' !== (string) ( $values['grade'] ?? '' ) ? (string) $values['grade'] : (string) ( $shared['grade'] ?? '' ),
 			'display_number' => (string) ( $values['certificate_number'] ?? '' ), 'custom_merge_fields' => $custom,
 		);
+	}
+
+	/** IDs must not silently truncate decimals, malformed values or integer overflow. */
+	private function identifier( $value ) {
+		if ( '' === $value ) { return 0; }
+		$canonical = ltrim( $value, '0' ); if ( '' === $canonical ) { $canonical = '0'; }
+		if ( ! preg_match( '/^[0-9]+$/D', $value ) || strlen( $canonical ) > strlen( (string) PHP_INT_MAX ) || (string) (int) $canonical !== $canonical ) { return new \WP_Error( 'certloom_bulk_csv_identity_invalid', __( 'Recipient and registration IDs must be whole numbers copied from Certloom. Do not use a customer-entered ID field as a record ID.', 'certloom' ) ); }
+		return (int) $canonical;
 	}
 
 	/** @return true|\WP_Error */

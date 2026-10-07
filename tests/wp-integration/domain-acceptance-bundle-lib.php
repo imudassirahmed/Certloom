@@ -1,6 +1,8 @@
 <?php
 /** Source-only helpers for Certloom's real WordPress/MySQL acceptance ceremony. */
 
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 function certloom_db_canonicalize( $value ) {
 	if ( is_array( $value ) ) {
 		$is_list = array_keys( $value ) === range( 0, count( $value ) - 1 );

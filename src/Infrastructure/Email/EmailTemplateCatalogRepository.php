@@ -20,6 +20,22 @@ final class EmailTemplateCatalogRepository {
 	const SCHEMA_VERSION = 3;
 	const DEFAULT_ID     = 'default';
 	const MAX_TEMPLATES  = 100;
+	public function validate_recovery_value( $value ) {
+		if ( ! is_array( $value ) || count( $value ) !== 2 || array_diff( array_keys( $value ), array( 'schema_version', 'templates' ) ) || self::SCHEMA_VERSION !== ( $value['schema_version'] ?? null ) ) { return new \WP_Error( 'certloom_whole_email_catalog_invalid', __( 'Repair the saved email design catalog before restoring it.', 'certloom' ) ); }
+		$rows = \Certloom\Application\Restore\WholeStateOptionRows::validate_list( $value['templates'] ?? null, self::MAX_TEMPLATES, function ( $row ) {
+			$normalized = $this->normalize( $row, false ); if ( is_wp_error( $normalized ) ) { return $normalized; }
+			// Stored legacy/custom HTML is independently sanitized. Reading a visual
+			// design recompiles that valid content into an envelope; the resulting
+			// envelope is not evidence that the original persisted HTML is corrupt.
+			$content = $this->service->normalize_template( $row ); if ( is_wp_error( $content ) ) { return $content; }
+			foreach ( $content as $key => $item ) {
+				$same = array_key_exists( $key, $row ) && ( 'html_body' === $key ? EmailDesignCompiler::same_inline_html( $row[$key], $item ) : \Certloom\Application\Restore\WholeStateOptionRows::same( $item, $row[$key] ) );
+				if ( ! $same ) { return new \WP_Error( 'certloom_whole_email_content_invalid', __( 'A saved email design contains unsupported content.', 'certloom' ) ); }
+			}
+			$normalized['html_body'] = $row['html_body']; return $normalized;
+		}, array( 'id' ) );
+		return is_wp_error( $rows ) ? $rows : $value;
+	}
 
 	/** @var EmailTemplateService */
 	private $service;
@@ -316,8 +332,7 @@ final class EmailTemplateCatalogRepository {
 	/** @return true|\WP_Error */
 	private function persist( array $items ) {
 		$payload = array( 'schema_version' => self::SCHEMA_VERSION, 'templates' => array_values( $items ) );
-		$saved = update_option( self::OPTION, $payload, false );
-		return $saved || $payload === get_option( self::OPTION, array() ) ? true : new \WP_Error( 'certloom_email_template_catalog_save_failed', __( 'Certloom could not save the email design catalog.', 'certloom' ) );
+		return ( new \Certloom\Infrastructure\Data\DurableOptionMutation() )->set( self::OPTION, $payload );
 	}
 
 	private function valid_timestamp( $value ) { return 1 === preg_match( '/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/', (string) $value ); }

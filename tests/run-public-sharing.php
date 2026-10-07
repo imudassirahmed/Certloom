@@ -1,5 +1,7 @@
 <?php
 /** SOC-01 public sharing privacy, URL and architecture acceptance. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define( 'ABSPATH', __DIR__ . '/webroot/' );
 function __( $v ){ return $v; }
 function sanitize_key( $v ){ return preg_replace('/[^a-z0-9_\-]/','',strtolower((string)$v)); }

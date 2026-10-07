@@ -1,5 +1,7 @@
 <?php
 /** Validate reviewed renderer authority before deterministic release packaging. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 require_once __DIR__ . '/authorized-release-lib.php';
 
 if ( $argc < 2 || $argc > 3 ) {

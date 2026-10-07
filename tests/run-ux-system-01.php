@@ -1,5 +1,7 @@
 <?php
 /** UX-SYSTEM-01 — external audit reconciliation and fail-safe UI contracts. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $root = dirname( __DIR__ ); $pass = 0; $fail = 0;
 function uxsys( $ok, $label ) { global $pass,$fail; if ($ok){$pass++;echo "PASS  {$label}\n";}else{$fail++;echo "FAIL  {$label}\n";} }
 function uxsyssrc($root,$path){$v=file_get_contents($root.'/'.$path);return false===$v?'':$v;}

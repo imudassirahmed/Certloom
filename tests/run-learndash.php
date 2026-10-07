@@ -1,5 +1,7 @@
 <?php
 /** INT-03 LearnDash first-party adapter contract. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define( 'ABSPATH', __DIR__ . '/fake-wp/' );
 define( 'LEARNDASH_VERSION', '4.25.1' );
 define( 'CERTLOOM_DOMAIN_WRITE_PATHS_READY', false );

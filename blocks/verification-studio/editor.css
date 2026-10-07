@@ -1,0 +1,3 @@
+.certloom-studio-editor .cv-search-form { pointer-events: none; }
+.certloom-studio-devices { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px; }
+.certloom-studio-devices button { min-height: 40px; }

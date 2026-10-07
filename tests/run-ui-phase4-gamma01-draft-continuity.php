@@ -1,5 +1,7 @@
 <?php
 /** Phase 4 Gamma-01 Anchor — per-admin draft continuity contract. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define( 'ABSPATH', __DIR__ . '/fake-wp/' );
 $GLOBALS['cl_gamma_meta'] = array();
 $GLOBALS['cl_gamma_user'] = 10;
@@ -17,6 +19,7 @@ function wp_generate_uuid4(){ $GLOBALS['cl_gamma_uuid']++; return '10000000-0000
 function current_time( $type ){ return $GLOBALS['cl_gamma_now']; }
 class WP_Error { private $message; public function __construct( $code = '', $message = '' ){ $this->message = $message; } public function get_error_message(){ return $this->message; } }
 
+require __DIR__ . '/support/draft-database.php';
 require dirname( __DIR__ ) . '/src/Application/Admin/DraftWorkspace.php';
 use Certloom\Application\Admin\DraftWorkspace;
 

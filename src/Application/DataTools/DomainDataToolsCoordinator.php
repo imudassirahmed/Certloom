@@ -132,7 +132,9 @@ final class DomainDataToolsCoordinator {
 		if ( '' === $review_generation || ! preg_match( '/^[a-f0-9]{64}$/', $review_config_hash ) ) {
 			return new \WP_Error( 'certloom_domain_restore_review_snapshot_invalid', __( 'The restore review is missing its live-data consistency snapshot.', 'certloom' ) );
 		}
-		if ( ! hash_equals( $review_generation, $this->generation->current() ) ) {
+		$generation = $this->generation->read_current();
+		if ( is_wp_error( $generation ) ) { return $generation; }
+		if ( ! hash_equals( $review_generation, $generation ) ) {
 			return new \WP_Error( 'certloom_domain_restore_review_stale', __( 'Certloom credential data changed after this restore review. Run the review again before committing.', 'certloom' ) );
 		}
 		$config = $this->backup_repository->configuration_snapshot();

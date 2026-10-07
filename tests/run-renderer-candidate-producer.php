@@ -1,5 +1,9 @@
 <?php
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 require_once __DIR__ . '/renderer-candidate/producer-lib.php';
+require_once __DIR__ . '/support/packaging-tools.php';
+require_once __DIR__ . '/support/python-process.php';
 
 use Certloom\Application\Contract\RendererInterface;
 use Certloom\Application\Rendering\CanonicalJson;
@@ -47,8 +51,8 @@ try {
     $oracle=json_decode(file_get_contents(__DIR__.'/fixtures/rendering/current-oracle-v2/manifest.json'),true);
     $font_hash=(string)$oracle['fonts']['400-normal']['sha256']; $bold_hash=(string)$oracle['fonts']['600-normal']['sha256'];
     $font_source=null; $bold_source=null;
-    foreach(array('/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf','/usr/share/fonts/dejavu/DejaVuSans.ttf','/usr/local/share/fonts/truetype/dejavu/DejaVuSans.ttf','/usr/local/share/fonts/dejavu/DejaVuSans.ttf') as $candidate){ if(is_file($candidate)&&hash_equals($font_hash,hash_file('sha256',$candidate))){ $font_source=$candidate; break; } }
-    foreach(array('/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf','/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf','/usr/local/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf','/usr/local/share/fonts/dejavu/DejaVuSans-Bold.ttf') as $candidate){ if(is_file($candidate)&&hash_equals($bold_hash,hash_file('sha256',$candidate))){ $bold_source=$candidate; break; } }
+    foreach(array(getenv('CERTLOOM_TEST_DEJAVU_SANS'),'/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf','/usr/share/fonts/dejavu/DejaVuSans.ttf','/usr/local/share/fonts/truetype/dejavu/DejaVuSans.ttf','/usr/local/share/fonts/dejavu/DejaVuSans.ttf') as $candidate){ if(is_file($candidate)&&hash_equals($font_hash,hash_file('sha256',$candidate))){ $font_source=$candidate; break; } }
+    foreach(array(getenv('CERTLOOM_TEST_DEJAVU_SANS_BOLD'),'/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf','/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf','/usr/local/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf','/usr/local/share/fonts/dejavu/DejaVuSans-Bold.ttf') as $candidate){ if(is_file($candidate)&&hash_equals($bold_hash,hash_file('sha256',$candidate))){ $bold_source=$candidate; break; } }
     rcp_check(is_string($font_source)&&is_string($bold_source),'Producer regression requires the exact current-oracle regular and bold DejaVu Sans faces in supported local development-font paths.');
     $font_root=$tmp.'/fonts'; mkdir($font_root,0700); copy($font_source,$font_root.'/'.$font_hash.'.ttf'); copy($bold_source,$font_root.'/'.$bold_hash.'.ttf');
 
@@ -88,7 +92,7 @@ try {
     rcp_check(isset($manifest['runs']['a']['fixtures']['qr']['jpeg'])&&null===$manifest['runs']['a']['fixtures']['qr']['jpeg']['receipt'],'Development producer run must include all three formats without production receipts.');
     rcp_check($manifest['renderers']['png']['source_archive']['path']===$manifest['renderers']['jpeg']['source_archive']['path'],'Content-addressed producer must deduplicate shared raster candidate source evidence.');
     rcp_check(hash_equals($raster['hash'],$manifest['renderers']['png']['candidate_manifest']['sha256'])&&hash_equals($raster['hash'],hash_file('sha256',$dev_out.'/'.$manifest['renderers']['png']['candidate_manifest']['path'])),'Bundled candidate manifest bytes must equal their canonical candidate SHA-256.');
-    $cmd='python3 '.escapeshellarg(__DIR__.'/renderer-candidate/verify-bundle.py').' '.escapeshellarg($dev_out).' 2>&1'; exec($cmd,$verify,$rc); rcp_check(0===$rc,'Independently verified development bundle must pass the real PDF-04 bundle verifier.');
+    list($rc,$verify_text)=certloom_test_python(array(__DIR__.'/renderer-candidate/verify-bundle.py',$dev_out)); if($rc){fwrite(STDERR,$verify_text);} $verify=explode("\n",$verify_text); rcp_check(0===$rc,'Independently verified development bundle must pass the real PDF-04 bundle verifier.');
     $report=json_decode(implode("\n",$verify),true); rcp_check(is_array($report)&&true===$report['verified']&&false===$report['qualifies_pdf04'],'Development harness output must verify but remain mechanically unable to qualify PDF-04.');
 
     rcp_check(rcp_throws(function()use($producer,$tmp,$font_root,$formats){$producer->produce($tmp.'/no-ack',array('font_root'=>$font_root,'formats'=>$formats),'production-candidate');}),'Production candidate output must require an explicit acknowledgement.');
@@ -102,7 +106,8 @@ try {
     $verify_entry=__DIR__.'/renderer-candidate/verify-production-bundle.sh';
     $verify_out=$tmp.'/production-verification';
     $verify_lines=array(); $verify_rc=0;
-    exec('bash '.escapeshellarg($verify_entry).' '.escapeshellarg($prod_out).' '.escapeshellarg($verify_out).' 2>&1',$verify_lines,$verify_rc);
+    list($verify_rc,$verify_text)=certloom_test_packaging_bash(array($verify_entry,$prod_out,$verify_out));
+    if($verify_rc){fwrite(STDERR,$verify_text);}
     rcp_check(0===$verify_rc&&is_dir($verify_out),'Standard production verifier must atomically publish a complete verification directory for a qualifying bundle.');
     $verification_files=array_values(array_diff(scandir($verify_out),array('.','..'))); sort($verification_files);
     rcp_check(array('verification-index.json','verification-report.json','verifier-environment.json')===$verification_files,'Published production verification must contain exactly the normalized three-file evidence set.');
@@ -113,43 +118,43 @@ try {
     $acceptance_builder=__DIR__.'/renderer-candidate/build-production-acceptance.php';
     $acceptance_path=$tmp.'/acceptance.json';
     $build_lines=array(); $build_rc=0;
-    exec('php '.escapeshellarg($acceptance_builder).' '.escapeshellarg($prod_out).' '.escapeshellarg($verify_out.'/verification-report.json').' '.escapeshellarg($verify_out.'/verifier-environment.json').' '.escapeshellarg($verify_out.'/verification-index.json').' '.escapeshellarg($acceptance_path).' 2>&1',$build_lines,$build_rc);
-    rcp_check(0===$build_rc&&is_file($acceptance_path),'Canonical acceptance-evidence builder must derive acceptance-v9 directly from the verified production bundle.');
+    list($build_rc,$child_output)=certloom_test_process(array(PHP_BINARY,$acceptance_builder,$prod_out,$verify_out.'/verification-report.json',$verify_out.'/verifier-environment.json',$verify_out.'/verification-index.json',$acceptance_path)); $build_lines=explode("\n",$child_output);
+    if($build_rc){fwrite(STDERR,$child_output);} rcp_check(0===$build_rc&&is_file($acceptance_path),'Canonical acceptance-evidence builder must derive acceptance-v9 directly from the verified production bundle.');
     $acceptance_data=json_decode(file_get_contents($acceptance_path),true);
     rcp_check(is_array($acceptance_data)&&9===$acceptance_data['version']&&hash_equals(hash_file('sha256',$prod_out.'/bundle.json'),$acceptance_data['bundle_manifest_sha256']),'Derived acceptance evidence must bind the exact independently verified production bundle.');
-    rcp_check(0600===(fileperms($acceptance_path)&0777)&&empty(glob($tmp.'/.certloom-acceptance-*.json')?:array()),'Acceptance evidence must be owner-only and atomically published without staging residue.');
+    if('Windows'===PHP_OS_FAMILY){echo "SKIP  POSIX owner-only mode assertion is unavailable on Windows; evidence uses the private temporary directory ACL.\n";}else{rcp_check(0600===(fileperms($acceptance_path)&0777),'Acceptance evidence must be owner-only.');} rcp_check(empty(glob($tmp.'/.certloom-acceptance-*.json')?:array()),'Acceptance evidence must be atomically published without staging residue.');
 
     $finalize_entry=__DIR__.'/renderer-candidate/finalize-production-acceptance.php';
     $authority_out=$tmp.'/authority';
     $finalize_lines=array(); $finalize_rc=0;
-    exec('php '.escapeshellarg($finalize_entry).' '.escapeshellarg($acceptance_path).' '.escapeshellarg($verify_out.'/verification-report.json').' '.escapeshellarg($verify_out.'/verifier-environment.json').' '.escapeshellarg($verify_out.'/verification-index.json').' '.escapeshellarg($authority_out).' 2>&1',$finalize_lines,$finalize_rc);
-    rcp_check(0===$finalize_rc&&is_file($authority_out.'/accepted.json')&&is_file($authority_out.'/authority-index.json'),'Standard production candidate -> verifier -> acceptance builder -> finalizer chain must execute end to end.');
+    list($finalize_rc,$child_output)=certloom_test_process(array(PHP_BINARY,$finalize_entry,$acceptance_path,$verify_out.'/verification-report.json',$verify_out.'/verifier-environment.json',$verify_out.'/verification-index.json',$authority_out)); $finalize_lines=explode("\n",$child_output);
+    if($finalize_rc){fwrite(STDERR,$child_output);} rcp_check(0===$finalize_rc&&is_file($authority_out.'/accepted.json')&&is_file($authority_out.'/authority-index.json'),'Standard production candidate -> verifier -> acceptance builder -> finalizer chain must execute end to end.');
 
     $existing_acceptance=$tmp.'/existing-acceptance.json'; file_put_contents($existing_acceptance,"{}\n");
     $lines=array(); $rc_existing_acceptance=0;
-    exec('php '.escapeshellarg($acceptance_builder).' '.escapeshellarg($prod_out).' '.escapeshellarg($verify_out.'/verification-report.json').' '.escapeshellarg($verify_out.'/verifier-environment.json').' '.escapeshellarg($verify_out.'/verification-index.json').' '.escapeshellarg($existing_acceptance).' 2>&1',$lines,$rc_existing_acceptance);
+    list($rc_existing_acceptance,$child_output)=certloom_test_process(array(PHP_BINARY,$acceptance_builder,$prod_out,$verify_out.'/verification-report.json',$verify_out.'/verifier-environment.json',$verify_out.'/verification-index.json',$existing_acceptance)); $lines=explode("\n",$child_output);
     rcp_check(0!==$rc_existing_acceptance&&"{}\n"===file_get_contents($existing_acceptance),'Acceptance builder must never overwrite or merge an existing evidence file.');
 
     $acceptance_inside=$root.'/tests/renderer-candidate/.forbidden-acceptance.json'; rcp_rm($acceptance_inside);
     $lines=array(); $rc_acceptance_inside=0;
-    exec('php '.escapeshellarg($acceptance_builder).' '.escapeshellarg($prod_out).' '.escapeshellarg($verify_out.'/verification-report.json').' '.escapeshellarg($verify_out.'/verifier-environment.json').' '.escapeshellarg($verify_out.'/verification-index.json').' '.escapeshellarg($acceptance_inside).' 2>&1',$lines,$rc_acceptance_inside);
+    list($rc_acceptance_inside,$child_output)=certloom_test_process(array(PHP_BINARY,$acceptance_builder,$prod_out,$verify_out.'/verification-report.json',$verify_out.'/verifier-environment.json',$verify_out.'/verification-index.json',$acceptance_inside)); $lines=explode("\n",$child_output);
     rcp_check(0!==$rc_acceptance_inside&&!file_exists($acceptance_inside),'Acceptance evidence must never be published inside the Certloom source tree.');
 
     $verify_existing=$tmp.'/existing-verification'; mkdir($verify_existing,0700);
-    $lines=array(); $rc_existing=0; exec('bash '.escapeshellarg($verify_entry).' '.escapeshellarg($prod_out).' '.escapeshellarg($verify_existing).' 2>&1',$lines,$rc_existing);
+    $lines=array(); $rc_existing=0; list($rc_existing,$verify_text)=certloom_test_packaging_bash(array($verify_entry,$prod_out,$verify_existing));
     rcp_check(0!==$rc_existing&&array()==array_values(array_diff(scandir($verify_existing),array('.','..'))),'Production verification must reject even an empty existing output directory rather than merge or replace evidence.');
 
     $verify_inside=$root.'/tests/renderer-candidate/.forbidden-production-verification'; rcp_rm($verify_inside);
-    $lines=array(); $rc_inside=0; exec('bash '.escapeshellarg($verify_entry).' '.escapeshellarg($prod_out).' '.escapeshellarg($verify_inside).' 2>&1',$lines,$rc_inside);
+    $lines=array(); $rc_inside=0; list($rc_inside,$verify_text)=certloom_test_packaging_bash(array($verify_entry,$prod_out,$verify_inside));
     rcp_check(0!==$rc_inside&&!file_exists($verify_inside)&&!is_link($verify_inside),'Independent verification evidence must never be written inside the Certloom source tree.');
 
     $verify_dot=$tmp.'/verify-dot-parent/../verification-dot-output';
-    $lines=array(); $rc_dot=0; exec('bash '.escapeshellarg($verify_entry).' '.escapeshellarg($prod_out).' '.escapeshellarg($verify_dot).' 2>&1',$lines,$rc_dot);
+    $lines=array(); $rc_dot=0; list($rc_dot,$verify_text)=certloom_test_packaging_bash(array($verify_entry,$prod_out,$verify_dot));
     rcp_check(0!==$rc_dot&&!file_exists($tmp.'/verification-dot-output'),'Independent verification must reject ambiguous dot-segment output paths before creating evidence.');
 
     file_put_contents($prod_out.'/artifacts/a/english.png','tamper',FILE_APPEND);
     $verify_failed=$tmp.'/failed-verification';
-    $lines=array(); $rc_failed=0; exec('bash '.escapeshellarg($verify_entry).' '.escapeshellarg($prod_out).' '.escapeshellarg($verify_failed).' 2>&1',$lines,$rc_failed);
+    $lines=array(); $rc_failed=0; list($rc_failed,$verify_text)=certloom_test_packaging_bash(array($verify_entry,$prod_out,$verify_failed));
     rcp_check(0!==$rc_failed&&!file_exists($verify_failed)&&!is_link($verify_failed),'Failed independent verification must never publish a partial final verification directory.');
     rcp_check(empty(glob($tmp.'/.certloom-verification-*')?:array()),'Failed independent verification must remove its private staging directory completely.');
 

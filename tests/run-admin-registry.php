@@ -1,8 +1,26 @@
 <?php
 /** Regression tests for Phase 1 Part B registry/lifecycle/field integration. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define( 'ABSPATH', __DIR__ . '/fake-wp/' );
 
 $GLOBALS['certloom_registry_options'] = array();
+require __DIR__ . '/bootstrap-autoload.php';
+require __DIR__ . '/support/option-database.php';
+function wp_cache_delete() { return true; }
+class RegistryTestDatabase {
+	public $options = 'wp_options'; public $prefix = 'wp_'; public $last_error = '';
+	public function prepare( $query, ...$args ) { return array( 'query' => $query, 'args' => $args ); }
+	public function query( $prepared ) { return 1; }
+	public function get_var( $prepared ) {
+		if ( is_string( $prepared ) ) { return 50; }
+		if ( 0 === strpos( $prepared['query'], 'SELECT ENGINE' ) ) { return 'InnoDB'; }
+		if ( ( $prepared['args'][1] ?? '' ) === 'certloom_domain_write_fence' ) { return '1'; }
+		return $GLOBALS['certloom_registry_options'][$prepared['args'][1] ?? ''] ?? null;
+	}
+	public function get_results( $prepared, $format ) { return certloom_test_option_rows( $prepared, $GLOBALS['certloom_registry_options'] ); }
+}
+$GLOBALS['wpdb'] = new RegistryTestDatabase();
 
 function __( $text ) { return $text; }
 function absint( $value ) { return abs( (int) $value ); }

@@ -1,5 +1,7 @@
 <?php
 /** Emits an actual PHP-generated logo QR SVG for independent scan acceptance. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define('ABSPATH',__DIR__.'/');
 class WP_Error { public function __construct($c,$m){} }
 function is_wp_error($v){return $v instanceof WP_Error;}

@@ -1,5 +1,7 @@
 <?php
 /** Browser fixture for UX-CORE-05 Credential record management. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $css = file_get_contents( dirname( __DIR__, 2 ) . '/assets/css/certloom-tokens.css' ) . "\n" . file_get_contents( dirname( __DIR__, 2 ) . '/admin/assets/admin.css' );
 ?><!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>
 html{box-sizing:border-box}*,*:before,*:after{box-sizing:inherit}body{margin:0;padding:18px;background:#f0f2f1;color:#1d2925;font:13px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.wrap{margin:0}.button{display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:0 12px;border:1px solid #0f6e56;border-radius:6px;background:#fff;color:#0f6e56;text-decoration:none}.button-primary{background:#0f6e56;color:#fff}.dashicons{display:inline-block;width:16px;height:16px}.fixture-stack{display:grid;gap:24px;max-width:1120px;margin:auto}.fixture-title{margin:0 0 8px;font-size:14px}.certloom-panel{background:#fff}

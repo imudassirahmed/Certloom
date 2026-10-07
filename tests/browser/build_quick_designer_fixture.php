@@ -1,5 +1,7 @@
 <?php
 /** Build a self-contained DSX-01 browser fixture by extending the permanent Designer fixture with Quick/Pro presentation. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 ob_start();
 require __DIR__ . '/build_template_designer_fixture.php';
 $html = ob_get_clean();

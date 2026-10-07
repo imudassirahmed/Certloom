@@ -61,9 +61,16 @@ final class ManualIssuanceAdmin {
 				'batch_id' => isset( $_GET['batch_id'] ) ? absint( $_GET['batch_id'] ) : 0,
 			),
 			'i18n' => array(
+				/* translators: %s: PDF, PNG or JPEG file format. */
+				'downloadFormat' => __( 'Download %s', 'certloom' ),
 				'loading' => __( 'Loading…', 'certloom' ),
 				'searching' => __( 'Searching…', 'certloom' ),
 				'noMatches' => __( 'No matching choices.', 'certloom' ),
+				/* translators: %s: Recipient record number, distinguishing identical names. */
+				'recipientReference' => __( 'Recipient #%s', 'certloom' ),
+				'manualEmail' => __( 'Manual email', 'certloom' ),
+				'manualEmailLater' => __( 'Prepare later', 'certloom' ),
+				'manualEmailReviewNext' => __( 'Review next', 'certloom' ),
 				'loadFailed' => __( 'Certloom could not load this step. Try again.', 'certloom' ),
 				'previewWaiting' => __( 'Complete Recipient and Credential details to load the live preview.', 'certloom' ),
 				'previewUpdating' => __( 'Updating preview…', 'certloom' ),
@@ -80,6 +87,7 @@ final class ManualIssuanceAdmin {
 				'verificationIncludeHint' => __( 'Include this value on the public verification screen for this credential.', 'certloom' ),
 				'verificationPrivate' => __( 'Private on verification', 'certloom' ),
 				'verificationPrivateHint' => __( 'Field privacy settings keep this value off public verification.', 'certloom' ),
+				'managedFieldSource' => __( 'Complete this value in customer account details, its Program default or the connected source. An issuance-only value cannot replace it.', 'certloom' ),
 				'recipientValueMissing' => __( 'This required value is missing from the Recipient profile.', 'certloom' ),
 				'refreshRecipientValue' => __( 'Refresh value', 'certloom' ),
 				'editRecipient' => __( 'Edit Recipient', 'certloom' ),
@@ -213,7 +221,7 @@ final class ManualIssuanceAdmin {
 	/** @return void */
 	private function render_email_step() {
 		echo '<section class="certloom-issue-step" data-issue-step="4" data-step-key="email" hidden><header><span class="certloom-eyebrow">' . esc_html__( 'Step 5 of 6', 'certloom' ) . '</span><h2>' . esc_html__( 'Manual email follow-up', 'certloom' ) . '</h2><p>' . esc_html__( 'Choose whether to review a manual email after issuing. Existing automation rules run separately and may send an email.', 'certloom' ) . '</p></header>';
-		echo '<div class="certloom-issue-email-options"><button type="button" data-email-mode="review" aria-pressed="false"><span class="dashicons dashicons-email-alt" aria-hidden="true"></span><strong>' . esc_html__( 'Review a manual email next', 'certloom' ) . '</strong><small>' . esc_html__( 'Issue first, then open Email Delivery to preview and confirm sending.', 'certloom' ) . '</small></button><button type="button" class="is-active" data-email-mode="later" aria-pressed="true"><span class="dashicons dashicons-clock" aria-hidden="true"></span><strong>' . esc_html__( 'Skip manual email review', 'certloom' ) . '</strong><small>' . esc_html__( 'You can prepare a manual email later from this credential. Existing automations are unaffected.', 'certloom' ) . '</small></button></div>';
+		echo '<div class="certloom-issue-email-options"><button type="button" data-email-mode="review" aria-pressed="false"><span class="dashicons dashicons-email-alt" aria-hidden="true"></span><strong>' . esc_html__( 'Review a manual email next', 'certloom' ) . '</strong><small>' . esc_html__( 'Issue first, then open Email Delivery to preview and confirm sending.', 'certloom' ) . '</small></button><button type="button" class="is-active" data-email-mode="later" aria-pressed="true"><span class="dashicons dashicons-clock" aria-hidden="true"></span><strong>' . esc_html__( 'Prepare a manual email later', 'certloom' ) . '</strong><small>' . esc_html__( 'You can prepare a manual email later from this credential. Existing automations are unaffected.', 'certloom' ) . '</small></button></div>';
 		echo '<div class="certloom-issue-field-action-cluster" data-email-design-field hidden><div class="certloom-issue-field-action-heading"><label for="certloom-issue-email-template">' . esc_html__( 'Email design', 'certloom' ) . '</label><a class="button button-small certloom-issue-external-link" target="_blank" rel="noopener noreferrer" href="' . esc_url( admin_url( 'admin.php?page=certloom-email-designs' ) ) . '">' . esc_html__( 'Manage email designs', 'certloom' ) . '</a></div><select id="certloom-issue-email-template" data-email-template><option value="automatic">' . esc_html__( 'Automatic — use email hierarchy', 'certloom' ) . '</option></select><small>' . esc_html__( 'An explicit selection is a one-send override; it does not change Design Rules.', 'certloom' ) . '</small></div></section>';
 	}
 
@@ -234,7 +242,7 @@ final class ManualIssuanceAdmin {
 
 	/** @return void */
 	private function render_summary( $program, $batch ) {
-		echo '<aside class="certloom-issue-summary" data-issue-summary><div class="certloom-issue-summary-head"><span class="certloom-eyebrow">' . esc_html__( 'Live summary', 'certloom' ) . '</span><h2>' . esc_html__( 'Credential', 'certloom' ) . '</h2></div><dl><div><dt>' . esc_html__( 'Recipient', 'certloom' ) . '</dt><dd data-summary-recipient>—</dd></div><div><dt>' . esc_html( $program ) . '</dt><dd data-summary-program>—</dd></div><div><dt>' . esc_html( $batch ) . '</dt><dd data-summary-batch>—</dd></div><div><dt>' . esc_html__( 'Title', 'certloom' ) . '</dt><dd data-summary-title>—</dd></div><div><dt>' . esc_html__( 'Certificate', 'certloom' ) . '</dt><dd data-summary-certificate>' . esc_html__( 'Details only', 'certloom' ) . '</dd></div><div><dt>' . esc_html__( 'Email', 'certloom' ) . '</dt><dd data-summary-email>' . esc_html__( 'Skip manual review', 'certloom' ) . '</dd></div></dl><div class="certloom-issue-summary-progress"><span data-summary-progress-bar></span></div><p data-summary-progress-text>' . esc_html__( 'Step 1 of 6', 'certloom' ) . '</p></aside>';
+		echo '<aside class="certloom-issue-summary" data-issue-summary><div class="certloom-issue-summary-head"><span class="certloom-eyebrow">' . esc_html__( 'Live summary', 'certloom' ) . '</span><h2>' . esc_html__( 'Credential', 'certloom' ) . '</h2></div><dl><div><dt>' . esc_html__( 'Recipient', 'certloom' ) . '</dt><dd data-summary-recipient>—</dd></div><div><dt>' . esc_html( $program ) . '</dt><dd data-summary-program>—</dd></div><div><dt>' . esc_html( $batch ) . '</dt><dd data-summary-batch>—</dd></div><div><dt>' . esc_html__( 'Title', 'certloom' ) . '</dt><dd data-summary-title>—</dd></div><div><dt>' . esc_html__( 'Certificate', 'certloom' ) . '</dt><dd data-summary-certificate>' . esc_html__( 'Details only', 'certloom' ) . '</dd></div><div><dt>' . esc_html__( 'Manual email', 'certloom' ) . '</dt><dd data-summary-email>' . esc_html__( 'Prepare later', 'certloom' ) . '</dd></div></dl><div class="certloom-issue-summary-progress"><span data-summary-progress-bar></span></div><p data-summary-progress-text>' . esc_html__( 'Step 1 of 6', 'certloom' ) . '</p></aside>';
 	}
 
 	/** @return void */

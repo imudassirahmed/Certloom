@@ -1,5 +1,7 @@
 <?php
 /** Regression: durable jobs schema must avoid SQL-reserved identifiers while preserving the application cursor contract. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define( 'ABSPATH', __DIR__ . '/fake-wp/' );
 define( 'ARRAY_A', 'ARRAY_A' );
 define( 'DAY_IN_SECONDS', 86400 );
@@ -44,13 +46,13 @@ function jsp_check( $condition, $message ) {
 
 $schema = file_get_contents( dirname( __DIR__ ) . '/src/Infrastructure/Database/SchemaManager.php' );
 $repo   = file_get_contents( dirname( __DIR__ ) . '/src/Infrastructure/Job/JobRepository.php' );
-jsp_check( false !== strpos( $schema, "const SCHEMA_VERSION         = '19'" ), 'current schema contract retains the v16 portable job progress migration under v19' );
+jsp_check( '20' === SchemaManager::SCHEMA_VERSION, 'current schema contract retains the v16 portable job progress migration under v20' );
 jsp_check( false !== strpos( $schema, 'progress_cursor BIGINT UNSIGNED NOT NULL DEFAULT 0' ), 'jobs DDL uses non-reserved progress_cursor identifier' );
 jsp_check( 0 === preg_match( '/^\s*cursor\s+BIGINT\b/m', $schema ), 'jobs DDL never reintroduces unquoted SQL-reserved cursor column' );
 jsp_check( false !== strpos( $repo, "'progress_cursor'  => 0" ) && false !== strpos( $repo, "'progress_cursor' => absint( \$progress['cursor'] ?? 0 )" ), 'job repository persists application cursor through progress_cursor' );
 
 $decode = new ReflectionMethod( JobRepository::class, 'decode' );
-$decode->setAccessible( true );
+if ( PHP_VERSION_ID < 80100 ) { $decode->setAccessible( true ); }
 $modern = $decode->invoke( null, array(
 	'id' => '1', 'owner_user_id' => null, 'progress_cursor' => '42', 'total' => null, 'selection_max_id' => null,
 	'attempts' => '0', 'recovery_count' => '0', 'payload_json' => null, 'result_json' => null, 'error_json' => null,
@@ -63,7 +65,7 @@ $legacy = $decode->invoke( null, array(
 jsp_check( 17 === $legacy['cursor'], 'legacy cursor rows remain readable during gated compatibility migration' );
 
 $migrate = new ReflectionMethod( SchemaManager::class, 'migrate_job_progress_cursor' );
-$migrate->setAccessible( true );
+if ( PHP_VERSION_ID < 80100 ) { $migrate->setAccessible( true ); }
 $GLOBALS['wpdb']->columns = array( array( 'Field' => 'id' ), array( 'Field' => 'cursor' ), array( 'Field' => 'progress_cursor' ) );
 $result = $migrate->invoke( null );
 jsp_check( true === $result && 1 === count( $GLOBALS['wpdb']->queries ), 'schema v16 copies legacy job progress idempotently when both columns exist' );

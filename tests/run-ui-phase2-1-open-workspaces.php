@@ -1,12 +1,15 @@
 <?php
 /** UI Phase 2.1 review-build contract: primary workspaces stay open for review. */
 namespace Certloom\Infrastructure\Migration {
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
+
 	final class DomainAuthorityGate {
 		public function allows( $scope ) { return false; }
 	}
 }
 namespace {
 	$root = dirname( __DIR__ );
+	if ( ! defined( 'ABSPATH' ) ) { define( 'ABSPATH', __DIR__ . '/fake-wp/' ); }
 	if ( ! defined( 'CERTLOOM_REVIEW_ADMIN_PREVIEW' ) ) { define( 'CERTLOOM_REVIEW_ADMIN_PREVIEW', true ); }
 	require_once $root . '/src/Infrastructure/Migration/DomainFeatureGate.php';
 	$checks = 0; $failures = array();

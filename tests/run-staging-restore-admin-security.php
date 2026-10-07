@@ -1,5 +1,7 @@
 <?php
 /** Static safety-boundary guards for the staging-only populated restore rehearsal. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $root=dirname(__DIR__);
 $admin=file_get_contents($root.'/admin/class-ecapla-certverify-admin.php');
 $view=file_get_contents($root.'/admin/views/settings-manager.php');

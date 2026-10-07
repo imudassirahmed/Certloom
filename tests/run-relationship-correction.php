@@ -1,5 +1,7 @@
 <?php
 /** Pure application tests for immutable Program/Batch relationship correction. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 define( 'ABSPATH', __DIR__ . '/fake-wp/' );
 if ( ! class_exists( 'WP_Error' ) ) { class WP_Error { private $code; private $message; public function __construct($c='',$m=''){ $this->code=$c;$this->message=$m;} public function get_error_code(){return $this->code;} public function get_error_message(){return $this->message;} } }
 function is_wp_error($v){ return $v instanceof WP_Error; }

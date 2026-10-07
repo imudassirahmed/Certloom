@@ -354,58 +354,61 @@ class Ecapla_CertVerify_Numbering {
 	 * @return int|WP_Error
 	 */
 	public static function allocate_sequence() {
-		$allowed = Ecapla_CertVerify_Backup::assert_writes_allowed();
-		if ( is_wp_error( $allowed ) ) {
-			return $allowed;
-		}
-		$policy = self::policy();
-		$start  = (int) $policy['numbering_start'];
-		$current = self::current_next_sequence();
-		if ( is_wp_error( $current ) ) {
-			return $current;
-		}
-		if ( $current > self::MAX_SEQUENCE ) {
-			return new WP_Error( 'ecapla_certverify_number_sequence_exhausted', __( 'The configured certificate-number sequence is exhausted.', 'certloom' ) );
-		}
+		return \Certloom\Infrastructure\Data\LegacyWriteGuard::run( static function () {
+			$allowed = Ecapla_CertVerify_Backup::assert_writes_allowed();
+			if ( is_wp_error( $allowed ) ) {
+				return $allowed;
+			}
+			$policy = self::policy();
+			$start  = (int) $policy['numbering_start'];
+			$current = self::current_next_sequence();
+			if ( is_wp_error( $current ) ) {
+				return $current;
+			}
+			if ( $current > self::MAX_SEQUENCE ) {
+				return new WP_Error( 'ecapla_certverify_number_sequence_exhausted', __( 'The configured certificate-number sequence is exhausted.', 'certloom' ) );
+			}
 
-		$generation = Ecapla_CertVerify_Backup::reserve_mutation_generation();
-		if ( is_wp_error( $generation ) ) {
-			return $generation;
-		}
+			$generation = Ecapla_CertVerify_Backup::reserve_mutation_generation();
+			if ( is_wp_error( $generation ) ) {
+				return $generation;
+			}
 
-		/* First allocation is race-safe because option_name is unique. */
-		$added = add_option( self::STATE_OPTION, (string) ( $start + 1 ), '', false );
-		if ( $added ) {
-			return $start;
-		}
+			/* First allocation is race-safe because option_name is unique. */
+			\Certloom\Infrastructure\Data\DatabaseOptions::invalidate( array( self::STATE_OPTION ) );
+			$added = add_option( self::STATE_OPTION, (string) ( $start + 1 ), '', false );
+			if ( $added ) {
+				return $start;
+			}
 
-		global $wpdb;
-		$wpdb->last_error = '';
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Atomic cross-request sequence allocation requires one SQL update on the WordPress-owned options row.
-		$updated = $wpdb->query(
-			$wpdb->prepare(
-				'UPDATE %i SET option_value = CAST(LAST_INSERT_ID(GREATEST(CAST(option_value AS UNSIGNED), %d)) + 1 AS CHAR) WHERE option_name = %s AND option_value REGEXP %s',
-				$wpdb->options,
-				$start,
-				self::STATE_OPTION,
-				'^[0-9]+$'
-			)
-		);
-		if ( 1 !== (int) $updated || '' !== (string) $wpdb->last_error ) {
+			global $wpdb;
+			$wpdb->last_error = '';
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Atomic cross-request sequence allocation requires one SQL update on the WordPress-owned options row.
+			$updated = $wpdb->query(
+				$wpdb->prepare(
+					'UPDATE %i SET option_value = CAST(LAST_INSERT_ID(GREATEST(CAST(option_value AS UNSIGNED), %d)) + 1 AS CHAR) WHERE option_name = %s AND option_value REGEXP %s',
+					$wpdb->options,
+					$start,
+					self::STATE_OPTION,
+					'^[0-9]+$'
+				)
+			);
+			if ( 1 !== (int) $updated || '' !== (string) $wpdb->last_error ) {
+				wp_cache_delete( self::STATE_OPTION, 'options' );
+				return new WP_Error( 'ecapla_certverify_number_sequence_allocate_failed', __( 'Certloom could not atomically reserve the next certificate sequence value. Automatic numbering stopped without creating a credential.', 'certloom' ) );
+			}
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Reads the connection-local value set by the atomic update above.
+			$allocated = $wpdb->get_var( 'SELECT LAST_INSERT_ID()' );
 			wp_cache_delete( self::STATE_OPTION, 'options' );
-			return new WP_Error( 'ecapla_certverify_number_sequence_allocate_failed', __( 'Certloom could not atomically reserve the next certificate sequence value. Automatic numbering stopped without creating a credential.', 'certloom' ) );
-		}
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Reads the connection-local value set by the atomic update above.
-		$allocated = $wpdb->get_var( 'SELECT LAST_INSERT_ID()' );
-		wp_cache_delete( self::STATE_OPTION, 'options' );
-		if ( '' !== (string) $wpdb->last_error || ! is_numeric( $allocated ) ) {
-			return new WP_Error( 'ecapla_certverify_number_sequence_allocate_failed', __( 'Certloom reserved numbering state but could not read the allocated sequence value. Automatic numbering is paused for review.', 'certloom' ) );
-		}
-		$allocated = (int) $allocated;
-		if ( $allocated < 1 || $allocated > self::MAX_SEQUENCE ) {
-			return new WP_Error( 'ecapla_certverify_number_sequence_exhausted', __( 'The configured certificate-number sequence is exhausted.', 'certloom' ) );
-		}
-		return $allocated;
+			if ( '' !== (string) $wpdb->last_error || ! is_numeric( $allocated ) ) {
+				return new WP_Error( 'ecapla_certverify_number_sequence_allocate_failed', __( 'Certloom reserved numbering state but could not read the allocated sequence value. Automatic numbering is paused for review.', 'certloom' ) );
+			}
+			$allocated = (int) $allocated;
+			if ( $allocated < 1 || $allocated > self::MAX_SEQUENCE ) {
+				return new WP_Error( 'ecapla_certverify_number_sequence_exhausted', __( 'The configured certificate-number sequence is exhausted.', 'certloom' ) );
+			}
+			return $allocated;
+		} );
 	}
 
 	/** @return int|null|WP_Error */

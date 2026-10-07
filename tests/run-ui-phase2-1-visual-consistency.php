@@ -1,5 +1,7 @@
 <?php
 /** Source contract for 1.7 UI Phase 2.1 visual consistency audit. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $root = dirname( __DIR__ );
 $foundation = file_get_contents( $root . '/admin/assets/certloom-foundation.css' );
 $admin_css = file_get_contents( $root . '/admin/assets/admin.css' );

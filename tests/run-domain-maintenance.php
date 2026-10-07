@@ -1,5 +1,6 @@
 <?php
 if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
+require_once __DIR__ . '/support/option-database.php';
 /** Pure owner/staleness/TTL/internal-write tests for shared domain maintenance lock. */
 $GLOBALS['dm_options'] = array();
 if ( ! class_exists( 'WP_Error' ) ) {
@@ -22,18 +23,27 @@ final class DMWpdb {
 	public $last_error = '';
 	public $busy = false;
 	public $fail_read = false;
+	public $fail_release = false;
 	public function get_var( $p ) {
 		$this->last_error = '';
+		if ( is_string( $p ) && 'SELECT @@SESSION.innodb_lock_wait_timeout' === $p ) { return 50; }
+		if ( strpos( $p['q'], 'SELECT ENGINE' ) === 0 ) { return 'InnoDB'; }
+		if ( strpos( $p['q'], 'SELECT option_value' ) === 0 && ( $p['a'][1] ?? '' ) === 'certloom_domain_write_fence' ) { return '1'; }
 		if ( $this->fail_read && strpos($p['q'], 'SELECT option_value') === 0 ) { $this->last_error='read failed'; return null; }
 		if ( strpos( $p['q'], 'SELECT GET_LOCK' ) === 0 ) return $this->busy ? '0' : '1';
-		if ( strpos( $p['q'], 'SELECT RELEASE_LOCK' ) === 0 ) return '1';
+		if ( strpos( $p['q'], 'SELECT RELEASE_LOCK' ) === 0 ) return $this->fail_release ? null : '1';
 		if ( strpos( $p['q'], 'SELECT option_value' ) === 0 ) return $GLOBALS['dm_options'][$p['a'][1]] ?? null;
 		if ( strpos( $p['q'], 'SELECT option_name' ) === 0 ) { foreach ( array_slice($p['a'],1) as $key ) if (isset($GLOBALS['dm_options'][$key])) return $key; }
 		return null;
 	}
+	public function get_results( $prepared, $format ) {
+		$this->last_error = $this->fail_read ? 'read failed' : '';
+		return $this->fail_read ? null : certloom_test_option_rows( array( 'query' => $prepared['q'], 'args' => $prepared['a'] ), $GLOBALS['dm_options'] );
+	}
 	public $fail_delete_once = false;
 	public function prepare( $q, ...$a ) { return array( 'q' => $q, 'a' => $a ); }
 	public function query( $p ) {
+		if ( is_string( $p ) ) { return 0; }
 		$a = $p['a'];
 		if ( 0 === strpos( $p['q'], 'UPDATE' ) ) {
 			$new = $a[1]; $name = $a[2]; $old = $a[3];
@@ -140,4 +150,9 @@ dm_same('certloom_domain_maintenance_read_failed',$l->recovery_allowed($a)->get_
 $GLOBALS['wpdb']->fail_read=false;
 echo "PASS  uncertain ownership blocks recovery and user writes\n";
 
-echo "\n9 tests, 0 failures\n";
+$GLOBALS['wpdb']->fail_release = true;
+$result = \Certloom\Infrastructure\Data\MaintenanceMutex::run( function () { return true; } );
+dm_same( 'certloom_maintenance_mutex_release_failed', $result->get_error_code(), 'uncertain advisory lock release cannot report success' );
+$GLOBALS['wpdb']->fail_release = false;
+echo "PASS  failed advisory lock release is reported rather than silently accepted\n";
+echo "\n10 tests, 0 failures\n";

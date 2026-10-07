@@ -1,5 +1,7 @@
 <?php
 /** Source contract for Phase 4 dashboard visual-review corrections. */
+
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 $root       = dirname( __DIR__ );
 $foundation = file_get_contents( $root . '/admin/assets/certloom-foundation.css' );
 $admin_css  = file_get_contents( $root . '/admin/assets/admin.css' );
