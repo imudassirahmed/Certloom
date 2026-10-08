@@ -4,11 +4,9 @@ namespace Certloom\Infrastructure\Admin;
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 /**
- * Six-step Issue Credential REST application shell.
- *
- * The previous server-rendered Compose/Review mega-form was removed. This class
- * now owns only page registration, assets and accessible application markup;
- * IssueCredentialRest + ManualIssuanceService own all data and issuance work.
+ * Short Program issuance popup and compatible advanced issuance page.
+ * Owns routing, assets and markup; IssueCredentialRest and
+ * ManualIssuanceService own data, validation and canonical issuance.
  */
 final class ManualIssuanceAdmin {
 	const PAGE = 'certloom-issuance';
@@ -35,10 +33,15 @@ final class ManualIssuanceAdmin {
 		$terms = UsageProfilePresentation::terms( $profile );
 		$program = (string) ( $terms['program']['singular'] ?? __( 'Program', 'certloom' ) );
 		$batch = (string) ( $terms['batch']['singular'] ?? __( 'Batch', 'certloom' ) );
-		wp_enqueue_media();
-		wp_enqueue_style( 'certloom-issue-credential', CERTLOOM_URL . 'admin/assets/issue-credential.css', array( 'certloom-admin-foundation' ), (string) filemtime( CERTLOOM_PATH . 'admin/assets/issue-credential.css' ) );
-		wp_enqueue_script( 'certloom-issue-credential', CERTLOOM_URL . 'admin/assets/issue-credential.js', array( 'ecapla-certverify-admin' ), (string) filemtime( CERTLOOM_PATH . 'admin/assets/issue-credential.js' ), true );
-		wp_localize_script( 'certloom-issue-credential', 'certloomIssueCredential', array(
+		$asset = self::PAGE === $page ? 'issue-credential' : 'program-issuance';
+		if ( self::PAGE === $page ) { wp_enqueue_media(); }
+		$handle = 'certloom-' . $asset;
+		wp_enqueue_style( $handle, CERTLOOM_URL . 'admin/assets/' . $asset . '.css', array( 'certloom-admin-foundation' ), (string) filemtime( CERTLOOM_PATH . 'admin/assets/' . $asset . '.css' ) );
+		wp_enqueue_script( $handle, CERTLOOM_URL . 'admin/assets/' . $asset . '.js', array( 'ecapla-certverify-admin' ), (string) filemtime( CERTLOOM_PATH . 'admin/assets/' . $asset . '.js' ), true );
+		wp_localize_script( $handle, 'certloomIssueCredential', array(
+			'actorId' => get_current_user_id(),
+			'programBootstrapUrl' => rest_url( 'certloom/v1/admin/issue/program-bootstrap' ),
+			'enrollmentsUrl' => rest_url( 'certloom/v1/admin/issue/enrollments' ),
 			'restNonce' => wp_create_nonce( 'wp_rest' ),
 			'bootstrapUrl' => rest_url( 'certloom/v1/admin/issue/bootstrap' ),
 			'programContextUrl' => rest_url( 'certloom/v1/admin/issue/program-context' ),
@@ -62,6 +65,48 @@ final class ManualIssuanceAdmin {
 				'batch_id' => isset( $_GET['batch_id'] ) ? absint( $_GET['batch_id'] ) : 0,
 			),
 			'i18n' => array(
+				'selectRecipient' => __( 'Choose a recipient to continue.', 'certloom' ),
+				'selectProgram' => __( 'Choose a Program to continue.', 'certloom' ),
+				'currentSettings' => __( 'Checking current settings…', 'certloom' ),
+				'reviewCredential' => __( 'Review credential', 'certloom' ),
+				'confirmIssue' => __( 'Issue credential', 'certloom' ),
+				'uncertainCommit' => __( 'The server response was interrupted. Retry this same issuance to safely check its result.', 'certloom' ),
+				'retryIssue' => __( 'Check issuance result', 'certloom' ),
+				'retryReview' => __( 'Review again', 'certloom' ),
+				'retryLoading' => __( 'Retry loading', 'certloom' ),
+				'issuedSuccess' => __( 'Credential issued', 'certloom' ),
+				'issuedNext' => __( 'The credential is ready. Configured automations handle delivery; you can also review an email below.', 'certloom' ),
+				'noExpiry' => __( 'No expiry', 'certloom' ),
+				'detailsOnly' => __( 'Details only — no certificate design is assigned', 'certloom' ),
+				'inheritedDesign' => __( 'Certificate design inherited from your settings', 'certloom' ),
+				'chosenRecipient' => __( 'Selected recipient', 'certloom' ),
+				'changeRecipient' => __( 'Change recipient', 'certloom' ),
+				'changeProgram' => __( 'Change Program', 'certloom' ),
+				'programDefaults' => __( 'Use Program settings', 'certloom' ),
+				'noBatch' => __( 'No Batch selected', 'certloom' ),
+				'discardIssuance' => __( 'Discard this recipient selection and start another issuance?', 'certloom' ),
+				'missingDetails' => __( 'Complete missing details in the customer profile or connected source, then review again.', 'certloom' ),
+				'enrollmentRequired' => __( 'Choose the enrollment for this credential.', 'certloom' ),
+				'recipientStep' => __( '1 · Recipient', 'certloom' ),
+				'reviewStep' => __( '2 · Review', 'certloom' ),
+				'finishedStep' => __( 'Complete', 'certloom' ),
+				'back' => __( 'Back', 'certloom' ),
+				'program' => $program,
+				'batch' => $batch,
+				'certificate' => __( 'Certificate', 'certloom' ),
+				'validity' => __( 'Valid from / expiry', 'certloom' ),
+				'signing' => __( 'Signing', 'certloom' ),
+				'configuredSigning' => __( 'Uses configured signing rules', 'certloom' ),
+				'pagePrevious' => __( 'Previous matches', 'certloom' ),
+				'pageNext' => __( 'Next matches', 'certloom' ),
+				'chooseBatch' => sprintf( __( 'Choose %s', 'certloom' ), $batch ),
+				'changeBatch' => sprintf( __( 'Change %s', 'certloom' ), $batch ),
+				'matches' => __( 'matches', 'certloom' ),
+				'newNameRequired' => __( 'Enter the recipient name.', 'certloom' ),
+				'emailInvalid' => __( 'Enter a valid email address.', 'certloom' ),
+				'batchRequired' => sprintf( __( 'Choose a %s for this Program before reviewing.', 'certloom' ), $batch ),
+				'expiryRequired' => __( 'This Program requires an expiry date for renewal.', 'certloom' ),
+				'expiryOptional' => __( 'This Program leaves expiry to each issuance. Blank means no expiry.', 'certloom' ),
 				/* translators: %s: PDF, PNG or JPEG file format. */
 				'downloadFormat' => __( 'Download %s', 'certloom' ),
 				'loading' => __( 'Loading…', 'certloom' ),
@@ -108,17 +153,15 @@ final class ManualIssuanceAdmin {
 		echo '</div>';
 	}
 
-	/** One shared application; the popup uses the same review and issuance engine. */
+	/** Short Program flow; the legacy route retains its compatible advanced editor. */
 	public function popup() {
 		$page = sanitize_key( wp_unslash( $_GET['page'] ?? '' ) ); // Read-only page routing.
 		if ( ! in_array( $page, array( 'certloom', 'certloom-domain-programs', 'certloom-domain-credentials', 'certloom-domain-recipients', 'certloom-domain-batches' ), true ) ) { return; }
 		if ( ! current_user_can( \Ecapla_CertVerify_Permissions::CAP_ISSUE_CREDENTIALS ) && ! current_user_can( \Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS ) ) { return; }
-		echo '<dialog class="certloom-issuance-popup ecapla-certverify-admin-wrap certloom-admin-shell" data-issuance-popup aria-labelledby="certloom-issuance-popup-title"><header class="certloom-issuance-popup-head"><div><span class="certloom-eyebrow">' . esc_html__( 'New credential', 'certloom' ) . '</span><h2 id="certloom-issuance-popup-title">' . esc_html__( 'Issue credential', 'certloom' ) . '</h2></div><button type="button" class="button" data-issuance-close aria-label="' . esc_attr__( 'Close issuance', 'certloom' ) . '">×</button></header><div data-issuance-popup-body></div></dialog><template data-issuance-popup-template>';
-		$this->app( true );
-		echo '</template>';
+		( new ProgramIssuancePopup() )->render();
 	}
 
-	private function app( $compact = false ) {
+	private function app() {
 		$profile = UsageProfilePresentation::active_profile();
 		$terms = UsageProfilePresentation::terms( $profile );
 		$program = (string) ( $terms['program']['singular'] ?? __( 'Program', 'certloom' ) );
@@ -126,10 +169,10 @@ final class ManualIssuanceAdmin {
 		$issuer = (string) ( $terms['issuer']['singular'] ?? __( 'Issuer', 'certloom' ) );
 		$signer = (string) ( $terms['signer']['singular'] ?? __( 'Signer', 'certloom' ) );
 
-		echo '<div class="certloom-issue-app' . ( $compact ? ' is-compact' : '' ) . '" data-certloom-issue-app data-program-term="' . esc_attr( $program ) . '" data-batch-term="' . esc_attr( $batch ) . '" data-issuer-term="' . esc_attr( $issuer ) . '" data-signer-term="' . esc_attr( $signer ) . '">';
+		echo '<div class="certloom-issue-app" data-certloom-issue-app data-program-term="' . esc_attr( $program ) . '" data-batch-term="' . esc_attr( $batch ) . '" data-issuer-term="' . esc_attr( $issuer ) . '" data-signer-term="' . esc_attr( $signer ) . '">';
 		echo '<div class="certloom-issue-loading" data-issue-loading><span class="spinner is-active" aria-hidden="true"></span><strong>' . esc_html__( 'Preparing issuance workspace…', 'certloom' ) . '</strong></div>';
 		echo '<div class="certloom-issue-app-body" data-issue-body hidden>';
-		$this->render_steps( $program, $batch, $issuer, $signer, $compact );
+		$this->render_steps( $program, $batch, $issuer, $signer );
 		$this->render_quick_dialogs( $program, $batch );
 		$this->render_summary( $program, $batch );
 		echo '</div>';
@@ -140,7 +183,7 @@ final class ManualIssuanceAdmin {
 
 
 	/** @return void */
-	private function render_steps( $program, $batch, $issuer, $signer, $compact = false ) {
+	private function render_steps( $program, $batch, $issuer, $signer ) {
 		$steps = array(
 			array( 'recipient', __( 'Recipient', 'certloom' ), __( 'Who receives it', 'certloom' ), __( 'Recipient', 'certloom' ) ),
 			array( 'context', __( 'Context', 'certloom' ), sprintf( /* translators: 1: Program terminology, 2: Batch terminology. */ __( '%1$s & %2$s', 'certloom' ), $program, $batch ), sprintf( /* translators: 1: Program terminology, 2: Batch terminology. */ __( '%1$s & %2$s', 'certloom' ), $program, $batch ) ),
@@ -158,14 +201,10 @@ final class ManualIssuanceAdmin {
 
 		echo '<form class="certloom-issue-form" data-issue-form novalidate>';
 		$this->render_recipient_step();
-		if ( $compact ) { echo '<details class="certloom-issue-disclosure" data-issue-context-options open><summary>' . esc_html__( 'Program and batch', 'certloom' ) . '</summary>'; }
 		$this->render_context_step( $program, $batch, $issuer );
-		if ( $compact ) { echo '</details>'; }
 		$this->render_credential_step( $program, $batch );
-		if ( $compact ) { echo '<details class="certloom-issue-disclosure" data-issue-options><summary>' . esc_html__( 'Certificate design, signing and email', 'certloom' ) . '</summary>'; }
 		$this->render_certificate_step( $program, $issuer, $signer );
 		$this->render_email_step();
-		if ( $compact ) { echo '</details>'; }
 		$this->render_review_step();
 		$this->render_footer();
 		echo '</form></main>';

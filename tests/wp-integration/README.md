@@ -2,6 +2,28 @@
 
 These tests are deliberately **not** replaced by the pure-PHP suite. They must be run on a disposable WordPress installation backed by MySQL/MariaDB before Certloom's next-generation domain can become the source of truth.
 
+## Compact Program issuance on Local
+
+`run-issuance-bootstrap.php` exercises the actual compact REST startup, canonical
+review/commit/replay, inherited settings and exact enrollment/data-source
+ownership. It runs directly with the Local PHP CLI and configuration, requires
+the exact guarded disposable site/root/database/port, and verifies a private
+snapshot through `CERTLOOM_TEST_DB_BACKUP` and
+`CERTLOOM_TEST_DB_BACKUP_SHA256` before bootstrapping WordPress.
+
+```powershell
+$env:CERTLOOM_TEST_WP_ROOT = '<disposable Local site>/app/public'
+$env:CERTLOOM_TEST_DB_BACKUP = '<private SQL snapshot>.sql'
+$env:CERTLOOM_TEST_DB_BACKUP_SHA256 = '<verified snapshot SHA-256>'
+& '<Local PHP executable>' -c '<Local CLI ini>' tests/wp-integration/run-issuance-bootstrap.php
+```
+
+Owned fixtures always roll back. External HTTP is blocked before WordPress
+bootstrap, mail is disabled, and complete tracked-row fingerprints must match
+afterward. This is implementation evidence, not release authority. Browser
+commit fixtures complement this probe but do not replace its genuine native
+transaction checks.
+
 ## Local recovery fault injection
 
 `run-recovery-cache.php` and `run-domain-recovery-matrix.php` run directly with the site's PHP CLI and configuration. They require `CERTLOOM_TEST_WP_ROOT` to identify the disposable WordPress root, `wp_get_environment_type() === 'local'`, and `CERTLOOM_TEST_DB_BACKUP` to point to an existing database snapshot. Take that snapshot immediately before testing. These scripts refuse HTTP execution and refuse to start with existing maintenance state.

@@ -1,0 +1,101 @@
+/* Short issuance uses the Certloom foundation tokens and the WP content bounds. */
+dialog.certloom-admin-shell.certloom-program-issuance {
+  --cl-pi-left: 160px;
+  box-sizing: border-box;
+  inset: var(--cl-pi-top, 32px) 0 0 var(--cl-pi-left, 160px);
+  width: min(760px, calc(100vw - var(--cl-pi-left, 160px) - 40px));
+  max-width: none;
+  max-height: calc(100dvh - var(--cl-pi-top, 32px) - 32px);
+  margin: auto;
+  padding: 0;
+  border: 1px solid var(--cl-rule);
+  border-radius: var(--cl-r-card);
+  background: var(--cl-surface);
+  color: var(--cl-ink);
+  box-shadow: var(--cl-shadow-dialog);
+  overflow: visible;
+  font-size: 14px;
+}
+.certloom-program-issuance::backdrop { background: rgb(15 28 57 / 36%); }
+.certloom-program-issuance [hidden] { display: none !important; }
+.certloom-program-issuance .cl-pi-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 20px 26px; border-bottom: 1px solid var(--cl-rule); }
+.certloom-program-issuance .cl-pi-head h2 { margin: 3px 0 0; font-size: 22px; line-height: 1.2; }
+.certloom-program-issuance .cl-pi-close { border: 0; border-radius: 50%; background: var(--cl-paper); color: var(--cl-ink-soft); font-size: 24px; width: 36px; height: 36px; cursor: pointer; }
+.certloom-program-issuance .cl-pi-close:hover { background: var(--cl-blue-wash); color: var(--cl-brand-blue); }
+.certloom-program-issuance .cl-pi-content { padding: 22px 26px; }
+.certloom-program-issuance .cl-pi-context { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-bottom: 18px; margin-bottom: 20px; border-bottom: 1px solid var(--cl-rule); }
+.certloom-program-issuance .cl-pi-context > div { min-width: 0; display: grid; gap: 3px; }
+.certloom-program-issuance .cl-pi-context span, .certloom-program-issuance small { color: var(--cl-ink-soft); font-size: 12px; line-height: 1.45; }
+.certloom-program-issuance .cl-pi-context strong { font-size: 16px; overflow-wrap: anywhere; }
+.certloom-program-issuance .cl-pi-context a { font-size: 12px; flex-shrink: 0; }
+.certloom-program-issuance .cl-pi-context-actions { display: flex; align-items: center; gap: 12px; }
+.certloom-program-issuance .cl-pi-recipient-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 18px 0 12px; }
+.certloom-program-issuance h3 { font-size: 17px; line-height: 1.4; margin: 0; }
+.certloom-program-issuance .cl-pi-modes { display: flex; padding: 3px; background: var(--cl-paper); border: 1px solid var(--cl-rule); border-radius: var(--cl-r-ctl); }
+.certloom-program-issuance .cl-pi-modes button { padding: 5px 12px; border: 0; border-radius: 5px; background: transparent; color: var(--cl-ink-soft); font-weight: 600; cursor: pointer; }
+.certloom-program-issuance .cl-pi-modes [aria-pressed="true"] { background: var(--cl-surface); color: var(--cl-brand-blue); box-shadow: 0 1px 3px rgb(15 28 57 / 10%); }
+.certloom-program-issuance label { display: grid; gap: 6px; font-size: 13px; font-weight: 600; }
+.certloom-program-issuance input, .certloom-program-issuance select { width: 100%; min-height: 40px; margin: 0; font-size: 14px; border: 1px solid var(--cl-rule); border-radius: var(--cl-r-ctl); }
+.certloom-program-issuance .cl-pi-search { position: relative; }
+.certloom-program-issuance .cl-pi-search input { padding-right: 38px; }
+.certloom-program-issuance .cl-pi-search [data-pi-clear] { position: absolute; right: 4px; top: 4px; width: 32px; height: 32px; border: 0; background: transparent; color: var(--cl-ink-soft); cursor: pointer; font-size: 20px; }
+.certloom-program-issuance .cl-pi-picker { position: relative; margin-bottom: 8px; }
+.certloom-program-issuance .cl-pi-results { position: absolute; z-index: 8; top: calc(100% - 16px); left: 0; right: 0; background: var(--cl-surface); border: 1px solid var(--cl-rule); border-radius: var(--cl-r-ctl); box-shadow: var(--cl-shadow-dialog); overflow: hidden; }
+.certloom-program-issuance .cl-pi-results > button { display: block; width: 100%; padding: 10px 12px; border: 0; border-bottom: 1px solid var(--cl-rule); background: var(--cl-surface); color: var(--cl-ink); text-align: left; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
+.certloom-program-issuance .cl-pi-results > button:hover, .certloom-program-issuance .cl-pi-results > button[aria-selected="true"] { background: var(--cl-blue-wash); }
+.certloom-program-issuance .cl-pi-result-nav { display: flex; justify-content: space-between; align-items: center; padding: 4px 10px; color: var(--cl-ink-soft); }
+.certloom-program-issuance .cl-pi-result-nav button { border: 0; background: transparent; padding: 6px 10px; cursor: pointer; color: var(--cl-brand-blue); }
+.certloom-program-issuance .cl-pi-result-nav button:disabled { opacity: .4; cursor: default; }
+.certloom-program-issuance [data-pi-search-status] { display: block; min-height: 17px; margin-top: 3px; }
+.certloom-program-issuance .cl-pi-new, .certloom-program-issuance .cl-pi-exceptions { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 14px; }
+.certloom-program-issuance .cl-pi-exceptions:has(> :not([hidden])) { margin-top: 14px; }
+.certloom-program-issuance .cl-pi-batch-line { display: flex; align-items: center; gap: 8px; margin: -8px 0 12px; font-size: 12px; color: var(--cl-ink-soft); }
+.certloom-program-issuance .cl-pi-batch-line .button-link { font-size: 12px; }
+.certloom-program-issuance .cl-pi-hint { margin: 16px 0 0; color: var(--cl-ink-soft); font-size: 12px; line-height: 1.6; }
+.certloom-program-issuance .cl-pi-footer { display: flex; align-items: center; gap: 12px; padding: 16px 26px; border-top: 1px solid var(--cl-rule); }
+.certloom-program-issuance .cl-pi-footer small { flex: 1; }
+.certloom-program-issuance .cl-pi-footer .button { min-height: 38px; }
+.certloom-program-issuance .cl-pi-review-person { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; }
+.certloom-program-issuance .cl-pi-review-person > div { min-width: 0; }
+.certloom-program-issuance .cl-pi-review-person h3 { overflow-wrap: anywhere; }
+.certloom-program-issuance .cl-pi-review-person small { overflow-wrap: anywhere; }
+.certloom-program-issuance .cl-pi-review-person span:not(.cl-pi-avatar) { font-size: 12px; color: var(--cl-ink-soft); }
+.certloom-program-issuance .cl-pi-avatar { width: 48px; height: 48px; flex-shrink: 0; display: grid; place-items: center; border-radius: 50%; background: var(--cl-blue-wash); color: var(--cl-brand-blue); font-weight: 700; font-size: 16px; }
+.certloom-program-issuance .cl-pi-facts { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 14px 24px; margin: 0; padding: 18px 0; border-block: 1px solid var(--cl-rule); }
+.certloom-program-issuance .cl-pi-facts dt { font-size: 12px; color: var(--cl-ink-soft); }
+.certloom-program-issuance .cl-pi-facts dd { margin: 4px 0 0; font-size: 13px; font-weight: 600; overflow-wrap: anywhere; }
+.certloom-program-issuance .cl-pi-message { margin-top: 12px; padding: 10px 12px; border-radius: var(--cl-r-ctl); background: var(--cl-paper); font-size: 13px; line-height: 1.5; }
+.certloom-program-issuance .cl-pi-message.is-error { background: color-mix(in srgb, var(--cl-error) 8%, var(--cl-surface)); color: var(--cl-error); }
+.certloom-program-issuance .cl-pi-help { display: flex; gap: 14px; margin-top: 10px; font-size: 12px; }
+.certloom-program-issuance [data-pi-receipt] { text-align: center; padding: 14px 0; }
+.certloom-program-issuance .cl-pi-success { display: inline-grid; place-items: center; border-radius: 50%; background: var(--cl-blue-wash); color: var(--cl-blue-deep); width: 52px; height: 52px; font-size: 26px; margin-bottom: 14px; }
+.certloom-program-issuance .cl-pi-receipt-links { display: flex; justify-content: center; gap: 10px; margin-top: 18px; }
+.certloom-program-issuance :focus-visible { outline: 2px solid var(--cl-brand-blue); outline-offset: 2px; }
+@media (prefers-reduced-motion: no-preference) { .certloom-program-issuance[open] { animation: cl-pi-enter 160ms ease-out; } @keyframes cl-pi-enter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } } }
+@media (max-width: 782px), (max-height: 650px) {
+  dialog.certloom-admin-shell.certloom-program-issuance { width: min(760px, calc(100vw - var(--cl-pi-left, 0px) - 16px)); max-height: calc(100dvh - var(--cl-pi-top, 0px) - 16px); }
+  .certloom-program-issuance .cl-pi-head { padding: 12px 16px; }
+  .certloom-program-issuance .cl-pi-content { padding: 14px 16px; }
+  .certloom-program-issuance .cl-pi-footer { padding: 12px 16px; }
+  .certloom-program-issuance .cl-pi-context { padding-bottom: 10px; margin-bottom: 12px; }
+  .certloom-program-issuance .cl-pi-recipient-head { margin-top: 10px; }
+  .certloom-program-issuance .cl-pi-hint { margin-top: 10px; }
+  .certloom-program-issuance .cl-pi-facts { gap: 10px 12px; padding: 10px 0; }
+}
+body.folded dialog.certloom-admin-shell.certloom-program-issuance { --cl-pi-left: 36px; }
+@media (min-width: 783px) and (max-width: 960px) {
+  dialog.certloom-admin-shell.certloom-program-issuance { --cl-pi-left: 36px; }
+}
+@media (max-width: 782px) {
+  dialog.certloom-admin-shell.certloom-program-issuance { inset: 46px 0 0; width: calc(100vw - 16px); max-height: calc(100dvh - 62px); }
+}
+@media (max-height: 520px) {
+  .certloom-program-issuance .cl-pi-head { padding-block: 8px; }
+  .certloom-program-issuance .cl-pi-head .certloom-eyebrow { display: none; }
+  .certloom-program-issuance .cl-pi-head h2 { font-size: 18px; }
+  .certloom-program-issuance .cl-pi-content { padding-block: 10px; }
+  .certloom-program-issuance .cl-pi-hint { display: none; }
+  .certloom-program-issuance .cl-pi-footer { padding-block: 8px; }
+  .certloom-program-issuance .cl-pi-review-person { margin-bottom: 10px; }
+  .certloom-program-issuance .cl-pi-facts { gap: 6px 12px; padding-block: 8px; }
+}

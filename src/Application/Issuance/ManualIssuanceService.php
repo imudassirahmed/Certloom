@@ -212,10 +212,19 @@ final class ManualIssuanceService {
 		return $this->receipt_from_existing( $version, false );
 	}
 
+	/** Reconcile a lost admin response before mutable Program configuration is read. */
+	public function receipt_for_review( $fingerprint, $actor_user_id ) {
+		if ( ! is_string( $fingerprint ) || ! preg_match( '/^[a-f0-9]{64}$/', $fingerprint ) ) { return new \WP_Error( 'certloom_manual_issue_review_required', __( 'Review the credential before issuing it.', 'certloom' ) ); }
+		$version = $this->repository->find_version_by_idempotency( self::SOURCE_TYPE, $this->idempotency_key( self::SOURCE_TYPE, $fingerprint ) );
+		if ( is_wp_error( $version ) || ! is_array( $version ) ) { return $version; }
+		$issuance = $version['snapshot']['issuance'] ?? array();
+		if ( 'user:' . absint( $actor_user_id ) !== ( $version['source_ref'] ?? '' ) || ! hash_equals( $fingerprint, (string) ( $issuance['review_fingerprint'] ?? '' ) ) ) { return new \WP_Error( 'certloom_manual_issue_replay_invalid', __( 'This issuance result does not match your reviewed request.', 'certloom' ) ); }
+		return $this->receipt_from_existing( $version, true );
+	}
+
 	/**
 	 * Confirms exactly the reviewed request. A retry of an already committed
-	 * review is idempotent and returns the existing receipt without allocating a
-	 * second number or creating another credential.
+	 * review returns its receipt without allocating another number or credential.
 	 *
 	 * @return array<string,mixed>|\WP_Error
 	 */

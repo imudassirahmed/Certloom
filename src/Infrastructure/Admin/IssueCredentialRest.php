@@ -35,6 +35,20 @@ final class IssueCredentialRest {
 
 	/** @return void */
 	public function routes() {
+		register_rest_route( self::NAMESPACE, self::BASE . '/enrollments', array(
+			'methods' => \WP_REST_Server::READABLE, 'callback' => array( $this, 'enrollments' ), 'permission_callback' => array( $this, 'permission' ),
+			'args' => array( 'program_id' => array( 'required' => true, 'sanitize_callback' => 'absint' ), 'recipient_id' => array( 'required' => true, 'sanitize_callback' => 'absint' ), 'batch_id' => array( 'default' => 0, 'sanitize_callback' => 'absint' ) ),
+		) );
+		register_rest_route( self::NAMESPACE, self::BASE . '/program-bootstrap', array(
+			'methods' => \WP_REST_Server::READABLE,
+			'callback' => array( $this, 'program_bootstrap' ),
+			'permission_callback' => array( $this, 'permission' ),
+			'args' => array(
+				'program_id' => array( 'default' => 0, 'sanitize_callback' => 'absint' ),
+				'batch_id' => array( 'default' => 0, 'sanitize_callback' => 'absint' ),
+				'recipient_id' => array( 'default' => 0, 'sanitize_callback' => 'absint' ),
+			),
+		) );
 		register_rest_route( self::NAMESPACE, self::BASE . '/bootstrap', array(
 			'methods' => \WP_REST_Server::READABLE,
 			'callback' => array( $this, 'bootstrap' ),
@@ -106,6 +120,42 @@ final class IssueCredentialRest {
 	/** @return bool */
 	public function can_manage_batches() {
 		return $this->permission() && current_user_can( \Ecapla_CertVerify_Permissions::CAP_MANAGE_BATCHES );
+	}
+
+	/** Exact enrollment selection is needed only when the canonical review reports ambiguity. */
+	public function enrollments( \WP_REST_Request $request ) {
+		$settings = ( new ProgramIssuanceSettings() )->resolve( $request->get_param( 'program_id' ), $request->get_param( 'batch_id' ) );
+		if ( is_wp_error( $settings ) ) { return $this->rest_error( $settings ); }
+		$recipient = ( new RecipientRepository() )->find( $request->get_param( 'recipient_id' ) );
+		if ( is_wp_error( $recipient ) ) { return $this->rest_error( $recipient ); }
+		if ( ! is_array( $recipient ) || ! empty( $recipient['privacy_anonymized_at'] ) ) { return $this->rest_error( new \WP_Error( 'certloom_issue_recipient_missing', __( 'This recipient is unavailable.', 'certloom' ) ) ); }
+		$choices = ( new \Certloom\Infrastructure\Repository\ProgramRegistrationRepository() )->choices_for_issuance( $recipient['id'], $settings['program']['id'], $settings['batch']['id'] ?? 0 );
+		if ( is_wp_error( $choices ) ) { return $this->rest_error( $choices ); }
+		$response = rest_ensure_response( array( 'choices' => $choices ) );
+		$response->header( 'Cache-Control', 'private, no-store, max-age=0' );
+		$response->header( 'Vary', 'Cookie', false );
+		return $response;
+	}
+
+	/** Small startup response: no template/email catalog, field editors or list counts. */
+	public function program_bootstrap( \WP_REST_Request $request ) {
+		$settings = null;
+		if ( $request->get_param( 'program_id' ) ) {
+			$settings = ( new ProgramIssuanceSettings() )->resolve( $request->get_param( 'program_id' ), $request->get_param( 'batch_id' ) );
+			if ( is_wp_error( $settings ) ) { return $this->rest_error( $settings ); }
+		} elseif ( $request->get_param( 'batch_id' ) ) {
+			return $this->rest_error( new \WP_Error( 'certloom_issue_batch_program_required', __( 'Choose the Program that owns this Batch.', 'certloom' ) ) );
+		}
+		$recipient = null;
+		if ( $request->get_param( 'recipient_id' ) ) {
+			$recipient = ( new RecipientRepository() )->find( $request->get_param( 'recipient_id' ) );
+			if ( is_wp_error( $recipient ) ) { return $this->rest_error( $recipient ); }
+			if ( ! is_array( $recipient ) ) { return $this->rest_error( new \WP_Error( 'certloom_issue_recipient_missing', __( 'This recipient is no longer available. Choose another recipient.', 'certloom' ) ) ); }
+		}
+		$response = rest_ensure_response( array( 'settings' => $settings, 'recipient' => $recipient ? $this->recipient_choice( $recipient ) : null, 'automatic_number' => ( new ManualIssuanceNumberAllocator() )->is_automatic() ) );
+		$response->header( 'Cache-Control', 'private, no-store, max-age=0' );
+		$response->header( 'Vary', 'Cookie', false );
+		return $response;
 	}
 
 	/** @return \WP_REST_Response|\WP_Error */
@@ -300,12 +350,17 @@ final class IssueCredentialRest {
 
 	/** @return \WP_REST_Response|\WP_Error */
 	public function issue( \WP_REST_Request $request ) {
-		$input = $this->issuance_request( $request );
-		if ( is_wp_error( $input ) ) { return $input; }
 		$body = $this->body( $request );
 		$fingerprint = strtolower( trim( sanitize_text_field( (string) ( $body['review_fingerprint'] ?? '' ) ) ) );
 		if ( ! preg_match( '/^[a-f0-9]{64}$/', $fingerprint ) ) { return new \WP_Error( 'certloom_issue_review_fingerprint_invalid', __( 'Review this credential again before issuing.', 'certloom' ), array( 'status' => 400 ) ); }
-		$result = ( new ManualIssuanceService() )->issue( $input['issuance'], $fingerprint, get_current_user_id() );
+		$service = new ManualIssuanceService();
+		$result = ! empty( $body['use_program_settings'] ) ? $service->receipt_for_review( $fingerprint, get_current_user_id() ) : null;
+		if ( is_wp_error( $result ) ) { return $this->rest_error( $result ); }
+		if ( null === $result ) {
+			$input = $this->issuance_request( $request );
+			if ( is_wp_error( $input ) ) { return $input; }
+			$result = $service->issue( $input['issuance'], $fingerprint, get_current_user_id() );
+		} else { $input = array( 'email' => array( 'mode' => 'later', 'template_id' => 'automatic' ) ); }
 		if ( is_wp_error( $result ) ) { return $this->rest_error( $result ); }
 		$version_id = absint( $result['version_id'] ?? 0 );
 		$email_url = add_query_arg( array(
@@ -337,6 +392,11 @@ final class IssueCredentialRest {
 		$issuance = isset( $body['issuance'] ) && is_array( $body['issuance'] ) ? $body['issuance'] : $body;
 		$issuance = $this->deep_unslash( $issuance );
 		$email = isset( $body['email'] ) && is_array( $body['email'] ) ? $this->deep_unslash( $body['email'] ) : array();
+		if ( ! empty( $body['use_program_settings'] ) ) {
+			$issuance = ( new ProgramIssuanceSettings() )->request( $issuance );
+			if ( is_wp_error( $issuance ) ) { return $this->rest_error( $issuance ); }
+			$email = array( 'mode' => 'later', 'template_id' => 'automatic' );
+		}
 
 		$contract = UsageProfilePresentation::issuance_contract();
 		$allowed = isset( $contract['repeating_rowsets'] ) && is_array( $contract['repeating_rowsets'] ) ? array_values( array_map( 'sanitize_key', $contract['repeating_rowsets'] ) ) : array();

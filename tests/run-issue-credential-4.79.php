@@ -37,7 +37,7 @@ i479( false !== strpos( $plugin, 'IssueCredentialRest() )->register()' ), 'Plugi
 foreach ( array( '/bootstrap', '/program-context', '/quick-program', '/quick-batch', '/review', '/issue', '/receipt/' ) as $route ) {
 	i479( false !== strpos( $rest, $route ), 'REST route exists: ' . $route );
 }
-i479( false !== strpos( $rest, 'new ManualIssuanceService() )->review' ) && false !== strpos( $rest, 'new ManualIssuanceService() )->issue' ), 'Review and Issue converge on canonical ManualIssuanceService' );
+i479( false !== strpos( $rest, 'new ManualIssuanceService() )->review' ) && false !== strpos( $rest, '$service->issue(' ), 'Review and Issue converge on canonical ManualIssuanceService' );
 i479( false !== strpos( $rest, "preg_match( '/^[a-f0-9]{64}$/', \$fingerprint )" ), 'Issue requires exact SHA-256 review fingerprint' );
 i479( false !== strpos( $rest, 'certloom_issue_profile_repeating_data_invalid' ), 'REST rejects profile-inappropriate repeating rowsets' );
 i479( false !== strpos( $rest, 'TableDataContract::MAX_ROWS' ) && false !== strpos( $js, "limit('repeating_rows', 50)" ), 'browser and REST bootstrap use the canonical repeating-data row cap' );

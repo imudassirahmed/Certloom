@@ -1,7 +1,7 @@
 (function () {
 	'use strict';
 
-	function initializeApp(root, cfg, compact) {
+	function initializeApp(root, cfg) {
 	var body = root.querySelector('[data-issue-body]');
 	var loading = root.querySelector('[data-issue-loading]');
 	var form = root.querySelector('[data-issue-form]');
@@ -959,18 +959,6 @@
 
 	function goToStep(index, shouldScroll) {
 		index = Math.max(0, Math.min(reviewStep, parseInt(index, 10) || 0));
-		if (compact) {
-			state.step = index === reviewStep ? reviewStep : 0;
-			stepPanels.forEach(function (panel, i) { panel.hidden = index === reviewStep ? i !== reviewStep : i === reviewStep; });
-			var options = root.querySelector('[data-issue-options]'); if (options) { options.hidden = index === reviewStep; if (index === 3 || index === 4) { options.open = true; } }
-			var contextOptions = root.querySelector('[data-issue-context-options]'); if (contextOptions) { contextOptions.hidden = index === reviewStep; if (index === 1) { contextOptions.open = true; } }
-			if (prevButton) { prevButton.hidden = index !== reviewStep; prevButton.disabled = state.busy; }
-			if (nextButton) { nextButton.hidden = index === reviewStep; nextButton.disabled = state.busy; nextButton.textContent = text('reviewCredential', 'Review credential'); }
-			if (stepStatus) { stepStatus.textContent = index === reviewStep ? text('finalReview', 'Check before issuing') : text('completeDetails', 'Complete the details, then review'); }
-			if (index === reviewStep && !state.reviewFingerprint) { buildReview(); }
-			if (shouldScroll !== false) { stepPanels[index].scrollIntoView({block:'start', behavior:'auto'}); }
-			return;
-		}
 		state.step = index;
 		stepPanels.forEach(function (panel, i) { panel.hidden = i !== index; panel.classList.toggle('is-current', i === index); });
 		stepButtons.forEach(function (button, i) { button.classList.toggle('is-current', i === index); if (i === index) { button.setAttribute('aria-current','step'); } else { button.removeAttribute('aria-current'); } button.classList.toggle('is-complete', i < index); });
@@ -985,8 +973,8 @@
 		}
 	}
 	function initStepper() {
-		if (prevButton) { prevButton.addEventListener('click', function () { if (!state.busy && !state.commitUncertain) { goToStep(compact ? 0 : state.step - 1); } }); }
-		if (nextButton) { nextButton.addEventListener('click', function () { if (!state.busy && (compact ? validateAllBeforeReview() : validateStep(state.step))) { goToStep(compact ? reviewStep : state.step + 1); } }); }
+		if (prevButton) { prevButton.addEventListener('click', function () { if (!state.busy && !state.commitUncertain) { goToStep(state.step - 1); } }); }
+		if (nextButton) { nextButton.addEventListener('click', function () { if (!state.busy && validateStep(state.step)) { goToStep(state.step + 1); } }); }
 		var reviewNow = root.querySelector('[data-review-now]');
 		if (reviewNow) { reviewNow.addEventListener('click', function () { if (!state.busy && validateStep(2)) { goToStep(reviewStep); } }); }
 		stepButtons.forEach(function (button, index) { button.addEventListener('click', function () { if (state.busy || index > state.step + 1) { return; } if (index > state.step && !validateStep(state.step)) { return; } goToStep(index); }); });
@@ -1184,32 +1172,5 @@
 	}
 
 	var cfg = window.certloomIssueCredential || {}, legacy = document.querySelector('[data-certloom-issue-app]');
-	if (legacy) { initializeApp(legacy, cfg, false); }
-	var popup = document.querySelector('[data-issuance-popup]'), template = document.querySelector('[data-issuance-popup-template]');
-	if (!popup || !template) { return; }
-	var instance = null, contextKey = '', opener = null;
-	function closePopup(event) {
-		if (event) { event.preventDefault(); }
-		if (instance && instance.busy()) { return; }
-		popup.close(); if (opener) { opener.focus({preventScroll:true}); }
-	}
-	popup.querySelector('[data-issuance-close]').addEventListener('click', closePopup); popup.addEventListener('cancel', closePopup);
-	document.addEventListener('click', function (event) {
-		var link = event.target.closest('a[href]'); if (!link || event.button || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) { return; }
-		var url; try { url = new URL(link.href); } catch (_) { return; }
-		if (url.origin !== window.location.origin || url.searchParams.get('page') !== 'certloom-issuance') { return; }
-		event.preventDefault(); var deep = {}; ['recipient_id', 'program_id', 'batch_id'].forEach(function (key) { deep[key] = Number(url.searchParams.get(key)) || 0; }); var key = JSON.stringify(deep);
-		if (instance && (instance.busy() || instance.uncertain())) { if (!popup.open) { popup.showModal(); } return; }
-		if (!instance || key !== contextKey || instance.complete()) {
-			if (instance && instance.dirty() && !window.confirm('Discard your unsaved issuance details and start for this selection?')) { return; }
-			if (instance) { instance.dispose(); }
-			var oldFooter = popup.querySelector('.certloom-popup-footer'); if (oldFooter) { oldFooter.remove(); }
-			var host = popup.querySelector('[data-issuance-popup-body]'); host.replaceChildren(template.content.cloneNode(true)); contextKey = key;
-			var app = host.querySelector('[data-certloom-issue-app]');
-			instance = initializeApp(app, Object.assign({}, cfg, {deepLink:deep}), true);
-			var footer = app.querySelector('.certloom-issue-footer'); footer.classList.add('certloom-popup-footer'); footer.hidden = true; popup.appendChild(footer);
-			var readiness = new MutationObserver(function () { if (!app.querySelector('[data-issue-body]').hidden) { footer.hidden = false; readiness.disconnect(); } }); readiness.observe(app.querySelector('[data-issue-body]'), {attributes:true,attributeFilter:['hidden']});
-		}
-		opener = link; if (!popup.open) { popup.showModal(); }
-	});
+	if (legacy) { initializeApp(legacy, cfg); }
 })();

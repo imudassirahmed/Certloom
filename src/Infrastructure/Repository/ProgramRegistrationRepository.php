@@ -36,6 +36,23 @@ final class ProgramRegistrationRepository {
 		$rows = $wpdb->get_results( $wpdb->prepare( 'SELECT a.id, a.status, p.title FROM %i a INNER JOIN %i p ON p.id=a.program_id WHERE a.recipient_id=%d AND a.id>%d AND a.status<>%s AND p.active=1 ORDER BY a.id LIMIT 51', \Certloom\Infrastructure\Database\SchemaManager::table( 'program_registrations' ), \Certloom\Infrastructure\Database\SchemaManager::table( 'programs' ), absint( $recipient_id ), absint( $after_id ), 'cancelled' ), ARRAY_A );
 		return '' !== (string) $wpdb->last_error || ! is_array( $rows ) ? $this->invalid() : $rows;
 	}
+	/** Exact issuance context; only identities are exposed to the enrollment picker. */
+	public function choices_for_issuance( $recipient_id, $program_id, $batch_id = 0 ) {
+		global $wpdb;
+		$args = array( \Certloom\Infrastructure\Database\SchemaManager::table( 'program_registrations' ), absint( $recipient_id ), absint( $program_id ) );
+		$batch_clause = $batch_id ? 'batch_id=%d' : 'batch_id IS NULL';
+		if ( $batch_id ) { $args[] = absint( $batch_id ); }
+		$wpdb->last_error = '';
+		$rows = $wpdb->get_results( $wpdb->prepare( "SELECT id, status, created_at FROM %i WHERE recipient_id=%d AND program_id=%d AND $batch_clause AND status IN ('active','completed') ORDER BY id DESC LIMIT 51", $args ), ARRAY_A );
+		if ( '' !== (string) $wpdb->last_error || ! is_array( $rows ) ) { return $this->invalid(); }
+		if ( count( $rows ) > 50 ) { return new \WP_Error( 'certloom_registration_choice_limit', __( 'This recipient has too many enrollments to select here. Issue from the connected source for the exact enrollment.', 'certloom' ) ); }
+		return array_map( static function ( $row ) {
+			$status = 'completed' === $row['status'] ? __( 'Completed', 'certloom' ) : __( 'Active', 'certloom' );
+			$date = get_date_from_gmt( $row['created_at'], get_option( 'date_format' ) );
+			/* translators: 1: exact enrollment record number, 2: local date, 3: enrollment status. */
+			return array( 'id' => (int) $row['id'], 'label' => sprintf( __( 'Enrollment #%1$d · %2$s · %3$s', 'certloom' ), $row['id'], $date, $status ) );
+		}, $rows );
+	}
 	public function for_recipient( $recipient_id, $after_id = 0, $limit = 50 ) {
 		$rows = $this->store->select( 'program_registrations', array( 'recipient_id' => absint( $recipient_id ) ), $limit, $after_id );
 		if ( is_wp_error( $rows ) ) { return $rows; }
