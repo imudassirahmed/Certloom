@@ -51,6 +51,7 @@ dialog.certloom-admin-shell.certloom-program-issuance {
 .certloom-program-issuance .cl-pi-exceptions:has(> :not([hidden])) { margin-top: 14px; }
 .certloom-program-issuance .cl-pi-batch-line { display: flex; align-items: center; gap: 8px; margin: -8px 0 12px; font-size: 12px; color: var(--cl-ink-soft); }
 .certloom-program-issuance .cl-pi-batch-line .button-link { font-size: 12px; }
+.certloom-program-issuance .cl-pi-default-batch { border-radius: 4px; padding: 1px 6px; background: var(--cl-blue-wash); color: var(--cl-brand-blue); font-size: 11px; font-weight: 600; }
 .certloom-program-issuance .cl-pi-hint { margin: 16px 0 0; color: var(--cl-ink-soft); font-size: 12px; line-height: 1.6; }
 .certloom-program-issuance .cl-pi-footer { display: flex; align-items: center; gap: 12px; padding: 16px 26px; border-top: 1px solid var(--cl-rule); }
 .certloom-program-issuance .cl-pi-footer small { flex: 1; }

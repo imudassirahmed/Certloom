@@ -285,6 +285,21 @@ final class BatchRepository {
 		return array( 'items' => $items, 'total' => $total );
 	}
 
+	/** One bounded read of direct certificate/signing choices for a Program's visible batches. */
+	public function configuration_choices( $program_id, array $ids ) {
+		$ids = array_values( array_unique( array_filter( array_map( 'absint', $ids ) ) ) );
+		if ( ! $ids ) { return array(); }
+		if ( ! absint( $program_id ) || count( $ids ) > 100 ) { return new \WP_Error( 'certloom_batch_configuration_scope_invalid', __( 'Reopen the Program to load batch settings.', 'certloom' ) ); }
+		global $wpdb; $wpdb->last_error = '';
+		$slots = implode( ',', array_fill( 0, count( $ids ), '%d' ) );
+		$sql = "SELECT b.id, (SELECT a.template_id FROM %i a WHERE a.scope_type='batch' AND a.scope_id=b.id AND a.active=1 LIMIT 1) AS batch_template_id, EXISTS(SELECT 1 FROM %i a INNER JOIN %i s ON s.id=a.signer_id WHERE a.scope_type='batch' AND a.scope_id=b.id AND a.role_type='signer' AND a.active=1 AND s.active=1) AS signing_override FROM %i b WHERE b.program_id=%d AND b.id IN ($slots)";
+		$rows = $wpdb->get_results( $wpdb->prepare( $sql, array_merge( array( SchemaManager::table( 'template_assignments' ), SchemaManager::table( 'signer_assignments' ), SchemaManager::table( 'signers' ), SchemaManager::table( 'batches' ), absint( $program_id ) ), $ids ) ), ARRAY_A );
+		if ( '' !== (string) $wpdb->last_error || ! is_array( $rows ) ) { return new \WP_Error( 'certloom_batch_configuration_read_failed', __( 'Batch inheritance could not be loaded. Try again.', 'certloom' ) ); }
+		$out = array();
+		foreach ( $rows as $row ) { $out[ absint( $row['id'] ) ] = array( 'batch_template_id' => absint( $row['batch_template_id'] ?? 0 ), 'signing' => ! empty( $row['signing_override'] ) ); }
+		return $out;
+	}
+
 	/**
 	 * Backward-compatible bounded member list used by older internal callers.
 	 *

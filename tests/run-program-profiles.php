@@ -15,6 +15,9 @@ $d=ProgramProfile::defaults();
 pp(3===($d['schema_version']??0),'Program Profile uses explicit schema version 3 for lifecycle and locale variants');
 pp('custom_other'===($d['purpose']??''),'Program Profile has bounded safe default purpose');
 pp('inherit'===($d['verification_visibility']??''),'Program Profile preserves the current safe verification visibility by default');
+pp(0===($d['default_batch_id']??null),'Existing Programs retain no default Batch until explicitly selected');
+pp(12===($p->normalize(array('default_batch_id'=>'12'))['default_batch_id']??null),'Default Batch normalizes to a typed positive ID');
+foreach(array(-1,'12.5',true,array(),str_repeat('9',80))as$badDefault){pp(is_wp_error($p->normalize(array('default_batch_id'=>$badDefault))),'Invalid or oversized default Batch identity fails closed');}
 pp(isset(ProgramProfile::purpose_labels()['training_courses']),'approved purpose taxonomy includes Training & Courses');
 pp(isset(ProgramProfile::subcategory_labels()['certification_standards']['management_systems']),'approved certification taxonomy includes management systems');
 $valid=$p->normalize(array('purpose'=>'training_courses','subcategory'=>'corporate_training','credential_type'=>'certification','eligibility_context'=>'Completed approved corporate training and met the Program threshold.','credential_locale'=>'ar','template_variants'=>array('ar'=>'arabic-certificate','en_US'=>'english-certificate'),'template_variant_fallback'=>'en_US','renewal'=>'required','verification_visibility'=>'recipient_only','portal'=>'enabled','sharing'=>'disabled','email_delivery'=>'enabled','integration_mapping_key'=>'training-map','external_scheme_id'=>'SCHEME-42'));

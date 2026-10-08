@@ -163,6 +163,16 @@ final class DomainRestoreMergeService {
 	/** @return array<string,mixed>|\WP_Error */
 	private function finalize( array $state ) {
 		$owner = (string) $state['workspace']['owner_token'];
+		$programs = $this->maps->by_action( $owner, 'programs', 'inserted' );
+		if ( is_wp_error( $programs ) ) { return $programs; }
+		foreach ( $programs as $mapping ) {
+			$source_batch = absint( $mapping['meta']['source_default_batch_id'] ?? 0 );
+			if ( ! $source_batch ) { continue; }
+			$batch_id = $this->mapped_required( $owner, 'batches', $source_batch );
+			if ( is_wp_error( $batch_id ) ) { return $batch_id; }
+			$updated = $this->update_program_default_batch( $state['workspace'], absint( $mapping['target_id'] ), $batch_id );
+			if ( is_wp_error( $updated ) ) { return $updated; }
+		}
 		$templates = $this->maps->by_action( $owner, 'templates', 'inserted' );
 		if ( is_wp_error( $templates ) ) { return $templates; }
 		foreach ( $templates as $mapping ) {
@@ -301,7 +311,17 @@ final class DomainRestoreMergeService {
 						if ( is_array( $existing ) && $this->rows_equal( $row, $existing ) ) { $target_id = $source_id; }
 					}
 				}
-				return $target_id ? $this->record_map( $owner, $entity, $source_id, $hash, $target_id, 'existing' ) : $this->insert_and_map( $owner, $entity, $source_id, $hash, $target_table, $row );
+				if ( $target_id ) { return $this->record_map( $owner, $entity, $source_id, $hash, $target_id, 'existing' ); }
+				// Batches are mapped later. Never copy a source-site ID into the target preference.
+				$metadata = json_decode( $row['metadata_json'] ?? '', true );
+				$key = \Certloom\Application\Program\ProgramProfile::STORAGE_KEY;
+				$default_batch = absint( $metadata[ $key ]['default_batch_id'] ?? 0 );
+				if ( $default_batch ) {
+					$metadata[ $key ]['default_batch_id'] = 0;
+					$row['metadata_json'] = wp_json_encode( $metadata );
+					if ( false === $row['metadata_json'] ) { return $this->workflow_conflict(); }
+				}
+				return $this->insert_and_map( $owner, $entity, $source_id, $hash, $target_table, $row, array( 'source_default_batch_id' => $default_batch ) );
 
 			case 'recipients':
 				$target_id = ! empty( $row['wp_user_id'] ) ? $this->lookup_id( $target_table, 'wp_user_id', absint( $row['wp_user_id'] ) ) : 0;
@@ -680,6 +700,27 @@ final class DomainRestoreMergeService {
 		$wpdb->last_error = '';
 		$id = $wpdb->get_var( $wpdb->prepare( 'SELECT id FROM %i WHERE source_type = %s AND source_idempotency_key = %s LIMIT 1', $table, $source_type, $source_key ) );
 		return '' === (string) $wpdb->last_error ? absint( $id ) : 0;
+	}
+
+	/** Finalize only an inserted Program; existing target preferences remain authoritative. */
+	private function update_program_default_batch( array $workspace, $program_id, $batch_id ) {
+		global $wpdb;
+		$invalid = new \WP_Error( 'certloom_domain_restore_merge_default_batch_invalid', __( 'Merge restore could not restore this Program’s default Batch safely. Review its batch selection in the source backup.', 'certloom' ) );
+		$program_table = $this->workspace->workspace_table( $workspace, 'merge', 'programs' );
+		$batch_table = $this->workspace->workspace_table( $workspace, 'merge', 'batches' );
+		if ( is_wp_error( $program_table ) || is_wp_error( $batch_table ) ) { return is_wp_error( $program_table ) ? $program_table : $batch_table; }
+		$program = $this->lookup_row( $program_table, 'id', $program_id );
+		$batch = $this->lookup_row( $batch_table, 'id', $batch_id );
+		if ( is_wp_error( $program ) || is_wp_error( $batch ) ) { return is_wp_error( $program ) ? $program : $batch; }
+		if ( ! is_array( $program ) || ! is_array( $batch ) || absint( $batch['program_id'] ) !== $program_id ) { return $invalid; }
+		$metadata = json_decode( $program['metadata_json'] ?? '', true );
+		if ( ! is_array( $metadata ) ) { return $invalid; }
+		$metadata[ \Certloom\Application\Program\ProgramProfile::STORAGE_KEY ]['default_batch_id'] = $batch_id;
+		$json = wp_json_encode( $metadata );
+		if ( false === $json ) { return $invalid; }
+		$wpdb->last_error = '';
+		$updated = $wpdb->update( $program_table, array( 'metadata_json' => $json ), array( 'id' => $program_id ) );
+		return false === $updated || '' !== (string) $wpdb->last_error ? $invalid : true;
 	}
 
 	/** @return true|\WP_Error */

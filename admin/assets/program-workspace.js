@@ -20,6 +20,16 @@
 		undo(key) { this.changes.delete(key); }
 		serialize() { return JSON.stringify([...this.changes.values()]); }
 		static validDates(patch) { return !patch.start_date || !patch.end_date || patch.end_date >= patch.start_date; }
+		static sources(item, text) {
+			const settings = item.settings || {}, inherited = [text.programFields, text.validityDelivery], custom = [];
+			const certificate = Object.hasOwn(item, 'batch_template_id') ? Number(item.batch_template_id) > 0 : !!settings.certificate;
+			[[certificate, text.certificate], [!!settings.email, text.email], [!!settings.signing, text.signing]].forEach(([override, label]) => (override ? custom : inherited).push(label));
+			if (item.start_date || item.end_date) { custom.push(text.datesLabel); }
+			if (Number(item.instructor_signer_id)) { custom.push(text.instructor); }
+			const changes = Object.keys(item.batch_field_requirement || {}).filter(key => item.batch_field_requirement[key]);
+			if (changes.length) { custom.push(text.fieldChanges.replace('%s', String(changes.length))); }
+			return { inherited, custom };
+		}
 	}
 	if (typeof module !== 'undefined' && module.exports) { module.exports = { BatchDraft }; }
 	if (typeof document === 'undefined') { return; }
@@ -30,6 +40,8 @@
 		const config = JSON.parse(root.querySelector('[data-program-config]').textContent), text = config.text;
 		const find = selector => root.querySelector(selector), all = selector => [...root.querySelectorAll(selector)];
 		const form = find('[data-certloom-entity-form="program"]'), payload = form.elements.program_batch_changes;
+		const defaultBatch = form.elements.program_default_batch;
+		const defaultChanged = () => defaultBatch.value !== config.defaultBatch;
 		let restored = []; try { restored = JSON.parse(payload.value); } catch (_) {}
 		const draft = new BatchDraft(Array.isArray(restored) ? restored : [], config.limit), bases = new Map(), selected = new Set();
 		const batchDialog = find('[data-program-batch-dialog]'), batchForm = find('[data-program-batch-form]'), bulkDialog = find('[data-program-bulk-dialog]');
@@ -43,7 +55,11 @@
 		function open(dialog) { dialog.classList.toggle('has-pointer-motion', !keyboard && !reduced.matches); dialog.showModal(); }
 		function close(dialog) { dialog.close(); dialog.classList.remove('has-pointer-motion'); }
 		function feedback(message) { find('[data-program-feedback]').textContent = message; }
-		function sync() { payload.value = draft.serialize(); payload.dispatchEvent(new Event('change', { bubbles: true })); feedback(draft.changes.size ? text.prepared : ''); render(); }
+		function sync() {
+			const choice = draft.changes.get(defaultBatch.value);
+			if ((choice && [false, 0, '0'].includes(choice.patch.active)) || (!/^\d+$/.test(defaultBatch.value) && !draft.changes.has(defaultBatch.value))) { defaultBatch.value = '0'; }
+			payload.value = draft.serialize(); payload.dispatchEvent(new Event('change', { bubbles: true })); feedback(draft.changes.size || defaultChanged() ? text.prepared : ''); render();
+		}
 		async function read(params = {}) {
 			const url = new URL(root.dataset.batchesUrl); Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, String(v)));
 			const response = await fetch(url, { credentials: 'same-origin', cache: 'no-store', headers: { 'X-WP-Nonce': config.nonce } });
@@ -63,13 +79,25 @@
 				const key = keyOf(item), row = node('div', 'certloom-program-batch-row');
 				const label = node('label', 'certloom-batch-select'), check = node('input'); check.type = 'checkbox'; check.checked = selected.has(key); check.setAttribute('aria-label', item.name);
 				check.addEventListener('change', () => { check.checked ? selected.add(key) : selected.delete(key); selection(); }); label.append(check);
-				const edit = node('button', 'certloom-batch-open'); edit.type = 'button'; edit.append(node('strong', '', item.name));
+				const edit = node('button', 'certloom-batch-open'); edit.type = 'button'; const heading = node('div', 'certloom-batch-heading'); heading.append(node('strong', '', item.name));
+				if (defaultBatch.value === key && [true, 1, '1'].includes(item.active)) { heading.append(node('span', 'certloom-batch-default', text.defaultBatch)); } edit.append(heading);
 				const subtitle = [item.code, text.batchSummary.replace('%s', String(item.recipient_count || 0)), [true, 1, '1'].includes(item.active) ? '' : text.inactive].filter(Boolean).join(' · ');
-				edit.append(node('span', '', subtitle)); edit.addEventListener('click', () => showBatch(key)); row.append(label, edit);
+				edit.append(node('span', '', subtitle));
+				const sources = BatchDraft.sources(item, text);
+				edit.append(node('span', 'certloom-batch-source', `${text.fromProgram}: ${sources.inherited.join(' · ')}`));
+				if (sources.custom.length) { edit.append(node('span', 'certloom-batch-source is-custom', `${text.setHere}: ${sources.custom.join(' · ')}`)); }
+				const fieldChanges = Object.entries(item.batch_field_requirement || {}).filter(([, rule]) => rule).map(([key, rule]) => `${config.fieldLabels[key] || key} (${text.fieldRules[rule] || rule})`);
+				if (fieldChanges.length) { const fields = node('span', 'certloom-batch-source', fieldChanges.slice(0, 2).join(' · ') + (fieldChanges.length > 2 ? ` · +${fieldChanges.length - 2}` : '')); fields.title = fieldChanges.join(' · '); edit.append(fields); }
+				if (item.start_date || item.end_date) { edit.append(node('span', 'certloom-batch-source', `${text.datesLabel}: ${[item.start_date, item.end_date].filter(Boolean).join(' → ')}`)); }
+				edit.addEventListener('click', () => showBatch(key)); row.append(label, edit);
 				if (draft.changes.has(key)) { const badge = node('span', 'certloom-batch-pending', text.pending); row.append(badge); const undo = node('button', 'button-link', item.id ? text.undo : text.remove); undo.type = 'button'; undo.addEventListener('click', () => { draft.undo(key); selected.delete(key); sync(); }); row.append(undo); }
 				list.append(row);
 			});
 			if (!items.length) { list.append(node('p', 'certloom-batch-empty', search ? text.noResults : text.empty)); }
+			const defaultItem = items.find(item => keyOf(item) === defaultBatch.value);
+			if (defaultItem) { find('[data-program-default-summary]').textContent = [true, 1, '1'].includes(defaultItem.active) ? text.defaultSummary.replace('%s', defaultItem.name) : text.defaultUnavailable; }
+			else if (defaultBatch.value === '0') { find('[data-program-default-summary]').textContent = text.noDefault; }
+			find('[data-program-default-clear]').hidden = defaultBatch.value === '0';
 			find('[data-program-list-page]').textContent = `${page} / ${Math.max(1, Math.ceil(total / 25))}`;
 			find('[data-program-list-previous]').disabled = page <= 1;
 			find('[data-program-list-next]').disabled = page * 25 >= total;
@@ -84,7 +112,7 @@
 		async function loadPage(nextPage = 1) {
 			if (!list) { return; }
 			const ticket = ++sequence; list.setAttribute('aria-busy', 'true'); feedback(text.loading);
-			try { const result = programId ? await read({ page: nextPage, search }) : { items: [], total: 0, page: 1 }; if (ticket !== sequence) { return false; } rows = result.items; total = result.total; page = result.page; render(); feedback(draft.changes.size ? text.prepared : ''); return true; }
+			try { const result = programId ? await read({ page: nextPage, search }) : { items: [], total: 0, page: 1 }; if (ticket !== sequence) { return false; } rows = result.items; total = result.total; page = result.page; render(); feedback(draft.changes.size || defaultChanged() ? text.prepared : ''); return true; }
 			catch (error) { if (ticket === sequence) { feedback(error.message); list.replaceChildren(); const retry = node('button', 'button', text.failed); retry.type = 'button'; retry.addEventListener('click', () => loadPage(nextPage)); list.append(retry); } return false; }
 			finally { if (ticket === sequence) { list.setAttribute('aria-busy', 'false'); } }
 		}
@@ -110,16 +138,22 @@
 			const end = batchForm.elements.end_date; end.setCustomValidity(BatchDraft.validDates(batchPatch()) ? '' : text.dates);
 			return batchForm.reportValidity();
 		}
+		function batchSnapshot() { return JSON.stringify({ patch: batchPatch(), default: batchForm.elements.default_for_issuance.checked }); }
 		function applyCurrent() {
 			if (!current || !validBatch()) { return false; }
 			const patch = batchPatch();
-			if (JSON.stringify(patch) === batchBaseline && current.id) { return true; }
-			try { draft.stage(current, patch); batchBaseline = JSON.stringify(patch); sync(); return true; }
+			if (batchSnapshot() === batchBaseline && current.id) { return true; }
+			try {
+				if (!current.id || JSON.stringify(patch) !== JSON.stringify(JSON.parse(batchBaseline).patch)) { draft.stage(current, patch); }
+				if (patch.active && batchForm.elements.default_for_issuance.checked) { defaultBatch.value = keyOf(current); }
+				else if (defaultBatch.value === keyOf(current)) { defaultBatch.value = '0'; }
+				defaultBatch.dispatchEvent(new Event('change', { bubbles: true })); batchBaseline = batchSnapshot(); sync(); return true;
+			}
 			catch (error) { find('[data-program-batch-error]').textContent = text[error.message] || error.message; return false; }
 		}
 		function protectBatchClose(event) {
 			if (event) { event.preventDefault(); }
-			if (current && JSON.stringify(batchPatch()) !== batchBaseline && !window.confirm(text.discard)) { return; }
+			if (current && batchSnapshot() !== batchBaseline && !window.confirm(text.discard)) { return; }
 			++detailSequence; close(batchDialog);
 		}
 		async function showBatch(key, direction = 0, keepNavigation = false) {
@@ -137,6 +171,7 @@
 				['name', 'code', 'start_date', 'end_date'].forEach(name => { batchForm.elements[name].value = effective[name] || ''; }); batchForm.elements.end_date.setCustomValidity('');
 				selectValue(batchForm.elements.instructor_signer_id, effective.instructor_signer_id, text.unavailable);
 				selectValue(batchForm.elements.batch_template_id, effective.batch_template_id || 0, text.unavailable); batchForm.elements.active.checked = [true, 1, '1'].includes(effective.active);
+				batchForm.elements.default_for_issuance.checked = defaultBatch.value === keyOf(item); batchForm.elements.default_for_issuance.disabled = !batchForm.elements.active.checked;
 				all('[data-program-batch-field]').forEach(select => {
 					select.value = (effective.batch_field_requirement || {})[select.dataset.programBatchField] || '';
 					const programSelect = [...form.querySelectorAll('[name^="program_field_requirement["]')].find(field => field.name === `program_field_requirement[${select.dataset.programBatchField}]`);
@@ -146,7 +181,7 @@
 				find('[data-program-batch-error]').textContent = ''; find('#certloom-batch-dialog-title').textContent = item.id || key ? effective.name || text.edit : text.add;
 				const position = navigation.indexOf(keyOf(item)); find('[data-program-batch-position]').textContent = position >= 0 ? `${position + 1} / ${navigation.length}` : (item.id ? text.edit : text.new);
 				find('[data-program-batch-previous]').disabled = position < 0 || position === 0 && page <= 1; find('[data-program-batch-next]').disabled = position < 0 || position >= navigation.length - 1 && page * 25 >= total;
-				batchBaseline = JSON.stringify(batchPatch()); batchForm.querySelector('button[type="submit"]').disabled = false;
+				batchBaseline = batchSnapshot(); batchForm.querySelector('button[type="submit"]').disabled = false;
 				if (direction && !keyboard && !reduced.matches) { find('[data-program-batch-body]').animate([{ opacity: 0, transform: `translateX(${direction * 12}px)` }, { opacity: 1, transform: 'translateX(0)' }], { duration: 160, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' }); }
 				find('[data-program-batch-body]').inert = false;
 				if (direction) { batchForm.elements.name.focus({ preventScroll: true }); }
@@ -154,6 +189,8 @@
 			finally { if (ticket === detailSequence) { find('[data-program-batch-body]').setAttribute('aria-busy', 'false'); find('[data-program-batch-body]').inert = false; } }
 		}
 		if (batchDialog) {
+			find('[data-program-default-clear]').addEventListener('click', () => { defaultBatch.value = '0'; defaultBatch.dispatchEvent(new Event('change', { bubbles: true })); sync(); });
+			batchForm.elements.active.addEventListener('change', () => { batchForm.elements.default_for_issuance.disabled = !batchForm.elements.active.checked; if (!batchForm.elements.active.checked) { batchForm.elements.default_for_issuance.checked = false; } });
 			batchForm.addEventListener('input', () => { batchForm.elements.end_date.setCustomValidity(''); });
 			find('[data-program-add-batch]').addEventListener('click', () => showBatch(null));
 			find('[data-program-batch-close]').addEventListener('click', protectBatchClose); batchDialog.addEventListener('cancel', protectBatchClose);
@@ -170,7 +207,7 @@
 			}); });
 			find('[data-program-batch-members]').addEventListener('click', async () => {
 				if (!current || !current.id) { return; }
-				if (dirty() || JSON.stringify(batchPatch()) !== batchBaseline) { find('[data-program-batch-error]').textContent = text.saveMembers; return; }
+				if (dirty() || batchSnapshot() !== batchBaseline) { find('[data-program-batch-error]').textContent = text.saveMembers; return; }
 				const ticket = detailSequence, batchId = current.id;
 				try { const result = await read({ batch_id: batchId, members: true }); if (ticket === detailSequence && batchDialog.open) { const container = find('[data-program-batch-members-body]'); const fragment = document.createElement('template'); fragment.innerHTML = result.html; container.replaceChildren(fragment.content); } }
 				catch (error) { find('[data-program-batch-error]').textContent = error.message; }
@@ -202,7 +239,7 @@
 		});
 		form.addEventListener('invalid', event => { const dialog = event.target.closest('[data-program-settings]'); if (dialog && !dialog.open) { open(dialog); } }, true);
 		form.addEventListener('submit', event => { if (!event.defaultPrevented && form.checkValidity()) { saving = true; } });
-		window.addEventListener('beforeunload', event => { if (!saving && (dirty() || current && batchDialog.open && JSON.stringify(batchPatch()) !== batchBaseline)) { event.preventDefault(); event.returnValue = ''; } });
+		window.addEventListener('beforeunload', event => { if (!saving && (dirty() || current && batchDialog.open && batchSnapshot() !== batchBaseline)) { event.preventDefault(); event.returnValue = ''; } });
 		let previewSequence = 0, previewController = null, previewTimer;
 		const previewContainer = find('[data-program-design-preview-body]');
 		function fitPreview() {

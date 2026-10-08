@@ -28,6 +28,10 @@ final class ProgramWorkspaceView {
 		echo '<aside class="certloom-program-batches" aria-labelledby="certloom-program-batches-title"><div class="certloom-program-section-head"><div><span class="certloom-eyebrow">' . esc_html__( 'In this Program', 'certloom' ) . '</span><h2 id="certloom-program-batches-title">' . esc_html__( 'Batches', 'certloom' ) . '</h2></div><button type="button" class="button button-primary" data-program-add-batch' . disabled( $can_batches, false, false ) . '>' . esc_html__( 'Add batch', 'certloom' ) . '</button></div>';
 		echo '<p class="description">' . esc_html__( 'Group recipients by intake, cohort or session. Each batch inherits this Program’s fields and certificate.', 'certloom' ) . '</p>';
 		if ( $can_batches ) {
+			$default_id = absint( $program['profile']['default_batch_id'] ?? 0 );
+			$default = $default_id ? ( new \Certloom\Infrastructure\Repository\BatchRepository() )->find( $default_id ) : null;
+			$default_name = is_array( $default ) && ! empty( $default['active'] ) && (int) $default['program_id'] === $id ? sprintf( __( 'Default: %s', 'certloom' ), $default['name'] ) : ( $default_id ? __( 'Default batch unavailable', 'certloom' ) : __( 'No default batch', 'certloom' ) );
+			echo '<div class="certloom-program-default-batch"><span data-program-default-summary>' . esc_html( $default_name ) . '</span><button type="button" class="button-link" data-program-default-clear' . ( $default_id ? '' : ' hidden' ) . '>' . esc_html__( 'Clear default', 'certloom' ) . '</button></div><p class="description">' . esc_html__( 'The default batch is preselected when issuing. You can choose another batch.', 'certloom' ) . '</p>';
 			echo '<label class="certloom-batch-search"><span class="screen-reader-text">' . esc_html__( 'Search this Program’s batches', 'certloom' ) . '</span><input type="search" data-program-batch-search placeholder="' . esc_attr__( 'Search batches…', 'certloom' ) . '"></label><div class="certloom-batch-bulk-toolbar"><label><input type="checkbox" data-program-select-page> ' . esc_html__( 'Select page', 'certloom' ) . '</label><button type="button" class="button" data-program-bulk-open disabled>' . esc_html__( 'Bulk edit', 'certloom' ) . '</button></div><div data-program-batch-list class="certloom-program-batch-list" aria-busy="true"></div><div class="certloom-batch-pagination"><button type="button" class="button" data-program-list-previous disabled>' . esc_html__( 'Previous', 'certloom' ) . '</button><span data-program-list-page></span><button type="button" class="button" data-program-list-next disabled>' . esc_html__( 'Next', 'certloom' ) . '</button></div>';
 		} else { echo '<p>' . esc_html__( 'Your role can edit this Program. Ask a batch manager to update its batches.', 'certloom' ) . '</p>'; }
 		echo '<p class="certloom-program-feedback" data-program-feedback role="status" aria-live="polite"></p>';
@@ -63,6 +67,8 @@ final class ProgramWorkspaceView {
 		if ( current_user_can( \Ecapla_CertVerify_Permissions::CAP_MANAGE_BATCHES ) ) { $this->batch_dialogs(); }
 		$config = array(
 			'nonce' => wp_create_nonce( 'wp_rest' ), 'limit' => ProgramBatchChanges::LIMIT,
+			'defaultBatch' => (string) absint( $program['profile']['default_batch_id'] ?? 0 ),
+			'fieldLabels' => array_column( \Ecapla_CertVerify_Fields::get_scopable_fields(), 'label', 'key' ),
 			'initialBatch' => absint( $_GET['batch_id'] ?? 0 ), 'initialNew' => isset( $_GET['batch_new'] ),
 			'previewUrl' => rest_url( 'certloom/v1/admin/template-preview' ),
 			'text' => array(
@@ -78,6 +84,13 @@ final class ProgramWorkspaceView {
 				'inherit' => __( 'Inherit parent design', 'certloom' ), 'unavailable' => __( 'Selected design — review before saving', 'certloom' ),
 				'assigned' => __( 'Assigned to this Program', 'certloom' ),
 				'batchSummary' => __( '%s recipients', 'certloom' ),
+				'defaultBatch' => __( 'Default', 'certloom' ), 'noDefault' => __( 'No default batch', 'certloom' ),
+				'defaultSummary' => __( 'Default: %s', 'certloom' ), 'defaultUnavailable' => __( 'Default batch unavailable', 'certloom' ),
+				'fromProgram' => __( 'From Program', 'certloom' ), 'setHere' => __( 'Set on batch', 'certloom' ),
+				'certificate' => __( 'Certificate', 'certloom' ), 'email' => __( 'Issued email design', 'certloom' ), 'signing' => __( 'Signing', 'certloom' ),
+				'programFields' => __( 'Fields', 'certloom' ), 'fieldChanges' => __( '%s field changes', 'certloom' ),
+				'validityDelivery' => __( 'Validity & delivery', 'certloom' ), 'datesLabel' => __( 'Dates', 'certloom' ), 'instructor' => __( 'Instructor', 'certloom' ),
+				'fieldRules' => array( 'required' => __( 'Required', 'certloom' ), 'optional' => __( 'Optional', 'certloom' ), 'exclude' => __( 'Excluded', 'certloom' ) ),
 				'selected' => __( '%s selected batches', 'certloom' ),
 				'saveMembers' => __( 'Save the Program before managing recipients.', 'certloom' ),
 			),
@@ -95,6 +108,7 @@ final class ProgramWorkspaceView {
 		echo '<label class="certloom-domain-field"><strong>' . esc_html__( 'Instructor / signer', 'certloom' ) . '</strong><select name="instructor_signer_id" data-certloom-context-lookup="signer" data-certloom-context-nonce="' . esc_attr( wp_create_nonce( ScopedFieldAdminAjax::NONCE_ACTION ) ) . '" data-certloom-context-empty-value=""><option value="">' . esc_html__( 'No batch-specific signer', 'certloom' ) . '</option>';
 		foreach ( $signers as $signer ) { echo '<option value="' . esc_attr( absint( $signer['id'] ) ) . '">' . esc_html( (string) $signer['display_name'] ) . '</option>'; }
 		echo '</select></label><label class="certloom-domain-field"><span><input type="checkbox" name="active" value="1" checked> <strong>' . esc_html__( 'Active batch', 'certloom' ) . '</strong></span></label>';
+		echo '<label class="certloom-domain-field certloom-domain-field-wide"><span><input type="checkbox" name="default_for_issuance" value="1"> <strong>' . esc_html__( 'Use as default batch for issuance', 'certloom' ) . '</strong></span><span class="description">' . esc_html__( 'One default per Program. Recipients can still be issued to another batch.', 'certloom' ) . '</span></label>';
 		$this->design_select( 'batch_template_id', $templates );
 		echo '</div><details class="certloom-batch-field-settings"><summary>' . esc_html__( 'Batch fields', 'certloom' ) . '</summary><p class="description">' . esc_html__( 'Inherit the Program’s fields, or add stricter requirements for this batch.', 'certloom' ) . '</p>';
 		foreach ( \Ecapla_CertVerify_Fields::get_scopable_fields() as $field ) {

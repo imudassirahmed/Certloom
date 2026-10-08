@@ -731,7 +731,8 @@ final class DomainStructureAdmin {
 		$result = null !== $existing ? $repo->update( $existing['id'], $data ) : $repo->create( $data );
 		if ( is_wp_error( $result ) ) { return $result; }
 		$id = null !== $existing ? (int) $existing['id'] : (int) $result;
-		return array_key_exists( 'batch_template_id', $patch ) ? $this->save_batch_template_assignment( $id, (int) $patch['batch_template_id'] ) : $result;
+		if ( array_key_exists( 'batch_template_id', $patch ) ) { $assignment = $this->save_batch_template_assignment( $id, (int) $patch['batch_template_id'] ); if ( is_wp_error( $assignment ) ) { return $assignment; } }
+		return null !== $existing ? $result : $id;
 	}
 
 	/** @return int|\WP_Error */

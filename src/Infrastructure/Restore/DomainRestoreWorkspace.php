@@ -207,6 +207,7 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 		}
 		$checks = array(
 			'program_issuer_missing' => array( "SELECT COUNT(*) FROM %i p LEFT JOIN %i i ON i.id=p.issuer_id WHERE p.issuer_id IS NOT NULL AND i.id IS NULL", array( $t['programs'], $t['issuers'] ) ),
+			'program_default_batch_invalid' => array( "SELECT COUNT(*) FROM %i p LEFT JOIN %i b ON b.id=CAST(JSON_UNQUOTE(JSON_EXTRACT(p.metadata_json,'$.certloom_profile_v1.default_batch_id')) AS UNSIGNED) AND b.program_id=p.id WHERE COALESCE(CAST(JSON_UNQUOTE(JSON_EXTRACT(p.metadata_json,'$.certloom_profile_v1.default_batch_id')) AS UNSIGNED),0)>0 AND b.id IS NULL", array( $t['programs'], $t['batches'] ) ),
 			'batch_program_missing' => array( "SELECT COUNT(*) FROM %i b LEFT JOIN %i p ON p.id=b.program_id WHERE p.id IS NULL", array( $t['batches'], $t['programs'] ) ),
 			'batch_signer_missing' => array( "SELECT COUNT(*) FROM %i b LEFT JOIN %i s ON s.id=b.instructor_signer_id WHERE b.instructor_signer_id IS NOT NULL AND s.id IS NULL", array( $t['batches'], $t['signers'] ) ),
 			'batch_member_batch_missing' => array( "SELECT COUNT(*) FROM %i m LEFT JOIN %i b ON b.id=m.batch_id WHERE b.id IS NULL", array( $t['batch_recipients'], $t['batches'] ) ),

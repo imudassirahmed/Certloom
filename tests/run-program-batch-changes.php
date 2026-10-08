@@ -14,6 +14,7 @@ namespace Certloom\Infrastructure\Repository {
 		public function update( $id, $data ) { self::$writes[$id] = $data; return true; }
 		public function create( $data ) { self::$writes[99] = $data; return 99; }
 		public function list_page( $s, $page, $size, $status, $scope ) { self::$scope = array( $page, $size, $scope ); return array( 'items' => self::$rows, 'total' => count( self::$rows ) ); }
+		public function configuration_choices( $scope, $ids ) { return array( 11 => array( 'batch_template_id' => 9, 'signing' => true ) ); }
 	}
 	class TemplateRepository {
 		public static $assignment = null; public static $saved = array();
@@ -23,6 +24,9 @@ namespace Certloom\Infrastructure\Repository {
 	}
 	class ProgramRepository { public function find( $id ) { return 7 === $id ? $GLOBALS['program'] : null; } }
 	class SignerRepository { public function find( $id ) { return 4 === $id ? array( 'id' => 4 ) : null; } }
+}
+namespace Certloom\Infrastructure\Email {
+	class EmailDesignAssignmentRepository { public function all() { return array( array( 'scope_type' => 'batch', 'scope_id' => 12, 'purpose' => EmailDesignPurposes::ISSUED ) ); } }
 }
 namespace {
 if ( PHP_SAPI !== 'cli' ) { exit; }
@@ -60,6 +64,7 @@ $service = new ProgramBatchChanges();
 check( ! is_wp_error( ProgramBatchChanges::decode( wp_json_encode( array( $item ) ) ) ), 'Valid bounded changes decode.' );
 foreach ( array( null, 'invalid JSON', str_repeat( ' ', 131073 ), wp_json_encode( array_fill( 0, 26, $item ) ), wp_json_encode( array( $item, $item ) ), wp_json_encode( array( array_merge( $item, array( 'id' => '11' ) ) ) ), wp_json_encode( array( array_merge( $item, array( 'patch' => array( 'program_id' => 8 ) ) ) ) ), wp_json_encode( array( array_merge( $item, array( 'patch' => array( 'batch_field_requirement' => array( 'score' => array( 'required' ) ) ) ) ) ) ), wp_json_encode( array( array_merge( $item, array( 'patch' => array( 'active' => 'anything' ) ) ) ) ), wp_json_encode( array( array_merge( $item, array( 'patch' => array( 'batch_template_id' => '-1' ) ) ) ) ) ) as $invalid ) { check( is_wp_error( ProgramBatchChanges::decode( $invalid ) ), 'Malformed or unbounded changes fail closed.' ); }
 Transaction::$owns = false; check( is_wp_error( $service->persist( $program, array( $item ) ) ), 'Writes require an owning transaction.' ); Transaction::$owns = true;
+check( is_wp_error( $service->persist_default( $program, str_repeat( '9', 80 ) ) ), 'Oversized numeric default identities are rejected before lookup or coercion.' );
 $caps['batches'] = false; check( is_wp_error( $service->persist( $program, array( $item ) ) ), 'Program permission alone does not permit batch edits.' ); $caps['batches'] = true;
 check( ! is_wp_error( $service->persist( $program, array( $item ) ) ), 'Date-only change uses canonical guarded parser.' );
 check( array( 'fields', 'integration', 'design' ) === $guards, 'All batch dependency guards run.' );
@@ -81,6 +86,7 @@ $second = array( 'id' => 12, 'revision' => ProgramBatchChanges::revision( BatchR
 $new = array( 'id' => 0, 'key' => 'new-intake', 'patch' => array( 'name' => 'New intake', 'active' => true ) ); check( ! is_wp_error( $service->persist( $program, array( $new ) ) ) && 7 === BatchRepository::$writes[99]['program_id'], 'New batches always inherit the owning Program identity.' );
 $rest = new ProgramWorkspaceRest(); check( $rest->permission(), 'Both management capabilities allow REST reads.' ); $caps['programs'] = false; check( ! $rest->permission(), 'Batch-only roles cannot use Program REST.' ); $caps['programs'] = true;
 $result = $rest->read( new WP_REST_Request( array( 'program_id' => 7, 'batch_id' => 0, 'page' => 2, 'search' => '' ) ) ); check( array( 2, 25, 7 ) === BatchRepository::$scope && ! isset( $result['items'][0]['metadata'] ), 'REST lists are bounded, Program scoped, and omit technical metadata.' );
+check( $result['items'][0]['settings'] === array( 'certificate' => true, 'email' => false, 'signing' => true ) && $result['items'][1]['settings']['email'], 'Batch summary preserves direct certificate, issued email and signing sources.' );
 $result = $rest->read( new WP_REST_Request( array( 'program_id' => 7, 'batch_id' => 11 ) ) ); check( $result['revision'] === $item['revision'] && ! isset( $result['patch']['metadata'] ), 'Popup REST payload contains exact revision and editable fields only.' );
 BatchRepository::$rows[11]['program_id'] = 8; check( is_wp_error( $rest->read( new WP_REST_Request( array( 'program_id' => 7, 'batch_id' => 11 ) ) ) ), 'REST rejects cross-Program detail requests.' );
 $response = $rest->private_headers( new WP_HTTP_Response(), null, new WP_REST_Request( array() ) ); check( 'private, no-store, max-age=0' === $response->headers['Cache-Control'], 'Private headers also cover denied/error REST responses.' );

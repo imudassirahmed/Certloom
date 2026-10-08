@@ -1,4 +1,4 @@
-.certloom-program-page { display: grid; grid-template-columns: minmax(0, 1fr) minmax(290px, 350px); gap: 22px; align-items: start; }
+.certloom-program-page { display: grid; grid-template-columns: minmax(0, 1fr) minmax(330px, 430px); gap: 24px; align-items: start; }
 .certloom-program-page .ecapla-certverify-admin-card { margin-top: 0; }
 .certloom-program-main { min-width: 0; }
 .certloom-program-main .certloom-domain-form-grid { gap: 14px 18px; }
@@ -23,6 +23,12 @@
 .certloom-batch-open span { display: block; color: #607087; font-size: 12px; line-height: 1.6; margin-top: 4px; overflow-wrap: anywhere; }
 .certloom-batch-pending, .certloom-program-batch-row > .button-link { grid-column: 2; font-size: 12px; justify-self: start; }
 .certloom-batch-pending { color: #8a5817; }
+.certloom-program-default-batch { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 12px; font-size: 12px; font-weight: 600; color: var(--cl-brand-blue); }
+.certloom-program-default-batch > span { min-width: 0; overflow-wrap: anywhere; }
+.certloom-batch-heading { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.certloom-batch-open .certloom-batch-default { display: inline-block; margin: 0; border-radius: 4px; padding: 1px 6px; background: var(--cl-blue-wash); color: var(--cl-brand-blue); font-size: 11px; font-weight: 600; }
+.certloom-batch-open .certloom-batch-source { font-size: 11px; line-height: 1.5; }
+.certloom-batch-open .certloom-batch-source.is-custom { color: var(--cl-blue-deep); }
 .certloom-program-feedback { color: #4f6580; font-size: 12px; line-height: 1.6; }
 .certloom-program-dialog { width: min(880px, calc(100vw - 48px)); max-height: calc(100dvh - 64px); box-sizing: border-box; padding: 0; border: 1px solid #dde5ef; border-radius: 20px; background: #fff; color: #19283f; box-shadow: 0 24px 80px #142d5238; overflow: auto; }
 .certloom-program-dialog::backdrop { background: #12203969; }
@@ -56,6 +62,6 @@
 .certloom-program-design-preview .certloom-template-preview-page { margin: 0; }
 .certloom-program-dialog.has-pointer-motion[open] { animation: certloom-program-dialog-enter 220ms cubic-bezier(0.16, 1, 0.3, 1); }
 @keyframes certloom-program-dialog-enter { from { opacity: 0; transform: translateY(10px) scale(.985); } to { opacity: 1; transform: translateY(0) scale(1); } }
-@media (max-width: 1100px) { .certloom-program-page { grid-template-columns: minmax(0, 1fr) minmax(260px, 310px); gap: 18px; } .certloom-program-main .certloom-domain-form-grid { grid-template-columns: 1fr; } }
+@media (max-width: 1100px) { .certloom-program-page { grid-template-columns: minmax(0, 1fr) minmax(290px, 350px); gap: 18px; } .certloom-program-main .certloom-domain-form-grid { grid-template-columns: 1fr; } }
 @media (max-width: 782px) { .certloom-program-page { grid-template-columns: 1fr; } .certloom-program-batches { position: static; padding-inline-start: 0; padding-top: 24px; border-inline-start: 0; border-top: 1px solid #e1e8f2; } .certloom-program-batch-list { max-height: 320px; } .certloom-program-dialog { width: calc(100vw - 24px); max-height: calc(100dvh - 32px); border-radius: 16px; } .certloom-program-dialog > header, .certloom-program-dialog footer { padding: 16px; gap: 10px; } .certloom-program-dialog-body { padding: 16px; } .certloom-program-dialog .certloom-domain-form-grid, .certloom-bulk-setting { grid-template-columns: 1fr; gap: 12px; } .certloom-batch-dialog h2 { font-size: 17px; } .certloom-program-dialog footer { flex-wrap: wrap; } }
 @media (prefers-reduced-motion: reduce) { .certloom-program-dialog.has-pointer-motion[open] { animation: none; } }

@@ -28,4 +28,12 @@ model.stage({ id: 0, key: 'new-intake', patch: {} }, { name: 'Autumn intake', ac
 const recovered = new BatchDraft(JSON.parse(model.serialize()));
 check(recovered.get({ id: 0, key: 'new-intake', patch: {} }).patch.name === 'Autumn intake', 'Unsaved new Program batches round-trip through form draft recovery.');
 check(BatchDraft.validDates({ start_date: '', end_date: '2026-01-01' }) && BatchDraft.validDates({ start_date: '2026-01-01', end_date: '' }), 'Clearing one date is an explicit valid bulk change.');
+const labels = { programFields: 'Fields', validityDelivery: 'Validity and delivery', certificate: 'Certificate', email: 'Issued email', signing: 'Signing', datesLabel: 'Dates', instructor: 'Instructor', fieldChanges: '%s field changes' };
+let sources = BatchDraft.sources({}, labels);
+check(sources.custom.length === 0 && sources.inherited.length === 5, 'Unconfigured batches show Program inheritance without inventing overrides.');
+sources = BatchDraft.sources({ settings: { certificate: true, email: true, signing: true }, batch_template_id: 0, batch_field_requirement: { score: 'required', old: '' }, end_date: '2026-10-10', instructor_signer_id: 4 }, labels);
+check(sources.inherited.includes('Certificate') && !sources.custom.includes('Certificate') && sources.custom.includes('Issued email') && sources.custom.includes('Signing'), 'An explicitly cleared design takes precedence over saved summary flags.');
+check(sources.custom.includes('1 field changes') && sources.custom.includes('Dates') && sources.custom.includes('Instructor') && sources.inherited.includes('Fields'), 'Field overlays and dates are identified while base Program fields remain inherited.');
+sources = BatchDraft.sources({ batch_template_id: 8 }, labels);
+check(sources.custom.includes('Certificate') && !sources.inherited.includes('Certificate'), 'Unsaved direct design choices are reflected immediately.');
 console.log(`${checks} checks, 0 failures`);

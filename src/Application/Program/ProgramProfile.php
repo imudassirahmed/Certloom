@@ -81,6 +81,7 @@ final class ProgramProfile {
 			'credential_locale' => CredentialLocale::SITE_DEFAULT,
 			'template_variants' => array(),
 			'template_variant_fallback' => 'program_default',
+			'default_batch_id' => 0,
 			'validity_mode' => ProgramLifecyclePolicy::VALIDITY_LEGACY,
 			'validity_value' => 0,
 			'validity_unit' => 'days',
@@ -126,6 +127,9 @@ final class ProgramProfile {
 			if ( is_wp_error( $fallback ) || ! isset( $variants[ $fallback ] ) ) { return new \WP_Error( 'certloom_program_profile_template_fallback_invalid', __( 'Choose Program default or a locale that has a configured Template variant.', 'certloom' ) ); }
 		}
 		$out['template_variant_fallback'] = $fallback;
+		$default_batch = $input['default_batch_id'] ?? 0;
+		if ( ! ( is_int( $default_batch ) || is_string( $default_batch ) ) || ! preg_match( '/^\d{1,19}$/D', (string) $default_batch ) || strlen( (string) $default_batch ) > strlen( (string) PHP_INT_MAX ) || ( strlen( (string) $default_batch ) === strlen( (string) PHP_INT_MAX ) && strcmp( (string) $default_batch, (string) PHP_INT_MAX ) > 0 ) ) { return new \WP_Error( 'certloom_program_default_batch_invalid', __( 'Choose a valid default Batch for this Program.', 'certloom' ) ); }
+		$out['default_batch_id'] = absint( $default_batch );
 
 		$out['credential_type'] = $this->choice( $input['credential_type'] ?? 'certificate', array( 'certificate', 'certification', 'degree', 'diploma', 'license', 'membership', 'award', 'participation', 'custom' ), 'certloom_program_profile_credential_type_invalid', __( 'Choose a valid credential type.', 'certloom' ) );
 		if ( is_wp_error( $out['credential_type'] ) ) { return $out['credential_type']; }

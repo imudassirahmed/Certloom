@@ -14,13 +14,19 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
 final class ProgramIssuanceSettings {
 
 	/** @return array<string,mixed>|\WP_Error */
-	public function resolve( $program_id, $batch_id = 0 ) {
+	public function resolve( $program_id, $batch_id = 0, $use_default_batch = false ) {
 		$program = ( new ProgramRepository() )->find( absint( $program_id ) );
 		if ( is_wp_error( $program ) ) { return $program; }
 		if ( ! is_array( $program ) || empty( $program['active'] ) ) { return new \WP_Error( 'certloom_issue_program_missing', __( 'Choose an active Program before issuing.', 'certloom' ) ); }
 		$batch = null;
+		$default_batch_id = absint( $program['profile']['default_batch_id'] ?? 0 );
+		if ( ! $batch_id && $use_default_batch && $default_batch_id ) {
+			$preferred = ( new BatchRepository() )->find( $default_batch_id );
+			if ( is_wp_error( $preferred ) ) { return $preferred; }
+			if ( is_array( $preferred ) && ! empty( $preferred['active'] ) && (int) $preferred['program_id'] === (int) $program['id'] ) { $batch_id = $default_batch_id; $batch = $preferred; }
+		}
 		if ( $batch_id ) {
-			$batch = ( new BatchRepository() )->find( absint( $batch_id ) );
+			if ( ! $batch ) { $batch = ( new BatchRepository() )->find( absint( $batch_id ) ); }
 			if ( is_wp_error( $batch ) ) { return $batch; }
 			if ( ! is_array( $batch ) || empty( $batch['active'] ) || (int) $batch['program_id'] !== (int) $program['id'] ) { return new \WP_Error( 'certloom_issue_batch_program_mismatch', __( 'Choose an active Batch belonging to this Program.', 'certloom' ) ); }
 		}
@@ -44,6 +50,7 @@ final class ProgramIssuanceSettings {
 		return array(
 			'program' => array( 'id' => (int) $program['id'], 'label' => (string) $program['title'] ),
 			'batch' => $batch ? array( 'id' => (int) $batch['id'], 'label' => (string) $batch['name'] ) : null,
+			'is_default_batch' => $batch && (int) $batch['id'] === $default_batch_id,
 			'valid_from' => ! empty( $batch['end_date'] ) ? (string) $batch['end_date'] : current_time( 'Y-m-d' ),
 			'has_batch_date' => ! empty( $batch['end_date'] ),
 			'validity' => (string) ( $program['validity_summary'] ?? '' ),

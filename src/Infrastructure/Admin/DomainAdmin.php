@@ -124,8 +124,11 @@ final class DomainAdmin {
 			if ( is_wp_error( $design ) ) { return $design; }
 			$program = $repo->find_for_update( $id );
 			if ( is_wp_error( $program ) || ! is_array( $program ) ) { return is_wp_error( $program ) ? $program : new \WP_Error( 'certloom_program_missing', __( 'The Program could not be saved.', 'certloom' ) ); }
-			$batches = ( new ProgramBatchChanges() )->persist( $program, $changes );
-			return is_wp_error( $batches ) ? $batches : $id;
+			$batch_changes = new ProgramBatchChanges();
+			$batches = $batch_changes->persist( $program, $changes );
+			if ( is_wp_error( $batches ) ) { return $batches; }
+			$default = $batch_changes->persist_default( $program, isset( $_POST['program_default_batch'] ) ? wp_unslash( $_POST['program_default_batch'] ) : null );
+			return is_wp_error( $default ) ? $default : $id;
 		} );
 		if ( is_wp_error( $result ) ) { $this->redirect_result( self::PROGRAMS_PAGE, $result, 'program_created', array( 'certloom_new' => 1, 'certloom_retry' => 1 ) ); }
 		$this->redirect_result( self::PROGRAMS_PAGE, $result, 'program_created', array( 'program_id' => absint( $result ) ) );
@@ -171,8 +174,11 @@ final class DomainAdmin {
 			if ( is_wp_error( $design ) ) { return $design; }
 			$program = $repo->find_for_update( $id );
 			if ( is_wp_error( $program ) || ! is_array( $program ) ) { return is_wp_error( $program ) ? $program : new \WP_Error( 'certloom_program_missing', __( 'The Program could not be saved.', 'certloom' ) ); }
-			$batches = ( new ProgramBatchChanges() )->persist( $program, $changes );
-			return is_wp_error( $batches ) ? $batches : $result;
+			$batch_changes = new ProgramBatchChanges();
+			$batches = $batch_changes->persist( $program, $changes );
+			if ( is_wp_error( $batches ) ) { return $batches; }
+			$default = $batch_changes->persist_default( $program, isset( $_POST['program_default_batch'] ) ? wp_unslash( $_POST['program_default_batch'] ) : null );
+			return is_wp_error( $default ) ? $default : $result;
 		} );
 		if ( is_wp_error( $result ) ) { $this->redirect_result( self::PROGRAMS_PAGE, $result, 'program_updated', array( 'program_id' => $id, 'certloom_retry' => 1 ) ); }
 		$this->redirect_result( self::PROGRAMS_PAGE, $result, 'program_updated', array( 'program_id' => $id ) );
@@ -1676,6 +1682,7 @@ final class DomainAdmin {
 		if ( $is_edit ) { echo '<input type="hidden" name="program_id" value="' . esc_attr( $id ) . '">'; wp_nonce_field( 'certloom_domain_update_program_' . $id ); } else { wp_nonce_field( 'certloom_domain_create_program' ); }
 		echo '<input type="hidden" name="program_form_version" value="1">';
 		echo '<input type="hidden" name="program_workspace_version" value="1"><input type="hidden" name="program_batch_changes" value="[]">';
+		echo '<input type="hidden" name="program_default_batch" value="' . esc_attr( absint( $profile['default_batch_id'] ?? 0 ) ) . '">';
 		$program_assignment = $is_edit ? $template_repo->get_assignment( 'program', $id ) : null;
 		if ( is_wp_error( $program_assignment ) ) { $this->error( $program_assignment->get_error_message() ); }
 		if ( $is_edit && ! is_wp_error( $program_assignment ) ) { echo '<input type="hidden" name="program_revision" value="' . esc_attr( ProgramBatchChanges::revision( $editing, $program_assignment ) ) . '">'; }
@@ -2046,6 +2053,8 @@ final class DomainAdmin {
 		if ( $fields_only ) { $profile = $existing['profile']; }
 		else {
 			$raw_profile = isset( $_POST['profile'] ) && is_array( $_POST['profile'] ) ? wp_unslash( $_POST['profile'] ) : array();
+			// The workspace resolves new/existing Batch identities after its atomic batch save.
+			$raw_profile['default_batch_id'] = absint( $existing['profile']['default_batch_id'] ?? 0 );
 			$variant_locales = isset( $_POST['profile_template_variant_locale'] ) && is_array( $_POST['profile_template_variant_locale'] ) ? wp_unslash( $_POST['profile_template_variant_locale'] ) : array();
 			$variant_template_ids = isset( $_POST['profile_template_variant_template_id'] ) && is_array( $_POST['profile_template_variant_template_id'] ) ? wp_unslash( $_POST['profile_template_variant_template_id'] ) : array();
 			if ( count( $variant_locales ) !== count( $variant_template_ids ) || count( $variant_locales ) > ProgramProfile::MAX_TEMPLATE_VARIANTS ) { return new \WP_Error( 'certloom_program_profile_template_variants_invalid', __( 'Program language variants are structurally invalid.', 'certloom' ) ); }

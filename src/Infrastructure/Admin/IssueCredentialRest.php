@@ -47,6 +47,7 @@ final class IssueCredentialRest {
 				'program_id' => array( 'default' => 0, 'sanitize_callback' => 'absint' ),
 				'batch_id' => array( 'default' => 0, 'sanitize_callback' => 'absint' ),
 				'recipient_id' => array( 'default' => 0, 'sanitize_callback' => 'absint' ),
+				'use_default_batch' => array( 'default' => true, 'sanitize_callback' => 'rest_sanitize_boolean' ),
 			),
 		) );
 		register_rest_route( self::NAMESPACE, self::BASE . '/bootstrap', array(
@@ -141,7 +142,8 @@ final class IssueCredentialRest {
 	public function program_bootstrap( \WP_REST_Request $request ) {
 		$settings = null;
 		if ( $request->get_param( 'program_id' ) ) {
-			$settings = ( new ProgramIssuanceSettings() )->resolve( $request->get_param( 'program_id' ), $request->get_param( 'batch_id' ) );
+			$use_default = null === $request->get_param( 'use_default_batch' ) || rest_sanitize_boolean( $request->get_param( 'use_default_batch' ) );
+			$settings = ( new ProgramIssuanceSettings() )->resolve( $request->get_param( 'program_id' ), $request->get_param( 'batch_id' ), $use_default );
 			if ( is_wp_error( $settings ) ) { return $this->rest_error( $settings ); }
 		} elseif ( $request->get_param( 'batch_id' ) ) {
 			return $this->rest_error( new \WP_Error( 'certloom_issue_batch_program_required', __( 'Choose the Program that owns this Batch.', 'certloom' ) ) );

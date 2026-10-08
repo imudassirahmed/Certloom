@@ -64,8 +64,21 @@ final class ProgramWorkspaceRest {
 		$page = max( 1, absint( $request['page'] ) );
 		$result = $repo->list_page( (string) $request['search'], $page, 25, 'all', $id );
 		if ( is_wp_error( $result ) ) { return $result; }
+		$choices = $repo->configuration_choices( $id, array_column( $result['items'], 'id' ) );
+		if ( is_wp_error( $choices ) ) { return $choices; }
+		$email_overrides = array();
+		foreach ( ( new \Certloom\Infrastructure\Email\EmailDesignAssignmentRepository() )->all() as $rule ) {
+			if ( 'batch' === $rule['scope_type'] && \Certloom\Infrastructure\Email\EmailDesignPurposes::ISSUED === $rule['purpose'] ) { $email_overrides[ absint( $rule['scope_id'] ) ] = true; }
+		}
 		$items = array();
-		foreach ( $result['items'] as $batch ) { $items[] = array_intersect_key( $batch, array_flip( array( 'id', 'name', 'code', 'active', 'start_date', 'end_date', 'recipient_count', 'credential_count' ) ) ); }
+		foreach ( $result['items'] as $batch ) {
+			$item = array_intersect_key( $batch, array_flip( array( 'id', 'name', 'code', 'active', 'start_date', 'end_date', 'recipient_count', 'credential_count', 'instructor_signer_id' ) ) );
+			$choice = $choices[ $batch['id'] ] ?? array();
+			$item['batch_template_id'] = absint( $choice['batch_template_id'] ?? 0 );
+			$item['batch_field_requirement'] = (array) ( $batch['field_contract']['fields'] ?? array() );
+			$item['settings'] = array( 'certificate' => $item['batch_template_id'] > 0, 'email' => ! empty( $email_overrides[ $batch['id'] ] ), 'signing' => ! empty( $choice['signing'] ) );
+			$items[] = $item;
+		}
 		return rest_ensure_response( array( 'items' => $items, 'total' => (int) $result['total'], 'page' => $page, 'per_page' => 25 ) );
 	}
 }

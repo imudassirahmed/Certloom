@@ -26,7 +26,7 @@
 		var form = popup.querySelector('form'), select = form.querySelector('[data-pi-select]'), reviewPanel = form.querySelector('[data-pi-review]'), receiptPanel = form.querySelector('[data-pi-receipt]');
 		var next = form.querySelector('[data-pi-next]'), back = form.querySelector('[data-pi-back]'), status = form.querySelector('[data-pi-status]'), message = form.querySelector('[data-pi-message]'), help = form.querySelector('[data-pi-help]');
 		var state = {deep:Object.assign({}, deep), settings:null, recipient:null, mode:'existing', stage:'select', busy:false, loading:false, failedLoad:false, fingerprint:'', payload:null, review:null, uncertain:false, complete:false, generation:0};
-		var disposed = false, settingsController, searches = {}, timers = {}, enrollmentController;
+		var disposed = false, settingsController, searches = {}, timers = {}, enrollmentController, useDefaultBatch = !deep.batch_id;
 		function node(selector) { return form.querySelector(selector); }
 		function notify(copy, error) { message.textContent = copy || ''; message.hidden = !copy; message.classList.toggle('is-error', !!error); }
 		function paint() {
@@ -54,8 +54,8 @@
 			input.value = choice.label || choice.name || ''; input.readOnly = true; if (clear) { clear.hidden = false; }
 			box.querySelector('[data-pi-search-status]').textContent = kind === 'recipient' ? text('chosenRecipient','Selected recipient') : '';
 			if (kind === 'recipient') { state.recipient = choice; state.deep.recipient_id = Number(choice.id); }
-			else if (kind === 'program') { state.deep.program_id = Number(choice.id); state.deep.batch_id = 0; loadSettings(); }
-			else { state.deep.batch_id = Number(choice.id); input.readOnly = false; box.hidden = true; loadSettings(); }
+			else if (kind === 'program') { state.deep.program_id = Number(choice.id); state.deep.batch_id = 0; useDefaultBatch = true; loadSettings(); }
+			else { state.deep.batch_id = Number(choice.id); useDefaultBatch = false; input.readOnly = false; box.hidden = true; loadSettings(); }
 		}
 		function clearChoice(kind) {
 			changed(); var box = picker(kind), input = box.querySelector('input'); input.value = ''; input.readOnly = false; var clear = box.querySelector('[data-pi-clear]'); if (clear) { clear.hidden = true; }
@@ -101,7 +101,7 @@
 			var settings = state.settings, context = node('[data-pi-context]'); context.hidden = !settings;
 			picker('program').hidden = !!settings;
 			node('[data-pi-program-change]').hidden = !!deep.program_id;
-			node('[data-pi-batch-line]').hidden = !settings || !!deep.batch_id || (!settings.has_batches && !settings.batch_required);
+			node('[data-pi-batch-line]').hidden = !settings || (!settings.has_batches && !settings.batch_required);
 			node('[data-pi-expiry]').hidden = !settings || !settings.expiry_at_issuance;
 			if (!settings) { picker('batch').hidden = true; return; }
 			node('[data-pi-expiry-hint]').textContent = settings.expiry_required ? text('expiryRequired','This Program requires an expiry date for renewal.') : text('expiryOptional','This Program leaves expiry to each issuance. Blank means no expiry.');
@@ -110,6 +110,7 @@
 			node('[data-pi-manage]').href = settings.program_url;
 			node('[data-pi-batch-label]').textContent = settings.batch ? settings.batch.label : text('programDefaults','Use Program settings');
 			node('[data-pi-batch-clear]').hidden = !settings.batch;
+			node('[data-pi-default-batch]').hidden = !settings.is_default_batch;
 			node('[data-pi-batch-open]').textContent = settings.batch ? text('changeBatch','Change Batch') : text('chooseBatch','Choose Batch');
 		}
 		function loadSettings() {
@@ -117,9 +118,11 @@
 			settingsController = new AbortController(); var controller = settingsController;
 			state.loading = true; state.failedLoad = false; status.textContent = text('currentSettings','Checking current settings…'); paint();
 			var url = new URL(cfg.programBootstrapUrl); ['program_id','batch_id','recipient_id'].forEach(function (key) { if (state.deep[key]) { url.searchParams.set(key,String(state.deep[key])); } });
+			url.searchParams.set('use_default_batch',String(useDefaultBatch));
 			rest(url.toString(), {signal:controller.signal}).then(function (data) {
 				if (disposed || controller.signal.aborted || controller !== settingsController) { return; }
 				state.settings = data.settings; state.recipient = data.recipient || state.recipient;
+				if (data.settings) { state.deep.batch_id = data.settings.batch ? Number(data.settings.batch.id) : 0; useDefaultBatch = false; }
 				if (data.recipient) { var box = picker('recipient'); box.querySelector('input').value = data.recipient.label; box.querySelector('input').readOnly = true; box.querySelector('[data-pi-clear]').hidden = false; }
 				node('[data-pi-number]').hidden = data.automatic_number; renderSettings(); notify('');
 			}).catch(function (error) { if (!disposed && !controller.signal.aborted && controller === settingsController) { state.failedLoad = true; notify(error.message || text('loadFailed','Could not load settings.'),true); } }).finally(function () { if (!disposed && !controller.signal.aborted && controller === settingsController) { state.loading = false; status.textContent = ''; paint(); } });
@@ -192,7 +195,7 @@
 		['display_name','email','display_number','expires_at'].forEach(function (name) { form.elements[name].addEventListener('input',function () { changed(); form.elements[name].removeAttribute('aria-invalid'); }); });
 		node('#cl-pi-enrollment').addEventListener('change',function () { state.generation++; state.fingerprint = ''; notify(''); });
 		node('[data-pi-batch-open]').addEventListener('click',function () { var input = picker('batch').querySelector('input'); picker('batch').hidden = false; input.focus(); search('batch',input.value,true); });
-		node('[data-pi-batch-clear]').addEventListener('click',function () { changed(); state.deep.batch_id = 0; loadSettings(); });
+		node('[data-pi-batch-clear]').addEventListener('click',function () { changed(); state.deep.batch_id = 0; useDefaultBatch = false; loadSettings(); });
 		back.addEventListener('click',function () { if (!state.busy && !state.uncertain) { state.stage = 'select'; paint(); (state.mode === 'new' ? form.elements.display_name : picker('recipient').querySelector('input')).focus(); } });
 		node('[data-pi-program-change]').addEventListener('click',function () { clearChoice('program'); picker('program').hidden = false; picker('program').querySelector('input').focus(); });
 		form.addEventListener('submit',function (event) { event.preventDefault(); if (state.busy || state.loading) { return; } if (state.failedLoad) { loadSettings(); } else if (state.stage === 'review') { issueCredential(); } else { buildReview(); } });
