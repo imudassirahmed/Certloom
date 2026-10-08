@@ -30,7 +30,7 @@
     say(text, error = false) { this.feedback.textContent = text; this.feedback.dataset.error = String(error); }
     setBusy(busy) {
       this.busy = busy; this.list.setAttribute('aria-busy', String(busy));
-      this.root.querySelectorAll('button, select').forEach(el => { el.disabled = busy || (this.mustRefresh && el.hasAttribute('data-request-command')) || Boolean(el.closest('[data-request-history][aria-busy="true"]')); });
+      this.root.querySelectorAll('button, select').forEach(el => { if (el.closest('[data-pending-policy]')) return; el.disabled = busy || (this.mustRefresh && el.hasAttribute('data-request-command')) || Boolean(el.closest('[data-request-history][aria-busy="true"]')); });
     }
     url(suffix = '') {
       const url = new URL(this.endpoint);
@@ -211,5 +211,8 @@
       }
     }
   }
-  document.querySelectorAll('[data-certloom-pending]').forEach(root => new PendingRequests(root));
+  const initialize = () => document.querySelectorAll('[data-certloom-pending]:not([data-attention-deferred])').forEach(root => {
+    if (root.dataset.pendingReady) { return; } root.dataset.pendingReady = '1'; new PendingRequests(root);
+  });
+  initialize(); document.addEventListener('certloom:attention-ready', initialize);
 })();

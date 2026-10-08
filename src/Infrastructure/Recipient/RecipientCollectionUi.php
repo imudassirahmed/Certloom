@@ -6,6 +6,7 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
 /** One account surface for WordPress, WooCommerce and the recipient portal. */
 final class RecipientCollectionUi {
 	public function register() {
+		( new RecipientSignupCollection() )->register();
 		add_action( 'show_user_profile', array( $this, 'profile' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'profile_assets' ) );
 		add_action( 'woocommerce_edit_account_form_start', array( $this, 'account' ) );

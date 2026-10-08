@@ -7,7 +7,6 @@
     if (className) el.className = className;
     return el;
   };
-
   class AccountDetails {
     constructor(root) {
       this.root = root;
@@ -296,10 +295,11 @@
   });
   const initialize = () => {
     boot();
-    document.querySelectorAll('[data-certloom-reviews]').forEach(root => {
+    document.querySelectorAll('[data-certloom-reviews]:not([data-attention-deferred])').forEach(root => {
       if (root.dataset.accountReady) return; root.dataset.accountReady = 'true';
       try { new RecipientReviews(root); } catch (_) { root.querySelector('[data-account-workspace]')?.setAttribute('aria-busy', 'false'); }
     });
   };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initialize); else initialize();
+  document.addEventListener('certloom:attention-ready', initialize);
 })();

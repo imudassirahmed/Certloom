@@ -134,7 +134,8 @@ final class AdminProductNavigation {
 	}
 
 	private function section_for_page( $page ) {
-		if ( in_array( $page, array( 'certloom-domain-recipients', 'certloom-recipient-reviews', 'certloom-pending-requests' ), true ) ) { return 'credentials'; }
+		if ( 'certloom-domain-recipients' === $page ) { return 'credentials'; }
+		if ( in_array( $page, array( 'certloom-recipient-reviews', 'certloom-pending-requests' ), true ) ) { return 'dashboard'; }
 		$groups = array(
 			'credentials' => array( 'certloom-certificates', 'certloom-add', 'certloom-domain-credentials', 'certloom-issuance', 'certloom-file-intake', 'certloom-bulk-issuance', 'certloom-email-delivery', 'certloom-bulk-review' ),
 			'people'      => array( 'certloom-domain-programs', 'certloom-domain-issuers', 'certloom-domain-batches', 'certloom-domain-signers' ),
@@ -153,10 +154,7 @@ final class AdminProductNavigation {
 				if ( ! $preview ) { return array( $this->link( __( 'Credentials', 'certloom' ), 'certloom-certificates', array( 'certloom-certificates', 'certloom-add', 'certloom-bulk-review' ), ECAPLA_CERTVERIFY_CAP ) ); }
 				return array(
 					$this->link( __( 'Credentials', 'certloom' ), 'certloom-domain-credentials', array( 'certloom-domain-credentials', 'certloom-certificates', 'certloom-add', 'certloom-bulk-review' ), \Ecapla_CertVerify_Permissions::CAP_VIEW_CREDENTIALS ),
-					$this->link( __( 'Issue credential', 'certloom' ), 'certloom-issuance', array( 'certloom-issuance' ), \Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS ),
 					$this->link( __( 'Recipients', 'certloom' ), 'certloom-domain-recipients', array( 'certloom-domain-recipients' ), \Ecapla_CertVerify_Permissions::CAP_MANAGE_RECIPIENTS ),
-					$this->link( __( 'Recipient reviews', 'certloom' ), 'certloom-recipient-reviews', array( 'certloom-recipient-reviews' ), \Ecapla_CertVerify_Permissions::CAP_MANAGE_RECIPIENTS ),
-					$this->link( __( 'Certificate requests', 'certloom' ), 'certloom-pending-requests', array( 'certloom-pending-requests' ), \Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS ),
 					$this->link( __( 'Import / issue from file', 'certloom' ), 'certloom-file-intake', array( 'certloom-file-intake', 'certloom-bulk-issuance' ), \Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS ),
 					$this->link( __( 'Email delivery', 'certloom' ), 'certloom-email-delivery', array( 'certloom-email-delivery' ), \Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS ),
 				);

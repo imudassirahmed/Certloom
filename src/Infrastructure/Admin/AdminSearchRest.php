@@ -21,6 +21,7 @@ final class AdminSearchRest {
 
 	/** @return void */
 	public function routes() {
+		register_rest_route( self::NAMESPACE, '/admin/email-preview', array( 'methods' => \WP_REST_Server::CREATABLE, 'callback' => array( $this, 'email_preview' ), 'permission_callback' => array( $this, 'email_preview_permission' ) ) );
 		register_rest_route(
 			self::NAMESPACE,
 			'/admin/context',
@@ -93,6 +94,19 @@ final class AdminSearchRest {
 	public function credentials_permission() {
 		return is_user_logged_in() && current_user_can( \Ecapla_CertVerify_Permissions::CAP_VIEW_CREDENTIALS );
 	}
+	public function email_preview_permission() { return is_user_logged_in() && current_user_can( \Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS ); }
+	/** Canonical, mutation-free email preview with synthetic values only. */
+	public function email_preview( \WP_REST_Request $request ) {
+		if ( strlen( $request->get_body() ) > 1048576 ) { return new \WP_Error( 'certloom_email_preview_limit', __( 'This email is too large to preview.', 'certloom' ), array( 'status' => 400 ) ); }
+		$input = $request->get_json_params();
+		if ( ! is_array( $input ) || ! is_array( $input['blocks'] ?? null ) || ! is_array( $input['theme'] ?? null ) || ! is_string( $input['subject'] ?? '' ) || ! is_string( $input['preheader'] ?? '' ) ) { return new \WP_Error( 'certloom_email_preview_invalid', __( 'Review the email content and try again.', 'certloom' ), array( 'status' => 400 ) ); }
+		$compiled = ( new \Certloom\Infrastructure\Email\EmailDesignCompiler() )->compile( $input['blocks'], $input['theme'] );
+		if ( is_wp_error( $compiled ) ) { return $compiled; }
+		$values = ( new \Certloom\Infrastructure\Email\EmailMergeTokenCatalog() )->sample_values(); $html_values = array(); $plain_values = array();
+		foreach ( $values as $key => $value ) { $html_values[ '{{' . $key . '}}' ] = esc_html( $value ); $plain_values[ '{{' . $key . '}}' ] = $value; }
+		$response = rest_ensure_response( array( 'html' => strtr( $compiled['html_body'], $html_values ), 'text' => strtr( $compiled['text_body'], $plain_values ), 'subject' => strtr( sanitize_text_field( $input['subject'] ?? '' ), $plain_values ), 'preheader' => strtr( sanitize_text_field( $input['preheader'] ?? '' ), $plain_values ) ) );
+		$response->header( 'Cache-Control', 'private, no-store, max-age=0' ); return $response;
+	}
 
 
 	/** @return bool */
@@ -101,6 +115,7 @@ final class AdminSearchRest {
 			current_user_can( \Ecapla_CertVerify_Permissions::CAP_ISSUE_CREDENTIALS )
 			|| current_user_can( \Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS )
 			|| current_user_can( \Ecapla_CertVerify_Permissions::CAP_MANAGE_TEMPLATES )
+			|| current_user_can( \Ecapla_CertVerify_Permissions::CAP_MANAGE_PROGRAMS )
 		);
 	}
 
@@ -118,7 +133,7 @@ final class AdminSearchRest {
 
 	/** Product/course choices can include unpublished titles; also keep denied responses private. */
 	public function private_context_headers( $response, $server, $request ) {
-		if ( '/certloom/v1/admin/context' === $request->get_route() && $response instanceof \WP_HTTP_Response ) {
+		if ( in_array( $request->get_route(), array( '/certloom/v1/admin/context', '/certloom/v1/admin/email-preview', '/certloom/v1/admin/template-preview', '/certloom/v1/admin/issuance-preview' ), true ) && $response instanceof \WP_HTTP_Response ) {
 			$response->header( 'Cache-Control', 'private, no-store, max-age=0' );
 			$response->header( 'Vary', 'Cookie', false );
 			$response->header( 'X-Robots-Tag', 'noindex' );

@@ -140,6 +140,7 @@
 					throw new Error(response && response.data && response.data.message ? response.data.message : cfg.previewUnavailable);
 				}
 				renderPreview(box, response.data || {});
+				choice.dispatchEvent(new CustomEvent('certloom:assignment-info', {detail:String(response.data.label || '') + ' · ' + String(response.data.source || '')}));
 			})
 			.catch(function (error) {
 				box.classList.remove('is-loading');

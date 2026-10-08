@@ -38,6 +38,8 @@ $source = $score; $source['collection_policy'] = $staff;
 $context = array( 'catalog' => array( 'father_name' => $father, 'department' => $personal, 'enrollment_id' => $enrollment, 'cnic' => $deferred, 'score' => $source, 'legacy_detail' => $base ), 'contract' => array( 'fields' => array( array( 'key' => 'father_name' ), array( 'key' => 'enrollment_id' ), array( 'key' => 'cnic' ), array( 'key' => 'score' ) ) ) );
 $selection = new RecipientCollectionFields();
 rcf_check( array( 'department' ) === array_keys( $selection->select( $context, 'recipient' ) ), 'ordinary profiles request only fields configured for the account' );
+$signup_context = $context; $signup_context['catalog']['department']['collection_policy']['collect_when'] = 'signup';
+rcf_check( array( 'department' ) === array_keys( $selection->select( $signup_context, 'recipient' ) ), 'personal website signup answers remain correctable in the customer profile without granting enrollment or result access' );
 $request_context = $context; $request_context['request_id'] = 1;
 rcf_check( array( 'father_name', 'cnic' ) === array_keys( $selection->select( $request_context, 'recipient' ) ), 'an owned waiting request collects applicable reusable details at registration or before issuance without an unrelated profile field' );
 $program = $selection->select( $context, 'registration' );

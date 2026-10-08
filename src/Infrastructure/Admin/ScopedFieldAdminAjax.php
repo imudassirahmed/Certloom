@@ -139,6 +139,15 @@ final class ScopedFieldAdminAjax {
 		}
 		$max_order = $fields ? max( array_map( 'absint', wp_list_pluck( $fields, 'order' ) ) ) : 0;
 		$field = array( 'key' => $key, 'label' => $label, 'type' => $type, 'column' => null, 'core' => false, 'protected' => false, 'locked_visibility' => false, 'sensitivity' => $sensitivity, 'public_exposure' => $public_exposure, 'show_on_frontend' => 'private' !== $public_exposure, 'order' => $max_order + 1 );
+		$writer = $_POST['collection_writer'] ?? 'legacy'; $lifetime = $_POST['collection_lifetime'] ?? 'registration';
+		$collection = ( new \Certloom\Application\Fields\FieldCollectionForm() )->normalize( array(
+			'writer' => is_string( $writer ) ? wp_unslash( $writer ) : $writer,
+			'lifetime' => is_string( $lifetime ) ? wp_unslash( $lifetime ) : $lifetime,
+			'collect_when' => 'recipient' === $lifetime ? 'profile' : 'registration',
+			'approval_required' => $_POST['collection_approval'] ?? '0', 'show_on_certificate' => '0', 'help' => '',
+		), $field );
+		if ( is_wp_error( $collection ) ) { wp_send_json_error( array( 'message' => $collection->get_error_message() ), 400 ); }
+		if ( is_array( $collection ) ) { $field[ \Certloom\Application\Fields\FieldCollectionPolicy::KEY ] = $collection; }
 		$fields[] = $field;
 		if ( ! \Ecapla_CertVerify_Fields::save_fields( $fields ) ) { wp_send_json_error( array( 'message' => __( 'Certloom could not save the new field.', 'certloom' ) ), 500 ); }
 		wp_send_json_success( array( 'field' => array_merge( $field, array( 'sensitivity_label' => (string) $sensitivity_options[ $sensitivity ], 'public_exposure_label' => (string) $exposure_options[ $public_exposure ] ) ), 'message' => __( 'Field created and added. You can manage its policy later in Settings → Fields.', 'certloom' ) ) );

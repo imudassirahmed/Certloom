@@ -109,9 +109,9 @@ final class TemplateAdmin {
 		wp_enqueue_media();
 		wp_enqueue_style( 'certloom-font-picker', CERTLOOM_URL . 'admin/assets/font-picker.css', array( 'ecapla-certverify-admin' ), CERTLOOM_VERSION );
 		wp_enqueue_script( 'certloom-font-picker', CERTLOOM_URL . 'admin/assets/font-picker.js', array(), CERTLOOM_VERSION, true );
-		wp_enqueue_style( 'certloom-template-designer', CERTLOOM_URL . 'admin/assets/designer.css', array( 'ecapla-certverify-admin', 'certloom-font-picker' ), CERTLOOM_VERSION );
+		wp_enqueue_style( 'certloom-template-designer', CERTLOOM_URL . 'admin/assets/designer.css', array( 'ecapla-certverify-admin', 'certloom-font-picker' ), (string) filemtime( CERTLOOM_PATH . 'admin/assets/designer.css' ) );
 		wp_enqueue_script( 'certloom-template-text-fit', CERTLOOM_URL . 'admin/assets/template-text-fit.js', array(), CERTLOOM_VERSION, true );
-		wp_enqueue_script( 'certloom-template-designer', CERTLOOM_URL . 'admin/assets/designer.js', array( 'ecapla-certverify-admin', 'certloom-font-picker', 'certloom-template-text-fit' ), CERTLOOM_VERSION, true );
+		wp_enqueue_script( 'certloom-template-designer', CERTLOOM_URL . 'admin/assets/designer.js', array( 'ecapla-certverify-admin', 'certloom-font-picker', 'certloom-template-text-fit' ), (string) filemtime( CERTLOOM_PATH . 'admin/assets/designer.js' ), true );
 		wp_enqueue_style( 'certloom-template-library', CERTLOOM_URL . 'admin/assets/template-library.css', array( 'ecapla-certverify-admin' ), CERTLOOM_VERSION );
 		wp_enqueue_script( 'certloom-template-library', CERTLOOM_URL . 'admin/assets/template-library.js', array( 'ecapla-certverify-admin', 'certloom-template-text-fit' ), CERTLOOM_VERSION, true );
 		wp_localize_script( 'certloom-font-picker', 'certloomFontPickerConfig', $this->font_picker_config() );

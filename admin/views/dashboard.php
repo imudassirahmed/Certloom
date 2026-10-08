@@ -72,6 +72,8 @@ $certloom_fields_url      = admin_url( 'admin.php?page=certloom-fields' );
 		</div>
 	</section>
 
+	<?php if ( $ecapla_certverify_normalized_issuance_ready ) { \Certloom\Infrastructure\Admin\AttentionWorkspace::render(); } ?>
+
 	<?php if ( isset( $_GET['certloom_wizard_applied'] ) ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only success flag after a nonce-protected action. ?>
 		<div class="notice notice-success is-dismissible inline certloom-owned-notice certloom-dashboard-notice"><p><?php esc_html_e( 'Setup settings applied.', 'certloom' ); ?></p></div>
 	<?php endif; ?>

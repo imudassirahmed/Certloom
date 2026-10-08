@@ -45,9 +45,7 @@ final class ProgramWorkspaceView {
 		$id = is_array( $assignment ) && ! empty( $assignment['active'] ) ? absint( $assignment['template_id'] ?? 0 ) : 0;
 		echo '<section class="certloom-domain-subsection certloom-program-design-section"><div class="certloom-domain-subsection-head"><div><h3>' . esc_html__( 'Certificate design', 'certloom' ) . '</h3><p>' . esc_html__( 'Choose one design for this Program. Batches inherit it unless you choose an override.', 'certloom' ) . '</p></div></div>';
 		$this->design_select( 'program_template_id', $templates, $id );
-		echo '<button type="button" class="button" data-program-settings-open="design" data-program-design-preview>' . esc_html__( 'Preview certificate', 'certloom' ) . '</button><p class="description">' . esc_html__( 'Changes affect future certificates. Certificates already issued retain their original design.', 'certloom' ) . '</p></section>';
-		echo '<dialog class="certloom-program-dialog" data-program-settings="design" aria-labelledby="certloom-program-dialog-design"><header><h2 id="certloom-program-dialog-design">' . esc_html__( 'Certificate preview', 'certloom' ) . '</h2><button type="button" class="button" data-program-settings-done aria-label="' . esc_attr__( 'Close preview', 'certloom' ) . '">×</button></header><div class="certloom-program-dialog-body"><div class="certloom-program-design-preview" data-program-design-preview-body aria-live="polite"></div>';
-		self::settings_close();
+		echo '<p class="description" data-program-design-source role="status"></p><div class="certloom-program-design-preview" data-program-design-preview-body aria-label="' . esc_attr__( 'Live certificate preview with sample details', 'certloom' ) . '" aria-busy="true"></div><p class="description">' . esc_html__( 'Preview updates automatically with sample details. Changes apply to future certificates when you save this Program.', 'certloom' ) . '</p></section>';
 	}
 
 	private function design_select( $name, array $templates, $id = 0 ) {
@@ -78,6 +76,7 @@ final class ProgramWorkspaceView {
 				'dates' => __( 'End date must be on or after the start date.', 'certloom' ),
 				'fields' => __( 'Choose at least one setting to bulk edit.', 'certloom' ),
 				'inherit' => __( 'Inherit parent design', 'certloom' ), 'unavailable' => __( 'Selected design — review before saving', 'certloom' ),
+				'assigned' => __( 'Assigned to this Program', 'certloom' ),
 				'batchSummary' => __( '%s recipients', 'certloom' ),
 				'selected' => __( '%s selected batches', 'certloom' ),
 				'saveMembers' => __( 'Save the Program before managing recipients.', 'certloom' ),

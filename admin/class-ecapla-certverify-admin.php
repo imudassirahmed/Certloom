@@ -251,6 +251,9 @@ class Ecapla_CertVerify_Admin {
 		wp_enqueue_style( 'certloom-admin-foundation', ECAPLA_CERTVERIFY_URL . 'admin/assets/certloom-foundation.css', array( 'ecapla-certverify-admin' ), $ui_version );
 		wp_enqueue_script( 'certloom-template-text-fit', ECAPLA_CERTVERIFY_URL . 'admin/assets/template-text-fit.js', array(), ECAPLA_CERTVERIFY_VERSION, true );
 		wp_enqueue_script( 'ecapla-certverify-admin', ECAPLA_CERTVERIFY_URL . 'admin/assets/admin.js', array( 'certloom-template-text-fit' ), $ui_version, true );
+		wp_enqueue_style( 'certloom-assignment-controls', ECAPLA_CERTVERIFY_URL . 'admin/assets/assignment-controls.css', array( 'certloom-admin-foundation' ), (string) filemtime( ECAPLA_CERTVERIFY_PATH . 'admin/assets/assignment-controls.css' ) );
+		wp_enqueue_script( 'certloom-assignment-controls', ECAPLA_CERTVERIFY_URL . 'admin/assets/assignment-controls.js', array( 'ecapla-certverify-admin' ), (string) filemtime( ECAPLA_CERTVERIFY_PATH . 'admin/assets/assignment-controls.js' ), true );
+		wp_localize_script( 'certloom-assignment-controls', 'certloomAssignmentText', array( 'assignDesign' => __( 'Assign a different design', 'certloom' ), 'assignSetting' => __( 'Use a different setting', 'certloom' ), 'changeSetting' => __( 'Change this setting', 'certloom' ) ) );
 		$usage_profile = \Certloom\Infrastructure\Admin\UsageProfilePresentation::active_profile();
 		$usage_terms = \Certloom\Infrastructure\Admin\UsageProfilePresentation::terms( $usage_profile );
 		$usage_issuance = \Certloom\Infrastructure\Admin\UsageProfilePresentation::issuance_contract( $usage_profile );

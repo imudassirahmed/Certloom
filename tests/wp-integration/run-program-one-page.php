@@ -52,6 +52,8 @@ $result = ( new Transaction() )->run( static function () use ( $check, $ok, $pos
 		$check( isset( $created['program_created'], $created['program_id'] ) && ! isset( $created['certloom_error'] ), 'Shared add form creates one Program with its staged batches.' );
 		$id = (int) $created['program_id']; $program = $ok( $programs->find( $id ) ); $items = $ok( $batches->list_page( '', 1, 25, 'all', $id ) )['items'];
 		$check( 2 === count( $items ), 'Both staged batches belong to the newly created Program.' );
+		$listed = $ok( $programs->list_page( $nonce, 1, 50 ) );
+		$check( 1 === count( $listed['items'] ) && 2 === $listed['items'][0]['batch_count'], 'Paged Program rows include an exact scoped batch count without per-row reads.' );
 		$ids = array_map( static function ( $b ) { return (int) $b['id']; }, $items ); sort( $ids );
 		$recipient = $ok( ( new RecipientRepository() )->create( array( 'display_name' => 'QA ' . $nonce ) ) );
 		foreach ( $ids as $batch_id ) { $ok( $batches->add_recipient( $batch_id, $recipient ) ); }

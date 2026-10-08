@@ -16,7 +16,7 @@ final class FieldCollectionPolicy {
 	const VERSION = 1;
 	const LIFETIMES = array( 'recipient', 'registration', 'achievement', 'program' );
 	const WRITERS = array( 'recipient', 'staff', 'source' );
-	const TIMINGS = array( 'profile', 'registration', 'before_issue', 'never' );
+	const TIMINGS = array( 'profile', 'signup', 'registration', 'before_issue', 'never' );
 
 	/** @return array<string,mixed>|\WP_Error */
 	public function for_definition( array $field ) {
@@ -73,7 +73,7 @@ final class FieldCollectionPolicy {
 		if ( ! $recipient && ( 'never' !== $input['collect_when'] || $input['approval_required'] ) ) {
 			return new \WP_Error( 'certloom_field_collection_timing_invalid', __( 'Staff and source-owned fields are not collected through recipient forms.', 'certloom' ) );
 		}
-		if ( $recipient && 'registration' === $input['lifetime'] && 'profile' === $input['collect_when'] ) {
+		if ( $recipient && 'registration' === $input['lifetime'] && in_array( $input['collect_when'], array( 'profile', 'signup' ), true ) ) {
 			return new \WP_Error( 'certloom_field_collection_scope_invalid', __( 'Choose a collection step that matches reusable personal details or a specific Program registration.', 'certloom' ) );
 		}
 		if ( $input['show_on_certificate'] && ( 'internal' === ( $field['sensitivity'] ?? '' ) || ! in_array( $field['public_exposure'] ?? 'private', array( 'profile', 'both' ), true ) ) ) {
@@ -97,7 +97,7 @@ final class FieldCollectionPolicy {
 
 	/** Whether a validated policy grants collection through account forms. @return bool */
 	public function recipient_editable( array $policy ) {
-		return self::SCHEMA === ( $policy['_meta']['schema'] ?? '' ) && self::VERSION === ( $policy['_meta']['schema_version'] ?? null ) && true === ( $policy['_meta']['configured'] ?? false ) && 'recipient' === ( $policy['writer'] ?? '' ) && in_array( $policy['lifetime'] ?? '', array( 'recipient', 'registration' ), true ) && in_array( $policy['collect_when'] ?? '', array( 'profile', 'registration', 'before_issue' ), true );
+		return self::SCHEMA === ( $policy['_meta']['schema'] ?? '' ) && self::VERSION === ( $policy['_meta']['schema_version'] ?? null ) && true === ( $policy['_meta']['configured'] ?? false ) && 'recipient' === ( $policy['writer'] ?? '' ) && in_array( $policy['lifetime'] ?? '', array( 'recipient', 'registration' ), true ) && in_array( $policy['collect_when'] ?? '', array( 'profile', 'signup', 'registration', 'before_issue' ), true );
 	}
 
 	/** @return \WP_Error */

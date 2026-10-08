@@ -9,7 +9,7 @@ $fields=file_get_contents(dirname(__DIR__).'/admin/views/fields-manager.php');
 $admin=file_get_contents(dirname(__DIR__).'/admin/class-ecapla-certverify-admin.php');
 $js=file_get_contents(dirname(__DIR__).'/admin/assets/admin.js');
 $issuerRepo=file_get_contents(dirname(__DIR__).'/src/Infrastructure/Repository/IssuerRepository.php');
-shui(false!==strpos($fields,'Global credential-field defaults'),'Field Manager exposes Global credential-field defaults');
+shui(false!==strpos($fields,'Global field requirements'),'Field Manager exposes Global field requirements');
 shui(false!==strpos($fields,'global_field_requirement['),'Global UI persists typed Global rules');
 shui(false!==strpos($admin,'ScopedFieldGlobalRepository'),'Field Manager save path uses the typed Global repository');
 shui(false!==strpos($domain,'issuer_field_editor'),'Issuer profile exposes field defaults');

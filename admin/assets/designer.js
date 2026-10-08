@@ -739,7 +739,7 @@
 		function isHiddenId( id ) { return designerState.hidden_ids.indexOf( id ) !== -1; }
 		function layerLabel( id ) { return designerState.layer_labels && designerState.layer_labels[ id ] ? designerState.layer_labels[ id ] : ''; }
 		function layerDisplayName( element ) { return layerLabel( element.id ) || elementTitle( element ) || typeLabel( element.type ); }
-		function compactLayerDisplayName( element ) { var full = String( layerDisplayName( element ) || '' ); var max = 26; return full.length > max ? full.slice( 0, max ).replace( /\s+$/, '' ) + '....' : full; }
+		function compactLayerDisplayName( element ) { var characters = Array.from( String( layerDisplayName( element ) || '' ) ); var max = 24; return characters.length > max ? characters.slice( 0, max ).join( '' ).replace( /\s+$/, '' ) + '…' : characters.join( '' ); }
 		function normalizeLayerLabel( value ) { return String( value || '' ).replace( /[\u0000-\u001F\u007F]/g, '' ).trim().slice( 0, 80 ); }
 		function snapshot() { return { layout: clone( layout ), state: clone( designerState ), selectedId: selectedId, selectedIds: selectionIds() }; }
 		function snapshotChanged( before ) { return stable( before.layout ) !== stable( layout ) || stable( before.state ) !== stable( designerState ); }

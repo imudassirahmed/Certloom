@@ -1,7 +1,8 @@
 /* Organization policy has its own optimistic save, independent of queue pagination. */
 (() => {
   'use strict';
-  document.querySelectorAll('[data-certloom-pending]').forEach(root => {
+  const initialize = () => document.querySelectorAll('[data-certloom-pending]:not([data-attention-deferred])').forEach(root => {
+    if (root.dataset.policyReady) return; root.dataset.policyReady = '1';
     const panel = root.querySelector('[data-pending-policy]');
     if (!panel) return;
     const fields = [...panel.querySelectorAll('[data-policy-key]')];
@@ -46,4 +47,5 @@
     refresh.addEventListener('click', load);
     panel.addEventListener('toggle', () => { if (panel.open && !hash) load(); });
   });
+  initialize(); document.addEventListener('certloom:attention-ready', initialize);
 })();

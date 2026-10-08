@@ -42,6 +42,9 @@
 		footer.appendChild(strong);
 		footer.appendChild(span);
 		box.appendChild(footer);
+		var dialog = box.closest('dialog'), kind = box.getAttribute('data-context-preview');
+		var select = dialog && kind ? dialog.querySelector('[data-context-choice="' + kind + '"]') : null;
+		if (select) { select.dispatchEvent(new CustomEvent('certloom:assignment-info', {detail: strong.textContent + ' · ' + span.textContent})); }
 		if (data && data.varies) {
 			var note = document.createElement('p');
 			note.className = 'certloom-rule-preview-varies';

@@ -219,8 +219,17 @@ final class IssueCredentialRest {
 			if ( ! is_array( $recipient ) ) { $recipient = null; }
 		}
 
+		$email = ( new \Certloom\Infrastructure\Email\EmailDesignAssignmentRepository() )->resolve( $issuer_id, $program_id, $batch_id );
+		$email_summary = array( 'label' => '', 'source' => '' );
+		if ( is_wp_error( $email ) ) { $email_summary['label'] = $email->get_error_message(); }
+		else {
+			$email_summary['label'] = (string) $email['design']['name'];
+			$sources = array( 'global' => __( 'Global email rule', 'certloom' ), 'catalog_default' => __( 'Site email default', 'certloom' ), 'issuer' => __( 'Issuer', 'certloom' ) . ': ' . ( $issuer['name'] ?? '' ), 'program' => __( 'Program', 'certloom' ) . ': ' . ( $program['title'] ?? '' ), 'batch' => __( 'Batch', 'certloom' ) . ': ' . ( $batch['name'] ?? '' ) );
+			$email_summary['source'] = $sources[ $email['scope_type'] ] ?? '';
+		}
 		return rest_ensure_response( array(
 			'program' => $program_id ? $this->program_choice( $program ) : null,
+			'email_design' => $email_summary,
 			'batch' => $batch ? $this->batch_choice( $batch ) : null,
 			'issuer' => is_array( $issuer ) ? $this->issuer_choice( $issuer ) : null,
 			'field_contract' => $field_contract,

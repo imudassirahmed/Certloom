@@ -24,6 +24,10 @@ fcp_check( ! is_wp_error( $legacy ) && ! $service->recipient_editable( $legacy )
 $normalized = $service->normalize( $policy, $field );
 fcp_check( ! is_wp_error( $normalized ) && $service->recipient_editable( $normalized ), 'explicit reusable personal details may be recipient editable' );
 fcp_check( $normalized['approval_required'], 'approval requirement survives normalization' );
+$signup = $policy; $signup['collect_when'] = 'signup';
+fcp_check( ! is_wp_error( $service->normalize( $signup, $field ) ) && $service->recipient_editable( $signup ), 'explicit website signup details remain editable in the customer profile' );
+$signup['lifetime'] = 'registration';
+fcp_check( is_wp_error( $service->normalize( $signup, $field ) ), 'an enrollment detail cannot be collected as a global website signup answer' );
 $registration = $policy; $registration['lifetime'] = 'registration'; $registration['collect_when'] = 'registration';
 fcp_check( ! is_wp_error( $service->normalize( $registration, $field ) ), 'Program registration values have their own collection scope' );
 foreach ( array( 'achievement', 'program' ) as $lifetime ) {

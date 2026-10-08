@@ -60,188 +60,16 @@ final class EmailDesignAdmin {
 		);
 	}
 
-	/** @return void */
+	/** Load only the current composer and the shared design library styles. */
 	public function assets() {
 		$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only asset routing.
-		if ( self::PAGE !== $page ) {
-			return;
-		}
-
+		if ( self::PAGE !== $page ) { return; }
+		wp_enqueue_style( 'certloom-email-designs', CERTLOOM_URL . 'admin/assets/email-designs.css', array( 'ecapla-certverify-admin' ), CERTLOOM_VERSION );
+		$view = isset( $_GET['email_view'] ) ? sanitize_key( wp_unslash( $_GET['email_view'] ) ) : 'library'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only asset routing.
+		if ( 'designer' !== $view ) { return; }
 		wp_enqueue_media();
-		wp_enqueue_style( 'certloom-font-picker', CERTLOOM_URL . 'admin/assets/font-picker.css', array( 'ecapla-certverify-admin' ), CERTLOOM_VERSION );
-		wp_enqueue_script( 'certloom-font-picker', CERTLOOM_URL . 'admin/assets/font-picker.js', array(), CERTLOOM_VERSION, true );
-		wp_enqueue_style(
-			'certloom-email-designs',
-			CERTLOOM_URL . 'admin/assets/email-designs.css',
-			array( 'ecapla-certverify-admin', 'certloom-font-picker' ),
-			CERTLOOM_VERSION
-		);
-		wp_enqueue_script(
-			'certloom-email-designer',
-			CERTLOOM_URL . 'admin/assets/email-designer.js',
-			array( 'certloom-font-picker' ),
-			CERTLOOM_VERSION,
-			true
-		);
-		wp_localize_script( 'certloom-font-picker', 'certloomFontPickerConfig', $this->font_picker_config() );
-		$merge_tokens = new EmailMergeTokenCatalog();
-		$font_catalog = new DesignerFontCatalog();
-
-		wp_localize_script(
-			'certloom-email-designer',
-			'certloomEmailDesignerL10n',
-			array(
-				'addHeading'            => __( 'Heading', 'certloom' ),
-				'addText'               => __( 'Text', 'certloom' ),
-				'addButton'             => __( 'Button', 'certloom' ),
-				'addImage'              => __( 'Image', 'certloom' ),
-				'addDivider'            => __( 'Divider', 'certloom' ),
-				'addSpacer'             => __( 'Spacer', 'certloom' ),
-				'addContainer'          => __( 'Container', 'certloom' ),
-				'container'             => __( 'Container', 'certloom' ),
-				'containerDirection'    => __( 'Direction', 'certloom' ),
-				'containerGap'          => __( 'Gap', 'certloom' ),
-				'containerBasis'        => __( 'Width', 'certloom' ),
-				'containerBackground'   => __( 'Container background', 'certloom' ),
-				'containerBackgroundImage' => __( 'Container background image', 'certloom' ),
-				'containerChildren'     => __( 'Items', 'certloom' ),
-				'containerDepthLimit'   => __( 'Container nesting has reached the supported depth.', 'certloom' ),
-				'emptyContainer'        => __( 'Empty container', 'certloom' ),
-				'dropBlocksHere'        => __( 'Drop blocks here', 'certloom' ),
-				'addBlock'              => __( 'Add block', 'certloom' ),
-				'containerAddHelp'      => __( 'Add blocks from Insert or drag existing blocks into this Container.', 'certloom' ),
-				'emailRoot'             => __( 'Email', 'certloom' ),
-				'horizontal'            => __( 'Horizontal', 'certloom' ),
-				'vertical'              => __( 'Vertical', 'certloom' ),
-				'background'            => __( 'Background', 'certloom' ),
-				'backgroundImage'       => __( 'Background image', 'certloom' ),
-				'border'                => __( 'Border', 'certloom' ),
-				'blockLimit'            => __( 'This email has reached the supported block limit.', 'certloom' ),
-				'addHtml'               => __( 'Custom HTML', 'certloom' ),
-				'htmlLabel'             => __( 'HTML', 'certloom' ),
-				'searchFields'          => __( 'Search fields', 'certloom' ),
-				'attachments'           => __( 'Attachments', 'certloom' ),
-				'addAttachments'        => __( 'Add attachments', 'certloom' ),
-				'chooseAttachments'     => __( 'Choose email attachments', 'certloom' ),
-				'useAttachments'        => __( 'Attach selected files', 'certloom' ),
-				'pageBackgroundImage'   => __( 'Page background image', 'certloom' ),
-				'contentBackgroundImage'=> __( 'Content background image', 'certloom' ),
-				'chooseBackground'      => __( 'Choose background image', 'certloom' ),
-				'removeBackground'      => __( 'Remove background', 'certloom' ),
-				'headingPlaceholder'    => __( 'Your credential is ready', 'certloom' ),
-				'textPlaceholder'       => __( 'Write the message recipients should receive.', 'certloom' ),
-				'buttonText'            => __( 'View credential', 'certloom' ),
-				'buttonUrl'             => '{{verification_url}}',
-				'chooseImage'           => __( 'Choose an email image', 'certloom' ),
-				'useImage'              => __( 'Use this image', 'certloom' ),
-				'remove'                => __( 'Remove', 'certloom' ),
-				'duplicate'             => __( 'Duplicate', 'certloom' ),
-				'moveUp'                => __( 'Move up', 'certloom' ),
-				'moveDown'              => __( 'Move down', 'certloom' ),
-				'dragBlock'             => __( 'Drag to reorder', 'certloom' ),
-				'urlLabel'              => __( 'URL', 'certloom' ),
-				'altText'               => __( 'Alternative text', 'certloom' ),
-				'spacingPixels'         => __( 'Spacing', 'certloom' ),
-				'headingLevel'          => __( 'Heading level', 'certloom' ),
-				'contentLabel'          => __( 'Content', 'certloom' ),
-				'textLabel'             => __( 'Text', 'certloom' ),
-				'buttonTextLabel'       => __( 'Button text', 'certloom' ),
-				'textFormatting'        => __( 'Text formatting', 'certloom' ),
-				'bold'                  => __( 'Bold', 'certloom' ),
-				'italic'                => __( 'Italic', 'certloom' ),
-				'underline'             => __( 'Underline', 'certloom' ),
-				'bulletedList'          => __( 'Bulleted list', 'certloom' ),
-				'numberedList'          => __( 'Numbered list', 'certloom' ),
-				'addLink'               => __( 'Add link', 'certloom' ),
-				'removeLink'            => __( 'Remove link', 'certloom' ),
-				'insertData'            => __( 'Insert data', 'certloom' ),
-				'fontFamily'            => __( 'Font family', 'certloom' ),
-				'fontSize'              => __( 'Font size', 'certloom' ),
-				'fontWeight'            => __( 'Font weight', 'certloom' ),
-				'lineHeight'            => __( 'Line height', 'certloom' ),
-				'textColor'             => __( 'Text color', 'certloom' ),
-				'backgroundColor'       => __( 'Background color', 'certloom' ),
-				'alignment'             => __( 'Alignment', 'certloom' ),
-				'horizontalPadding'     => __( 'Horizontal padding', 'certloom' ),
-				'verticalPadding'       => __( 'Vertical padding', 'certloom' ),
-				'cornerRadius'          => __( 'Corner radius', 'certloom' ),
-				'imageWidth'            => __( 'Image width', 'certloom' ),
-				'dividerColor'          => __( 'Divider color', 'certloom' ),
-				'dividerThickness'      => __( 'Thickness', 'certloom' ),
-				'dividerWidth'          => __( 'Divider width', 'certloom' ),
-				'verticalSpacing'       => __( 'Vertical spacing', 'certloom' ),
-				'letterSpacing'          => __( 'Letter spacing', 'certloom' ),
-				'textTransform'          => __( 'Text transform', 'certloom' ),
-				'none'                   => __( 'None', 'certloom' ),
-				'uppercase'              => __( 'Uppercase', 'certloom' ),
-				'lowercase'              => __( 'Lowercase', 'certloom' ),
-				'capitalize'             => __( 'Capitalize', 'certloom' ),
-				'backgroundOpacity'      => __( 'Background opacity', 'certloom' ),
-				'backgroundColorOpacity' => __( 'Background color opacity', 'certloom' ),
-				'overlayColor'           => __( 'Overlay color', 'certloom' ),
-				'overlayOpacity'         => __( 'Overlay opacity', 'certloom' ),
-				'borderColor'            => __( 'Border color', 'certloom' ),
-				'borderWidth'            => __( 'Border width', 'certloom' ),
-				'borderStyle'            => __( 'Border style', 'certloom' ),
-				'fullWidthButton'        => __( 'Full width button', 'certloom' ),
-				'verticalMargin'         => __( 'Vertical margin', 'certloom' ),
-				'imageOpacity'           => __( 'Image opacity', 'certloom' ),
-				'lineStyle'              => __( 'Line style', 'certloom' ),
-				'solid'                  => __( 'Solid', 'certloom' ),
-				'dashed'                 => __( 'Dashed', 'certloom' ),
-				'dotted'                 => __( 'Dotted', 'certloom' ),
-				'reset'                 => __( 'Reset', 'certloom' ),
-				'inheritGlobal'         => __( 'Use email default', 'certloom' ),
-				'typographySection'     => __( 'Typography', 'certloom' ),
-				'colorsSection'         => __( 'Colors', 'certloom' ),
-				'layoutSection'         => __( 'Layout', 'certloom' ),
-				'spacingSection'        => __( 'Spacing', 'certloom' ),
-				'blockActions'          => __( 'Block actions', 'certloom' ),
-				'sampleRecipient'       => __( 'Sara Khan', 'certloom' ),
-				'sampleProgram'         => __( 'Professional Leadership Program', 'certloom' ),
-				'sampleIssuer'          => __( 'Example Institute', 'certloom' ),
-				'sampleGrade'           => __( 'Distinction', 'certloom' ),
-				'verifyThisCredential'  => __( 'Verify this credential', 'certloom' ),
-				'contentBlocksRequired' => __( 'Add at least one usable content block before saving this email design.', 'certloom' ),
-				'emptyContent'          => __( 'Add a content block to start the message.', 'certloom' ),
-				'selectBlock'           => __( 'Select a block on the canvas to edit it.', 'certloom' ),
-				'tokens'                => $merge_tokens->flat(),
-				'tokenGroups'           => $merge_tokens->groups(),
-				'tokenSamples'          => $merge_tokens->sample_values(),
-				'fontCatalog'           => $font_catalog->browser_contract(),
-				'fontLocalLabel'        => __( 'Installed locally', 'certloom' ),
-				'fontFallbackLabel'     => __( 'Uses fallback on this device', 'certloom' ),
-				'fontAvailabilityHelp'   => __( 'Local/system and site-local custom fonts. Custom web fonts are emitted only when used; email clients that block web fonts fall back safely.', 'certloom' ),
-				'scanLocalFonts'          => __( 'Scan local fonts', 'certloom' ),
-				'localDeviceFonts'        => __( 'Local device fonts', 'certloom' ),
-				'savedLocalFont'          => __( 'saved local font', 'certloom' ),
-				'localFontScanHelp'       => __( 'Optional: allow your browser to list fonts installed on this device. No font files are uploaded.', 'certloom' ),
-				'localFontScanning'       => __( 'Checking fonts installed on this device…', 'certloom' ),
-				'localFontsFound'         => __( 'local font families available.', 'certloom' ),
-				'localFontsNone'          => __( 'No additional local fonts were returned by the browser.', 'certloom' ),
-				'localFontPermission'     => __( 'Local font access was not allowed. You can grant permission and scan again.', 'certloom' ),
-				'localFontUnsupported'    => __( 'This browser cannot list every installed font. WordPress local fonts and the built-in system catalog remain available.', 'certloom' ),
-				'localFontScanFailed'     => __( 'Local fonts could not be read. The built-in and WordPress-local font lists are still available.', 'certloom' ),
-			)
-		);
-	}
-
-
-	/** Shared visual/custom font picker configuration. @return array<string,mixed> */
-	private function font_picker_config() {
-		return array(
-			'ajaxUrl' => admin_url( 'admin-ajax.php' ), 'nonce' => wp_create_nonce( 'certloom_custom_font_upload' ),
-			'chooseFont' => __( 'Choose font', 'certloom' ), 'searchFonts' => __( 'Search fonts', 'certloom' ),
-			'addCustomFont' => __( 'Upload custom font', 'certloom' ), 'customFonts' => __( 'Custom fonts', 'certloom' ),
-			'familyName' => __( 'Family name', 'certloom' ), 'weight' => __( 'Weight', 'certloom' ), 'style' => __( 'Style', 'certloom' ),
-			'normal' => __( 'Normal', 'certloom' ), 'italic' => __( 'Italic', 'certloom' ), 'fontFile' => __( 'Font file', 'certloom' ),
-			'upload' => __( 'Upload font', 'certloom' ), 'uploading' => __( 'Uploading…', 'certloom' ),
-			'uploadIncomplete' => __( 'Choose a font file and enter its family name.', 'certloom' ), 'uploadFailed' => __( 'Custom font upload failed.', 'certloom' ),
-			'uploadHelp' => __( 'Upload a Unicode TTF or OTF file under 8 MB. Use a font you have permission to publish. Email apps that do not support custom fonts use the fallback font.', 'certloom' ),
-			'previewFailed' => __( 'The font could not be loaded for preview. Your previous selection is unchanged; check the font file and retry.', 'certloom' ),
-			'fontResults' => __( '%s fonts available.', 'certloom' ),
-			'noFonts' => __( 'No fonts found. Try another search or upload a custom font.', 'certloom' ),
-		);
+		wp_enqueue_style( 'certloom-email-composer', CERTLOOM_URL . 'admin/assets/email-composer.css', array( 'certloom-admin-foundation', 'certloom-email-designs' ), (string) filemtime( CERTLOOM_PATH . 'admin/assets/email-composer.css' ) );
+		wp_enqueue_script( 'certloom-email-composer', CERTLOOM_URL . 'admin/assets/email-composer.js', array( 'ecapla-certverify-admin' ), (string) filemtime( CERTLOOM_PATH . 'admin/assets/email-composer.js' ), true );
 	}
 
 	/** @return void */
@@ -281,7 +109,7 @@ final class EmailDesignAdmin {
 			}
 			if ( ! is_array( $editing ) ) {
 				$compiled = ( new EmailDesignCompiler() )->compile(
-					EmailDesignCompiler::default_blocks(),
+					\Certloom\Infrastructure\Email\EmailComposerDocument::defaults(),
 					EmailDesignCompiler::default_theme()
 				);
 				$editing = array(
@@ -299,7 +127,7 @@ final class EmailDesignAdmin {
 			}
 
 			$email_font_definitions = ( new DesignerFontCatalog() )->definitions();
-			include CERTLOOM_PATH . 'admin/views/email-designer.php';
+			include CERTLOOM_PATH . 'admin/views/email-composer.php';
 			return;
 		}
 
@@ -386,6 +214,11 @@ final class EmailDesignAdmin {
 			'border_radius'     => absint( $_POST['theme_border_radius'] ?? 12 ),
 		);
 		$attachments_raw = isset( $_POST['attachments_json'] ) ? (string) wp_unslash( $_POST['attachments_json'] ) : '[]';
+		if ( isset( $_POST['composer_theme_json'] ) ) {
+			$raw_theme = $_POST['composer_theme_json'];
+			$theme = is_string( $raw_theme ) ? json_decode( wp_unslash( $raw_theme ), true ) : null;
+			if ( ! is_array( $theme ) || JSON_ERROR_NONE !== json_last_error() ) { $this->redirect( new \WP_Error( 'certloom_email_composer_theme_invalid', __( 'The email appearance settings could not be read. Please try again.', 'certloom' ) ), '', '', 'designer' ); }
+		}
 		$attachments = json_decode( $attachments_raw, true );
 		$attachments = is_array( $attachments ) ? $attachments : array();
 		$attachments = ( new EmailTemplateService() )->validate_static_attachment_ids( $attachments );

@@ -38,7 +38,8 @@ async function main() {
     setTimeout: callback => { scheduled.set(++timerId, callback); return timerId; },
     clearTimeout: id => scheduled.delete(id)
   });
-  vm.runInContext(productionFunction('buildReview') + '\n' + productionFunction('searchPicker'), context);
+  context.prevButton = {disabled:false}; context.renderReceipt = () => renders.push('receipt');
+  vm.runInContext(productionFunction('buildReview') + '\n' + productionFunction('searchPicker') + '\n' + productionFunction('issueCredential'), context);
   context.buildReview(); currentSignature = 'changed while waiting';
   calls[0].response.resolve({review_fingerprint: 'old-fingerprint', review: {recipient: {name: 'Old name'}}});
   await flush();
@@ -72,6 +73,17 @@ async function main() {
   state.issuance.program_id = 0; context.searchPicker('batch', '', true);
   batch.response.resolve({choices: [{label: 'Wrong Program batch'}]}); await flush();
   check(batch.options.signal.aborted && renders.at(-1).length === 0, 'removing Program context cancels an outstanding Batch search');
+  state.reviewFingerprint = 'retry-fingerprint'; state.reviewSignature = currentSignature;
+  context.issueCredential(); const issue = calls.at(-1); issue.response.reject(new TypeError('Connection lost')); await flush();
+  check(state.commitUncertain && state.reviewFingerprint === 'retry-fingerprint' && context.prevButton.disabled, 'a dropped commit keeps its reviewed identity and prevents editing');
+  const count = calls.length; context.buildReview();
+  check(calls.length === count && state.reviewFingerprint === 'retry-fingerprint', 'refreshing review cannot replace an uncertain commit');
+  context.issueCredential(); const retry = calls.at(-1);
+  check(retry.options.body.review_fingerprint === issue.options.body.review_fingerprint, 'retry commits the same reviewed request');
+  retry.response.resolve({receipt:{series_id:51,version_id:52}}); await flush();
+  check(!state.commitUncertain && renders.at(-1) === 'receipt', 'a reconciled receipt clears uncertainty');
+  context.issueCredential(); calls.at(-1).response.resolve({}); await flush();
+  check(state.commitUncertain && renders.at(-1) === 'receipt', 'an incomplete success response cannot create a false issuance receipt');
   console.log('\n' + checks + ' checks, 0 failures');
 }
 main().catch(error => { console.error(error); process.exitCode = 1; });

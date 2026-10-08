@@ -1,0 +1,22 @@
+.certloom-attention-home { display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+.certloom-attention-home h2 { margin: 4px 0 6px; font-size: 20px; }
+.certloom-attention-home p { margin: 0; color: var(--cl-ink-soft); font-size: 13px; }
+.certloom-attention-actions { display: flex; gap: 10px; flex-wrap: wrap; flex-shrink: 0; }
+.certloom-attention-dialog { width: min(1060px, calc(100vw - 40px)); max-width: none; max-height: calc(100dvh - 48px); padding: 0; border: 1px solid var(--cl-rule); border-radius: var(--cl-r-card); background: var(--cl-surface); color: var(--cl-ink); box-shadow: var(--cl-shadow-dialog); overflow: auto; box-sizing: border-box; }
+.certloom-attention-dialog::backdrop { background: color-mix(in srgb, var(--cl-ink) 42%, transparent); }
+.certloom-attention-dialog > header { position: sticky; top: 0; z-index: 2; background: var(--cl-surface); padding: 18px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--cl-rule); }
+.certloom-attention-dialog > header h2 { margin: 0; font-size: 20px; }
+.certloom-attention-content { padding: 24px; }
+.certloom-admin-shell .certloom-admin-account { max-width: none; margin: 0; padding: 0; border: 0; box-shadow: none; border-radius: var(--cl-r-none); background: transparent; font-size: 13px; }
+.certloom-admin-shell .certloom-admin-account .certloom-account__header { padding: 0 0 18px; background: transparent; border: 0; }
+.certloom-admin-shell .certloom-admin-account .certloom-account__header h1 { font-size: 24px; margin-block: 4px 8px; }
+.certloom-admin-shell .certloom-admin-account .certloom-account__header p { font-size: 13px; line-height: 1.6; }
+.certloom-admin-shell .certloom-admin-account .certloom-account__workspace { padding: 0; }
+.certloom-admin-shell .certloom-admin-account :is(input, select, button) { font-size: 13px; }
+.certloom-admin-shell .certloom-admin-account button { min-height: 36px; padding: 7px 12px; border-radius: var(--cl-r-ctl); }
+.certloom-admin-shell .certloom-admin-account .certloom-pending__toolbar { gap: 12px; padding: 16px; border: 1px solid var(--cl-rule); border-radius: var(--cl-r-sm); background: var(--cl-surface-soft); }
+.certloom-admin-shell .certloom-admin-account .certloom-account__panel { margin-block: 16px; padding: 18px; box-shadow: none; }
+.certloom-admin-shell .certloom-pending__filters { margin: 12px 0 18px; }
+.certloom-admin-shell .certloom-pending__filters summary { cursor: pointer; color: var(--cl-ink-soft); }
+.certloom-admin-shell .certloom-pending__filters[open] .certloom-pending__toolbar { margin-top: 12px; }
+@media (max-width: 782px) { .certloom-attention-home { align-items: start; flex-direction: column; gap: 16px; } .certloom-attention-dialog { width: calc(100vw - 16px); max-height: calc(100dvh - 24px); } .certloom-attention-content, .certloom-attention-dialog > header { padding: 16px; } }

@@ -40,6 +40,15 @@ use Certloom\Infrastructure\Email\EmailTemplateCatalogRepository;
 
 $checks=0;
 function ed_ok($ok,$message){global $checks;if(!$ok){throw new RuntimeException($message);}$checks++;}
+$composer = new \Certloom\Infrastructure\Email\EmailComposerDocument();
+$defaults = ( new EmailDesignCompiler() )->compile( $composer->defaults(), EmailDesignCompiler::default_theme() );
+ed_ok( array( 'heading', 'text', 'button', 'text' ) === array_column( $defaults['blocks'], 'type' ), 'standard composer defaults contain a usable message, action and footer after canonical compilation' );
+$nested = array( array( 'type' => 'container', 'children' => array( array( 'type' => 'heading', 'text' => 'Nested heading', 'style' => array( 'font_size' => 30 ) ), array( 'type' => 'text', 'html' => '<p>Main</p>' ), array( 'type' => 'button', 'text' => 'Verify', 'url' => '{{verification_url}}' ), array( 'type' => 'html', 'html' => '<table><tr><td>Retained custom layout</td></tr></table>' ), array( 'type' => 'text', 'html' => '<p>Footer</p>' ) ) ) );
+$untouched = $nested; $controls = $composer->controls( $nested );
+ed_ok( $nested === $untouched && array( 0, 'children', 1 ) === $controls['message']['path'] && array( 0, 'children', 4 ) === $controls['footer']['path'], 'composer discovers nested message/footer paths without changing an existing document' );
+ed_ok( count( $controls['additional'] ) === 1 && 'html' === $controls['additional'][0]['block']['type'], 'existing custom content stays available rather than being flattened or discarded' );
+ed_ok( '' === $composer->custom_plain_text( $defaults['blocks'], $defaults['theme'], $defaults['text_body'] ), 'generated plain text continues to follow rich message changes' );
+ed_ok( 'Custom plain message' === $composer->custom_plain_text( $defaults['blocks'], $defaults['theme'], 'Custom plain message' ), 'a deliberately different plain-text message remains editable and intact' );
 function ed_same($a,$b,$message){ed_ok($a===$b,$message.' expected '.var_export($a,true).' got '.var_export($b,true));}
 function ed_has($source,$needle,$message){ed_ok(false!==strpos($source,$needle),$message);}
 function ed_lacks($source,$needle,$message){ed_ok(false===strpos($source,$needle),$message);}

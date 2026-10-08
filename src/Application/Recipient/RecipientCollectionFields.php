@@ -19,7 +19,7 @@ final class RecipientCollectionFields {
 			if ( ! $policies->recipient_editable( $policy ) ) { continue; }
 			if ( 'recipient' === $kind ) {
 				if ( 'recipient' !== $policy['lifetime'] ) { continue; }
-				if ( ! $for_decision && ( ! empty( $context['request_id'] ) ? ! isset( $applicable[ $key ] ) : 'profile' !== $policy['collect_when'] ) ) { continue; }
+				if ( ! $for_decision && ( ! empty( $context['request_id'] ) ? ! isset( $applicable[ $key ] ) : ! in_array( $policy['collect_when'], array( 'profile', 'signup' ), true ) ) ) { continue; }
 			} elseif ( ! isset( $applicable[ $key ] ) || ( $for_decision && 'registration' !== $policy['lifetime'] ) ) { continue; }
 			$out[ $key ] = $definition;
 		}

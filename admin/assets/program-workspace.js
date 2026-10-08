@@ -203,7 +203,7 @@
 		form.addEventListener('invalid', event => { const dialog = event.target.closest('[data-program-settings]'); if (dialog && !dialog.open) { open(dialog); } }, true);
 		form.addEventListener('submit', event => { if (!event.defaultPrevented && form.checkValidity()) { saving = true; } });
 		window.addEventListener('beforeunload', event => { if (!saving && (dirty() || current && batchDialog.open && JSON.stringify(batchPatch()) !== batchBaseline)) { event.preventDefault(); event.returnValue = ''; } });
-		let previewSequence = 0;
+		let previewSequence = 0, previewController = null, previewTimer;
 		const previewContainer = find('[data-program-design-preview-body]');
 		function fitPreview() {
 			const canvas = previewContainer.querySelector('.certloom-template-preview-scroll');
@@ -217,19 +217,29 @@
 		}
 		if (window.ResizeObserver) { new ResizeObserver(fitPreview).observe(previewContainer); }
 		else { window.addEventListener('resize', fitPreview); }
-		find('[data-program-design-preview]').addEventListener('click', async () => {
+		async function refreshPreview() {
 			const ticket = ++previewSequence, container = previewContainer, url = new URL(config.previewUrl), id = Number(form.elements.program_template_id.value);
+			if (previewController) { previewController.abort(); }
+			previewController = new AbortController(); const controller = previewController;
 			url.searchParams.set('mode', id ? 'assigned' : 'inherited'); url.searchParams.set('template_id', String(id));
 			if (!id) { url.searchParams.set('issuer_id', form.elements.issuer_id ? form.elements.issuer_id.value : '0'); }
-			container.textContent = text.loading;
+			container.setAttribute('aria-busy', 'true'); find('[data-program-design-source]').textContent = text.loading;
 			try {
-				const response = await fetch(url, { credentials: 'same-origin', cache: 'no-store', headers: { 'X-WP-Nonce': config.nonce } }), result = await response.json();
+				const response = await fetch(url, { signal: controller.signal, credentials: 'same-origin', cache: 'no-store', headers: { 'X-WP-Nonce': config.nonce } }), result = await response.json();
 				if (!response.ok) { throw new Error(result.message || text.failed); } if (ticket !== previewSequence) { return; }
+				find('[data-program-design-source]').textContent = `${result.name} · ${id ? text.assigned : result.source_label}`;
+				form.elements.program_template_id.dispatchEvent(new CustomEvent('certloom:assignment-info', {detail: `${result.name} · ${result.source_label}`}));
+				root.dataset.programInheritedDesign = `${result.name} · ${id ? text.assigned : result.source_label}`;
+				all('select[name="batch_template_id"]').forEach(select => select.dispatchEvent(new CustomEvent('certloom:assignment-info', {detail:root.dataset.programInheritedDesign})));
+				container.classList.remove('is-empty');
 				// This authenticated endpoint returns the canonical escaped RenderPlanHtmlPreview fragment.
 				const fragment = document.createElement('template'); fragment.innerHTML = String(result.html || '');
 				container.replaceChildren(fragment.content); fitPreview();
 			}
-			catch (error) { if (ticket === previewSequence) { container.textContent = error.message; } }
-		});
+			catch (error) { if (ticket === previewSequence && error.name !== 'AbortError') { container.textContent = error.message; container.classList.add('is-empty'); find('[data-program-design-source]').textContent = ''; form.elements.program_template_id.dispatchEvent(new CustomEvent('certloom:assignment-info', {detail:error.message})); all('select[name="batch_template_id"]').forEach(select => select.dispatchEvent(new CustomEvent('certloom:assignment-info', {detail:error.message}))); } }
+			finally { if (ticket === previewSequence) { container.setAttribute('aria-busy', 'false'); } }
+		}
+		form.addEventListener('change', event => { if (['program_template_id', 'issuer_id'].includes(event.target.name)) { clearTimeout(previewTimer); previewTimer = setTimeout(refreshPreview, 160); } });
+		refreshPreview();
 	});
 })();

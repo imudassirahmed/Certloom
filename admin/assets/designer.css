@@ -2823,7 +2823,11 @@
 }
 /* Keep compact Layer controls in their intended grid columns; override the legacy safety span. */
 .certloom-template-designer-layer > .certloom-studio-layer-icon[data-certloom-designer-layer-row-action="visibility"] { grid-column: 1; }
-.certloom-template-designer-layer-select { grid-column: 2; }
+.certloom-template-designer-v2 .certloom-template-designer-layer { grid-template-columns: 24px minmax(0, 1fr) 50px; }
+.certloom-template-designer-v2 .certloom-template-designer-layer-select { grid-column: 2; display: flex; justify-content: flex-start; text-align: start; width: 100%; min-width: 0; padding: 0; overflow: hidden; }
+.certloom-template-designer-v2 .certloom-template-designer-layer-actions { grid-column: 3; padding: 0; }
+.certloom-template-designer-layer-select .certloom-studio-layer-name { flex: 1; min-width: 0; text-align: start; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.certloom-template-designer-layer > .certloom-studio-layer-icon[data-certloom-designer-layer-row-action="visibility"] { justify-self: start; }
 .certloom-template-designer-layer-actions { grid-column: 3; overflow: visible; }
 .certloom-studio-title-button[hidden] { display: none !important; }
 

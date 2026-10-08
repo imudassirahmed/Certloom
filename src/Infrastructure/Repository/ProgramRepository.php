@@ -93,14 +93,15 @@ final class ProgramRepository {
 		$programs = SchemaManager::table( 'programs' );
 		$issuers = SchemaManager::table( 'issuers' );
 		$series = SchemaManager::table( 'credential_series' );
+		$batches = SchemaManager::table( 'batches' );
 		$wpdb->last_error = '';
 		$total = (int) $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM %i p' . $where, array_merge( array( $programs ), $args ) ) );
 		if ( '' !== (string) $wpdb->last_error ) {
 			return new \WP_Error( 'certloom_program_list_failed', __( 'Certloom could not load programs.', 'certloom' ) );
 		}
-		$sql = 'SELECT p.id, p.issuer_id, p.code, p.title, p.validity_days, p.active, p.metadata_json, p.created_at, p.updated_at, i.name AS issuer_name, (SELECT COUNT(*) FROM %i s WHERE s.program_id = p.id) AS credential_count FROM %i p LEFT JOIN %i i ON i.id = p.issuer_id' . $where . ' ORDER BY p.active DESC, p.title ASC, p.id DESC LIMIT %d OFFSET %d';
+		$sql = 'SELECT p.id, p.issuer_id, p.code, p.title, p.validity_days, p.active, p.metadata_json, p.created_at, p.updated_at, i.name AS issuer_name, (SELECT COUNT(*) FROM %i s WHERE s.program_id = p.id) AS credential_count, (SELECT COUNT(*) FROM %i b WHERE b.program_id = p.id) AS batch_count FROM %i p LEFT JOIN %i i ON i.id = p.issuer_id' . $where . ' ORDER BY p.active DESC, p.title ASC, p.id DESC LIMIT %d OFFSET %d';
 		$wpdb->last_error = '';
-		$items = $wpdb->get_results( $wpdb->prepare( $sql, array_merge( array( $series, $programs, $issuers ), $args, array( $per_page, $offset ) ) ), ARRAY_A );
+		$items = $wpdb->get_results( $wpdb->prepare( $sql, array_merge( array( $series, $batches, $programs, $issuers ), $args, array( $per_page, $offset ) ) ), ARRAY_A );
 		if ( '' !== (string) $wpdb->last_error || ! is_array( $items ) ) { return new \WP_Error( 'certloom_program_list_failed', __( 'Certloom could not load programs.', 'certloom' ) ); }
 		foreach ( $items as &$item ) {
 			$item['id'] = absint( $item['id'] ?? 0 );
@@ -108,6 +109,7 @@ final class ProgramRepository {
 			$item['validity_days'] = null !== ( $item['validity_days'] ?? null ) ? absint( $item['validity_days'] ) : null;
 			$item['active'] = ! empty( $item['active'] );
 			$item['credential_count'] = absint( $item['credential_count'] ?? 0 );
+			$item['batch_count'] = absint( $item['batch_count'] ?? 0 );
 			$profile_summary = $this->profile_summary( $item['metadata_json'] ?? null, $item['validity_days'] );
 			$item['purpose'] = (string) ( $profile_summary['purpose'] ?? '' );
 			$item['purpose_label'] = (string) ( $profile_summary['label'] ?? '' );

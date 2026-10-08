@@ -17,6 +17,7 @@ final class ManualIssuanceAdmin {
 	public function register() {
 		add_action( 'admin_menu', array( $this, 'menu' ), 55 );
 		add_action( 'admin_enqueue_scripts', array( $this, 'assets' ) );
+		add_action( 'admin_footer', array( $this, 'popup' ) );
 	}
 
 	/** @return void */
@@ -28,15 +29,15 @@ final class ManualIssuanceAdmin {
 	public function assets() {
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only page routing.
 		$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
-		if ( self::PAGE !== $page ) { return; }
-		$this->require_capability();
+		if ( ! in_array( $page, array( self::PAGE, 'certloom', 'certloom-domain-programs', 'certloom-domain-credentials', 'certloom-domain-recipients', 'certloom-domain-batches' ), true ) ) { return; }
+		if ( ! current_user_can( \Ecapla_CertVerify_Permissions::CAP_ISSUE_CREDENTIALS ) && ! current_user_can( \Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS ) ) { return; }
 		$profile = UsageProfilePresentation::active_profile();
 		$terms = UsageProfilePresentation::terms( $profile );
 		$program = (string) ( $terms['program']['singular'] ?? __( 'Program', 'certloom' ) );
 		$batch = (string) ( $terms['batch']['singular'] ?? __( 'Batch', 'certloom' ) );
 		wp_enqueue_media();
-		wp_enqueue_style( 'certloom-issue-credential', CERTLOOM_URL . 'admin/assets/issue-credential.css', array( 'certloom-admin-foundation' ), CERTLOOM_VERSION );
-		wp_enqueue_script( 'certloom-issue-credential', CERTLOOM_URL . 'admin/assets/issue-credential.js', array( 'ecapla-certverify-admin' ), CERTLOOM_VERSION, true );
+		wp_enqueue_style( 'certloom-issue-credential', CERTLOOM_URL . 'admin/assets/issue-credential.css', array( 'certloom-admin-foundation' ), (string) filemtime( CERTLOOM_PATH . 'admin/assets/issue-credential.css' ) );
+		wp_enqueue_script( 'certloom-issue-credential', CERTLOOM_URL . 'admin/assets/issue-credential.js', array( 'ecapla-certverify-admin' ), (string) filemtime( CERTLOOM_PATH . 'admin/assets/issue-credential.js' ), true );
 		wp_localize_script( 'certloom-issue-credential', 'certloomIssueCredential', array(
 			'restNonce' => wp_create_nonce( 'wp_rest' ),
 			'bootstrapUrl' => rest_url( 'certloom/v1/admin/issue/bootstrap' ),
@@ -101,6 +102,23 @@ final class ManualIssuanceAdmin {
 	/** @return void */
 	public function render() {
 		$this->require_capability();
+		echo '<div class="wrap ecapla-certverify-admin-wrap certloom-admin-shell certloom-issue-app-shell"><section class="certloom-page-hero certloom-issue-app-hero"><div><span class="certloom-eyebrow">' . esc_html__( 'Credential operations', 'certloom' ) . '</span><h1>' . esc_html__( 'Issue credential', 'certloom' ) . '</h1></div></section>';
+		( new AdminProductNavigation() )->render_current_subnav();
+		$this->app();
+		echo '</div>';
+	}
+
+	/** One shared application; the popup uses the same review and issuance engine. */
+	public function popup() {
+		$page = sanitize_key( wp_unslash( $_GET['page'] ?? '' ) ); // Read-only page routing.
+		if ( ! in_array( $page, array( 'certloom', 'certloom-domain-programs', 'certloom-domain-credentials', 'certloom-domain-recipients', 'certloom-domain-batches' ), true ) ) { return; }
+		if ( ! current_user_can( \Ecapla_CertVerify_Permissions::CAP_ISSUE_CREDENTIALS ) && ! current_user_can( \Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS ) ) { return; }
+		echo '<dialog class="certloom-issuance-popup ecapla-certverify-admin-wrap certloom-admin-shell" data-issuance-popup aria-labelledby="certloom-issuance-popup-title"><header class="certloom-issuance-popup-head"><div><span class="certloom-eyebrow">' . esc_html__( 'New credential', 'certloom' ) . '</span><h2 id="certloom-issuance-popup-title">' . esc_html__( 'Issue credential', 'certloom' ) . '</h2></div><button type="button" class="button" data-issuance-close aria-label="' . esc_attr__( 'Close issuance', 'certloom' ) . '">×</button></header><div data-issuance-popup-body></div></dialog><template data-issuance-popup-template>';
+		$this->app( true );
+		echo '</template>';
+	}
+
+	private function app( $compact = false ) {
 		$profile = UsageProfilePresentation::active_profile();
 		$terms = UsageProfilePresentation::terms( $profile );
 		$program = (string) ( $terms['program']['singular'] ?? __( 'Program', 'certloom' ) );
@@ -108,25 +126,21 @@ final class ManualIssuanceAdmin {
 		$issuer = (string) ( $terms['issuer']['singular'] ?? __( 'Issuer', 'certloom' ) );
 		$signer = (string) ( $terms['signer']['singular'] ?? __( 'Signer', 'certloom' ) );
 
-		echo '<div class="wrap ecapla-certverify-admin-wrap certloom-admin-shell certloom-issue-app-shell">';
-		echo '<section class="certloom-page-hero certloom-issue-app-hero"><div><span class="certloom-eyebrow">' . esc_html__( 'Credential operations', 'certloom' ) . '</span><h1>' . esc_html__( 'Issue credential', 'certloom' ) . '</h1></div></section>';
-		( new AdminProductNavigation() )->render_current_subnav();
-
-		echo '<div class="certloom-issue-app" data-certloom-issue-app data-program-term="' . esc_attr( $program ) . '" data-batch-term="' . esc_attr( $batch ) . '" data-issuer-term="' . esc_attr( $issuer ) . '" data-signer-term="' . esc_attr( $signer ) . '">';
+		echo '<div class="certloom-issue-app' . ( $compact ? ' is-compact' : '' ) . '" data-certloom-issue-app data-program-term="' . esc_attr( $program ) . '" data-batch-term="' . esc_attr( $batch ) . '" data-issuer-term="' . esc_attr( $issuer ) . '" data-signer-term="' . esc_attr( $signer ) . '">';
 		echo '<div class="certloom-issue-loading" data-issue-loading><span class="spinner is-active" aria-hidden="true"></span><strong>' . esc_html__( 'Preparing issuance workspace…', 'certloom' ) . '</strong></div>';
 		echo '<div class="certloom-issue-app-body" data-issue-body hidden>';
-		$this->render_steps( $program, $batch, $issuer, $signer );
+		$this->render_steps( $program, $batch, $issuer, $signer, $compact );
 		$this->render_quick_dialogs( $program, $batch );
 		$this->render_summary( $program, $batch );
 		echo '</div>';
 		echo '<div class="certloom-issue-global-message" data-issue-message role="status" aria-live="polite" hidden></div>';
 		echo '<noscript><div class="notice notice-error inline"><p>' . esc_html( sprintf( /* translators: 1: Program terminology, 2: Batch terminology. */ __( 'Issue Credential requires JavaScript because %1$s/%2$s lookup, live certificate preview and server Review are loaded through the authenticated WordPress REST API.', 'certloom' ), $program, $batch ) ) . '</p></div></noscript>';
-		echo '</div></div>';
+		echo '</div>';
 	}
 
 
 	/** @return void */
-	private function render_steps( $program, $batch, $issuer, $signer ) {
+	private function render_steps( $program, $batch, $issuer, $signer, $compact = false ) {
 		$steps = array(
 			array( 'recipient', __( 'Recipient', 'certloom' ), __( 'Who receives it', 'certloom' ), __( 'Recipient', 'certloom' ) ),
 			array( 'context', __( 'Context', 'certloom' ), sprintf( /* translators: 1: Program terminology, 2: Batch terminology. */ __( '%1$s & %2$s', 'certloom' ), $program, $batch ), sprintf( /* translators: 1: Program terminology, 2: Batch terminology. */ __( '%1$s & %2$s', 'certloom' ), $program, $batch ) ),
@@ -144,10 +158,14 @@ final class ManualIssuanceAdmin {
 
 		echo '<form class="certloom-issue-form" data-issue-form novalidate>';
 		$this->render_recipient_step();
+		if ( $compact ) { echo '<details class="certloom-issue-disclosure" data-issue-context-options open><summary>' . esc_html__( 'Program and batch', 'certloom' ) . '</summary>'; }
 		$this->render_context_step( $program, $batch, $issuer );
+		if ( $compact ) { echo '</details>'; }
 		$this->render_credential_step( $program, $batch );
+		if ( $compact ) { echo '<details class="certloom-issue-disclosure" data-issue-options><summary>' . esc_html__( 'Certificate design, signing and email', 'certloom' ) . '</summary>'; }
 		$this->render_certificate_step( $program, $issuer, $signer );
 		$this->render_email_step();
+		if ( $compact ) { echo '</details>'; }
 		$this->render_review_step();
 		$this->render_footer();
 		echo '</form></main>';
