@@ -110,6 +110,7 @@ final class Plugin {
 		}
 		if ( \Certloom\Infrastructure\Migration\DomainFeatureGate::admin_preview_ready() ) {
 			( new \Certloom\Infrastructure\Admin\AdminSearchRest() )->register();
+			( new \Certloom\Infrastructure\Admin\ProgramWorkspaceRest() )->register();
 			( new \Certloom\Infrastructure\Admin\IssueCredentialRest() )->register();
 			( new \Certloom\Infrastructure\Admin\WizardSetupRest() )->register();
 			( new \Certloom\Infrastructure\Admin\PendingRequestRest() )->register();

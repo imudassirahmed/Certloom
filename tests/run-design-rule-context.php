@@ -24,7 +24,7 @@ function drc_has( $source, $needle, $message ) { drc_check( false !== strpos( $s
 function drc_lacks( $source, $needle, $message ) { drc_check( false === strpos( $source, $needle ), $message ); }
 
 // Existing entity forms use one contextual UI, not embedded assignment selectors.
-drc_has( $src['domain'], "context_card( 'program', \$id )", 'Existing Program screens must render the shared Designs card.' );
+drc_has( $src['domain'], "context_card( 'program', \$id, true )", 'Existing Program screens retain shared email design controls alongside the inline certificate selector.' );
 drc_has( $src['domain'], "context_card( 'issuer', \$id )", 'Existing Issuer screens must render the shared Designs card.' );
 drc_has( $src['structure'], "context_card( 'batch', \$id )", 'Existing Batch screens must render the shared Designs card.' );
 drc_has( $src['rules'], 'Presentation & communication', 'Context card must explain the combined certificate/email presentation purpose without assignment jargon.' );
@@ -38,7 +38,7 @@ drc_has( $src['domain'], "isset( \$_POST['issuer_template_id'] ) ? \$this->save_
 drc_has( $src['structure'], "isset( \$_POST['batch_template_id'] ) ? \$this->save_batch_template_assignment", 'Batch persistence must only change a certificate rule when the legacy field is explicitly submitted.' );
 drc_has( $src['domain'], "isset( \$_POST['program_template_id'] ) ? absint( \$_POST['program_template_id'] ) : \$this->stored_scope_template_id", 'Program validation must preserve the stored direct certificate rule when the selector is absent.' );
 drc_has( $src['domain'], "isset( \$_POST['issuer_template_id'] ) ? absint( \$_POST['issuer_template_id'] ) : \$this->stored_scope_template_id", 'Issuer validation must preserve the stored direct certificate rule when the selector is absent.' );
-drc_has( $src['structure'], "isset( \$_POST['batch_template_id'] ) ? absint( \$_POST['batch_template_id'] ) : \$this->stored_batch_template_id", 'Batch validation must preserve the stored direct certificate rule when the selector is absent.' );
+drc_has( $src['structure'], "isset( \$input['batch_template_id'] ) ? absint( \$input['batch_template_id'] ) : \$this->stored_batch_template_id", 'Batch validation must preserve the stored direct certificate rule when the selector is absent from canonical input.' );
 
 // Quick creation inherits; design assignment is a separate job.
 drc_has( $src['manual'], 'Designs inherit automatically', 'Quick Program creation must explain automatic inheritance.' );

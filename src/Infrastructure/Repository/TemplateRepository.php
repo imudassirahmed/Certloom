@@ -769,13 +769,14 @@ final class TemplateRepository {
 	}
 
 	/** @return array<string,mixed>|null|\WP_Error */
-	public function get_assignment( $scope_type, $scope_id = 0 ) {
+	public function get_assignment( $scope_type, $scope_id = 0, $lock = false ) {
+		if ( $lock && ! Transaction::owns_current() ) { return new \WP_Error( 'certloom_template_assignment_transaction_required', __( 'A checked transaction is required to lock a certificate assignment.', 'certloom' ) ); }
 		$scope = ( new TemplateAssignmentPolicy() )->normalize_scope( $scope_type, $scope_id );
 		if ( is_wp_error( $scope ) ) { return $scope; }
 		global $wpdb;
 		$wpdb->last_error = '';
 		$row = $wpdb->get_row( $wpdb->prepare(
-			'SELECT a.*, t.name AS template_name, t.machine_key, t.archived_at AS template_archived_at, t.current_revision_id, r.revision_number AS current_revision_number, r.source_type AS current_revision_source, r.layout_sha256 FROM %i a LEFT JOIN %i t ON t.id=a.template_id LEFT JOIN %i r ON r.id=t.current_revision_id WHERE a.scope_type=%s AND a.scope_id=%d LIMIT 1',
+			'SELECT a.*, t.name AS template_name, t.machine_key, t.archived_at AS template_archived_at, t.current_revision_id, r.revision_number AS current_revision_number, r.source_type AS current_revision_source, r.layout_sha256 FROM %i a LEFT JOIN %i t ON t.id=a.template_id LEFT JOIN %i r ON r.id=t.current_revision_id WHERE a.scope_type=%s AND a.scope_id=%d LIMIT 1' . ( $lock ? ' FOR UPDATE' : '' ),
 			SchemaManager::table( 'template_assignments' ), SchemaManager::table( 'templates' ), SchemaManager::table( 'template_revisions' ), $scope['scope_type'], $scope['scope_id']
 		), ARRAY_A );
 		if ( '' !== (string) $wpdb->last_error ) { return new \WP_Error( 'certloom_template_assignment_read_failed', __( 'Certloom could not inspect the template assignment.', 'certloom' ) ); }

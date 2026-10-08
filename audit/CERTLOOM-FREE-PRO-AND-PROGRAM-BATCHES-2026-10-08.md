@@ -4,7 +4,7 @@ Date: 8 October 2026. Working product decision and implementation handoff before
 
 ## Scope and sequence
 
-The user requested these two changes before the Free/Pro split: settle the product boundary, and manage batches within Program tabs. LearnDash has been installed by the user; do not configure it, issue through it, or run its acceptance tests in this phase. Comprehensive screen-by-screen and function-by-function validation follows the split, with LearnDash acceptance afterward.
+The user requested these two changes before the Free/Pro split: settle the product boundary, and manage batches within each Program. Their final layout instruction is one shared add/edit page, with batches on the right within the same layout and the existing Program fields, design and other controls retained. There are no Program section tabs or separate batch card. LearnDash has been installed by the user; do not configure it, issue through it, or run its acceptance tests in this phase. Comprehensive screen-by-screen and function-by-function validation follows the split, with LearnDash acceptance afterward.
 
 The user confirmed **CSV bulk issuance in Pro** on 8 October. The matrix records the proposed boundary presented with that choice. Package ownership and entitlement checks are implemented during the split; the existing monolithic bulk workflow remains usable in this phase. No licensing or release-authority gates are changed here.
 
@@ -56,15 +56,18 @@ Recovering data that includes Pro settings must be lossless in Free. Configurati
 
 Architecture fits already: each batch has a mandatory `program_id`. Keep batches as normalized entities, not arrays inside Program metadata. Their IDs, codes, memberships, signer assignments, field overrides, design assignments and issued credential references stay intact. No schema migration is needed.
 
-- Programs remain the primary navigation destination. Opening **MBA**, for example, opens a workspace headed **MBA**, with **Details**, **Fields**, **Certificate**, and **Batches** belonging to that specific Program. This follows the user's clarification: relocating a global Batches submenu is insufficient. Users without batch permissions do not see the batch section.
-- Fields are edited inside that Program's workspace; details and field saves are isolated, preserving the other section's current settings under a checked transaction and locking read. Certificate selection uses the existing Program-scoped design interface. Batch settings, field differences, members and design overrides remain inside the owning Program.
+- Programs remain the primary navigation destination. Opening **MBA**, for example, opens one page headed **MBA**. Add and edit use the same renderer. Program details, defaults, lifecycle/language, fields, collection settings, shared values and certificate choice remain inline, with the existing optional/technical sections retained. Email settings and credential activity remain on the saved Program page.
+- Batches occupy the right side of that same enclosing layout, with Add batch at the top; there is no separate batch card. On narrow screens they stack after the Program controls. Users without batch permissions receive an explanation and cannot load or edit the batch list.
+- Add/edit opens a native dialog. Previous/next arrows move between batches inside that dialog, including across list pages. Bulk edit changes only checked dates, certificate design, active status or signer. Individual edits, field overrides, metadata and memberships are preserved.
+- **Apply batch** prepares a local draft; **Save Program** saves the Program form, certificate assignment and all prepared batch changes in one checked transaction. A later invalid, stale or foreign batch rolls back the entire command. New Programs can prepare batches before their first save. Existing email and membership actions retain their established scoped commands/nonces; membership editing asks staff to save pending Program/batch changes first.
 - Only the selected Program's batches are queried, including scoped search, status and pagination. Invalid explicit scopes fail rather than returning every Program's data.
 - Add/edit a batch without selecting its Program again. The normal starting point is its name; dates, stable import code, signer and field changes are optional settings.
 - Show Program-required fields when creating a batch; preserve all existing field/source validation, dependency guards and design inheritance.
 - Keep member search, add/remove actions, notices and save/retry destinations inside the Program. Embedded writes carry both their existing action nonce and a verified Program context.
 - Reject a batch ID belonging to another Program before rendering its editor or accepting a mismatched scoped write.
 - Existing batch links resolve to the correct Program when the user has both permissions. Preserve the legacy route for batch-only roles; do not silently grant Program management or remove their existing authorized access.
-- The previous Program quick-add handler remains compatible, but its normal UI now points to the Batches tab.
+- Legacy batch links open the owning Program and the relevant batch popup. Legacy partial Program handlers and quick-add commands remain compatible; the normal editor has no section tabs.
+- Batch bulk configuration belongs to the core Program/batch workflow. It is distinct from **CSV bulk issuance**, which the user assigned to Pro. No entitlement or packaging changes are implemented in this phase.
 
 ## Further simplifications recommended for the later screen review
 
@@ -77,18 +80,21 @@ Architecture fits already: each batch has a mandatory `program_id`. Keep batches
 
 ## Targeted checks and later acceptance
 
-This phase verifies scoped repository reads, Program context rejection, canonical batch navigation, changed PHP/JavaScript syntax and read-only Lance browser rendering. No LearnDash hooks or settings are exercised.
+This phase verifies scoped reads, canonical Program/batch commands, atomic rollback and stale-edit rejection, changed PHP/JavaScript syntax and the integrated Lance flows. No LearnDash hooks or settings are exercised.
 
-Implementation status: the selected Program has its own named workspace and navigation, rather than the global Programs subnavigation. Details, Fields and Certificate controls belong to that Program; Batches includes scoped add/edit, membership and design access. Stable batch records and legacy links are preserved. Scoped field/detail writes use a locking Program read inside the existing checked transaction; draft recovery separates the two forms and preserves fresh nonces.
+Implementation status: the final right-side integrated layout supersedes the earlier tab implementation and intermediate left-side/popup-settings layouts. Existing inline controls are restored. Stable batch records and legacy links are preserved. Program/batch revisions are checked against locking reads; retry recovery retains the originally edited revisions while preserving fresh transport nonces. Native dialogs provide a top layer, focus containment and reduced-motion support.
 
-Targeted evidence on 8 October:
+Final targeted evidence on 8 October:
 
 - `tests/run-program-batch-workspace.php`: 26 behavior checks on each PHP runtime, covering scoped count/list/search/paging, bad scopes, mismatched context, capabilities, and legacy routing.
 - `tests/run-program-workspace-sections.php`: 14 behavior checks on each runtime, covering isolated field/detail patches, preserved defaults/profile/structured metadata, unconfigured legacy field contracts, incomplete forms and dependency rejection.
-- `tests/run-program-batch-draft.js`: 21 checks of the actual draft-recovery JavaScript, including fresh nonce preservation and separate Details/Fields draft keys.
-- 23 focused standalone suite runs passed across PHP 8.2/8.5 and Node, without skipped checks or diagnostics. Receipt: ignored `output/program-batches-20261008/workspace-verified/`.
-- Lance read-only checks covered the four Program-owned sections, responsive Fields/Certificate views, batch creation UI, an existing batch, member search/form context, legacy routing and cross-Program rejection. Native commits were not performed in this phase. Receipts and screenshots are under ignored `output/playwright/`.
+- `tests/run-program-batch-draft.js`: 25 checks of the actual draft-recovery JavaScript, including fresh nonce/version transport, original Program revision retention and legacy separate-section draft compatibility.
+- `tests/run-program-batch-changes.php`: 33 checks per runtime covering bounded payloads, capabilities, checked transactions, scope/revision rejection, canonical batch parsing, preserved field/metadata contracts and private read-only REST responses. `tests/run-program-batch-changes.js` adds 13 staging/bulk/undo/recovery checks.
+- All 22 focused suite executions passed across PHP 8.2/8.5 and Node, without skipped checks or diagnostics. Final receipt: ignored `output/program-single-page-20261008/final-focused/`. Earlier stale source-assertion failures are retained in the intermediate receipts; the final suite includes their corrected assertions.
+- `tests/wp-integration/run-program-one-page.php`: 18 checks per PHP runtime through the actual native create/update handlers against Local WordPress/MySQL. Creation, bulk updates, invalid/stale/cross-Program rollback and truncated-form rejection pass. All fixtures run inside an owning rollback-only probe; domain tables and WordPress users/posts/metadata/options have exact before/after fingerprints. These are native-handler checks, not browser form commits or issuance acceptance.
+- Lance: 28 final integrated-flow checks and ten desktop/mobile screenshots, including visibly rendered sample certificate text, canonical preview styles and responsive preview fitting. Inline settings, email/recipient UI, batch add/edit/navigation/bulk drafts and reduced-motion emulation pass. Three additional checks verify the inactive bulk draft label agrees with the popup and can be undone. No browser writes; drafts were discarded. A further nine checks with controlled REST responses cover cross-page navigation and recovery after a failed load, also without database writes. Receipts: `output/playwright/program-integrated-rendered-preview-final.log`, `program-inactive-check.log` and `program-pagination-check-second.log`. Earlier attempt logs remain historical evidence.
+- Changed PHP files pass syntax checks on PHP 8.2/8.5; both admin JavaScript files pass Node syntax checks, and `git diff --check` passes.
 
-These targeted checks do not substitute for post-split native save/issuance acceptance or the user's broader UI consistency review. No Free/Pro split, production authority override or LearnDash acceptance has happened in this phase.
+See the [one-page Program correction report](CERTLOOM-PROGRAM-ONE-PAGE-2026-10-08.md) for source ownership and evidence limits. These targeted checks do not substitute for post-split native browser save/issuance acceptance or the user's broader UI consistency review. No Free/Pro split, production authority override or LearnDash acceptance has happened in this phase.
 
 After the split, validate Free alone, Free+Pro, entitlement loss/return and Pro removal. Test screen by screen and function by function, including native Program/batch creation/editing, membership changes, field/design inheritance, manual/bulk/app issuance, recovery, recipient ownership, reminders/expiry, concurrency and every block/widget. Re-run the canonical safety checks for the actual split artifacts rather than relying on the earlier monolithic checkpoint. Run LearnDash acceptance only after that overall validation, as requested.

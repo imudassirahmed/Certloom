@@ -384,7 +384,7 @@ final class DomainStructureAdmin {
 		$raw = $_POST['certloom_program_context'];
 		$nonce = $_POST['_certloom_program_nonce'] ?? '';
 		if ( ! is_scalar( $raw ) || ! ctype_digit( (string) $raw ) || (int) $raw < 1 || ! current_user_can( \Ecapla_CertVerify_Permissions::CAP_MANAGE_PROGRAMS ) || ! is_string( $nonce ) || ! wp_verify_nonce( wp_unslash( $nonce ), 'certloom_program_batches_' . (int) $raw ) ) {
-			return new \WP_Error( 'certloom_batch_program_context_invalid', __( 'The Program context has expired. Reopen its Batches tab and try again.', 'certloom' ) );
+			return new \WP_Error( 'certloom_batch_program_context_invalid', __( 'The Program context has expired. Reopen the Program and try again.', 'certloom' ) );
 		}
 		if ( (int) $raw !== (int) $program_id || ( is_array( $existing ) && (int) $raw !== (int) $existing['program_id'] ) ) {
 			return new \WP_Error( 'certloom_batch_program_context_mismatch', __( 'The batch must belong to the Program shown in this form.', 'certloom' ) );
@@ -399,7 +399,7 @@ final class DomainStructureAdmin {
 	private function batch_route_args( array $extra = array() ) {
 		$args = array( 'page' => self::BATCHES_PAGE );
 		if ( is_array( $this->program_context ) ) {
-			$args = array( 'page' => DomainAdmin::PROGRAMS_PAGE, 'program_id' => absint( $this->program_context['id'] ), 'program_tab' => 'batches' );
+			$args = array( 'page' => DomainAdmin::PROGRAMS_PAGE, 'program_id' => absint( $this->program_context['id'] ) );
 			if ( isset( $extra['certloom_new'] ) ) { $extra['batch_new'] = $extra['certloom_new']; unset( $extra['certloom_new'] ); }
 		}
 		return array_merge( $args, $extra );
@@ -492,6 +492,14 @@ final class DomainStructureAdmin {
 	}
 
 	/** @param BatchRepository $repo @param array<string,mixed> $batch @return void */
+	public function render_workspace_members( array $program, array $batch ) {
+		$this->require_capability( \Ecapla_CertVerify_Permissions::CAP_MANAGE_PROGRAMS );
+		$this->require_capability( \Ecapla_CertVerify_Permissions::CAP_MANAGE_BATCHES );
+		if ( (int) $batch['program_id'] !== (int) $program['id'] ) { return; }
+		$this->program_context = $program;
+		$this->batch_members( new BatchRepository(), $batch );
+	}
+
 	private function batch_members( BatchRepository $repo, array $batch ) {
 		$batch_id       = absint( $batch['id'] );
 		$member_search  = isset( $_GET['member_s'] ) ? sanitize_text_field( wp_unslash( $_GET['member_s'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only search.
@@ -619,19 +627,20 @@ final class DomainStructureAdmin {
 	}
 
 	/** @param array<string,mixed>|null $existing @return array<string,mixed>|\WP_Error */
-	private function batch_request( ?array $existing = null ) {
-		$program_id = isset( $_POST['program_id'] ) ? absint( $_POST['program_id'] ) : 0;
-		$context = $this->verify_program_context( $existing, $program_id );
+	private function batch_request( ?array $existing = null, ?array $input = null, ?array $workspace_program = null ) {
+		$input = null === $input ? wp_unslash( $_POST ) : $input;
+		$program_id = isset( $input['program_id'] ) ? absint( $input['program_id'] ) : 0;
+		$context = null === $workspace_program ? $this->verify_program_context( $existing, $program_id ) : ( (int) $workspace_program['id'] === $program_id && ( null === $existing || (int) $existing['program_id'] === $program_id ) ? true : new \WP_Error( 'certloom_batch_program_context_mismatch', __( 'The batch must belong to this Program.', 'certloom' ) ) );
 		if ( is_wp_error( $context ) ) { return $context; }
 		if ( ! $program_id ) {
 			return new \WP_Error( 'certloom_batch_program_required', __( 'Choose a Program for the Batch.', 'certloom' ) );
 		}
-		$program = ( new ProgramRepository() )->find( $program_id );
+		$program = null !== $workspace_program ? $workspace_program : ( new ProgramRepository() )->find( $program_id );
 		if ( is_wp_error( $program ) || ! is_array( $program ) ) {
 			return is_wp_error( $program ) ? $program : new \WP_Error( 'certloom_batch_program_missing', __( 'The selected Program no longer exists.', 'certloom' ) );
 		}
 
-		$signer_id = isset( $_POST['instructor_signer_id'] ) && '' !== trim( (string) $_POST['instructor_signer_id'] ) ? absint( $_POST['instructor_signer_id'] ) : null;
+		$signer_id = isset( $input['instructor_signer_id'] ) && '' !== trim( (string) $input['instructor_signer_id'] ) ? absint( $input['instructor_signer_id'] ) : null;
 		if ( $signer_id ) {
 			$signer = ( new SignerRepository() )->find( $signer_id );
 			if ( is_wp_error( $signer ) || ! is_array( $signer ) ) {
@@ -641,30 +650,35 @@ final class DomainStructureAdmin {
 
 		$data = array(
 			'program_id'           => $program_id,
-			'code'                 => isset( $_POST['code'] ) ? sanitize_text_field( wp_unslash( $_POST['code'] ) ) : '',
-			'name'                 => isset( $_POST['name'] ) ? sanitize_text_field( wp_unslash( $_POST['name'] ) ) : '',
-			'start_date'           => isset( $_POST['start_date'] ) ? sanitize_text_field( wp_unslash( $_POST['start_date'] ) ) : '',
-			'end_date'             => isset( $_POST['end_date'] ) ? sanitize_text_field( wp_unslash( $_POST['end_date'] ) ) : '',
+			'code'                 => isset( $input['code'] ) ? sanitize_text_field( $input['code'] ) : '',
+			'name'                 => isset( $input['name'] ) ? sanitize_text_field( $input['name'] ) : '',
+			'start_date'           => isset( $input['start_date'] ) ? sanitize_text_field( $input['start_date'] ) : '',
+			'end_date'             => isset( $input['end_date'] ) ? sanitize_text_field( $input['end_date'] ) : '',
 			// Free-form instructor identity is legacy-only. Preserve an existing fallback
 			// until a reusable Signer is deliberately selected, then clear the duplicate.
 			'instructor_name'      => $signer_id ? '' : ( null !== $existing ? (string) ( $existing['instructor_name'] ?? '' ) : '' ),
 			'instructor_signer_id' => $signer_id,
-			'active'               => isset( $_POST['active'] ),
+			'active'               => ! empty( $input['active'] ),
 		);
 		$metadata = null !== $existing && isset( $existing['metadata'] ) && is_array( $existing['metadata'] ) ? $existing['metadata'] : array();
-		if ( isset( $_POST['batch_metadata_present'] ) ) {
+		if ( isset( $input['batch_metadata_present'] ) ) {
 			$parsed = $this->parse_key_value_request( 'batch_meta_key', 'batch_meta_value', 30 );
 			if ( is_wp_error( $parsed ) ) { return $parsed; }
 			$metadata = $parsed;
 		}
-		$raw_field_rules = isset( $_POST['batch_field_requirement'] ) && is_array( $_POST['batch_field_requirement'] ) ? wp_unslash( $_POST['batch_field_requirement'] ) : array();
+		$raw_field_rules = isset( $input['batch_field_requirement'] ) && is_array( $input['batch_field_requirement'] ) ? $input['batch_field_requirement'] : array();
 		$field_rules = array();
 		foreach ( $raw_field_rules as $raw_key => $raw_rule ) {
 			$key = sanitize_key( (string) $raw_key ); $rule = sanitize_key( (string) $raw_rule );
 			if ( '' !== $key && in_array( $rule, array( 'optional', 'required', 'exclude' ), true ) ) { $field_rules[ $key ] = $rule; }
 		}
 		$contract = new ScopedFieldContract();
-		$metadata = $contract->with_batch_metadata( $metadata, $field_rules, \Ecapla_CertVerify_Fields::get_field_map() );
+		if ( ! array_key_exists( 'batch_field_requirement', $input ) && null !== $existing ) {
+			if ( ! empty( $existing['field_contract']['_meta']['configured'] ) ) { $metadata[ ScopedFieldContract::STORAGE_KEY ] = $existing['field_contract']; }
+		} else {
+			$metadata = $contract->with_batch_metadata( $metadata, $field_rules, \Ecapla_CertVerify_Fields::get_field_map() );
+			if ( null !== $existing && empty( $existing['field_contract']['_meta']['configured'] ) && empty( $field_rules ) ) { unset( $metadata[ ScopedFieldContract::STORAGE_KEY ] ); }
+		}
 		if ( is_wp_error( $metadata ) ) { return $metadata; }
 		$batch_contract = $contract->from_batch_metadata( $metadata, \Ecapla_CertVerify_Fields::get_field_map() );
 		if ( is_wp_error( $batch_contract ) ) { return $batch_contract; }
@@ -682,7 +696,7 @@ final class DomainStructureAdmin {
 		$proposed_batch['program_id'] = $program_id;
 		$proposed_batch['active'] = ! empty( $data['active'] );
 		$proposed_batch['field_contract'] = $batch_contract;
-		$batch_template_id = isset( $_POST['batch_template_id'] ) ? absint( $_POST['batch_template_id'] ) : $this->stored_batch_template_id( absint( $existing['id'] ?? 0 ) );
+		$batch_template_id = isset( $input['batch_template_id'] ) ? absint( $input['batch_template_id'] ) : $this->stored_batch_template_id( absint( $existing['id'] ?? 0 ) );
 		if ( is_wp_error( $batch_template_id ) ) { return $batch_template_id; }
 		if ( null !== $existing ) {
 			$integration_dependency = ( new IntegrationConfigurationDependencyGuard() )->validate_batch_context_change(
@@ -700,6 +714,24 @@ final class DomainStructureAdmin {
 		if ( is_wp_error( $design_dependency ) ) { return $design_dependency; }
 		$data['metadata'] = $metadata;
 		return $data;
+	}
+
+	/** Reuses the canonical batch parser and dependency guards inside a Program command. */
+	public function save_workspace_batch( array $program, ?array $existing, array $patch ) {
+		$input = null !== $existing ? array_intersect_key( $existing, array_flip( array( 'name', 'code', 'start_date', 'end_date', 'active', 'instructor_signer_id' ) ) ) : array( 'name' => '', 'code' => '', 'start_date' => '', 'end_date' => '', 'active' => true, 'instructor_signer_id' => '' );
+		$input = array_merge( $input, $patch, array( 'program_id' => (int) $program['id'] ) );
+		if ( isset( $patch['batch_template_id'] ) ) {
+			$current = $this->stored_batch_template_id( $existing['id'] ?? 0 );
+			if ( is_wp_error( $current ) ) { return $current; }
+			if ( (int) $patch['batch_template_id'] !== $current && ! current_user_can( \Ecapla_CertVerify_Permissions::CAP_MANAGE_TEMPLATES ) ) { return new \WP_Error( 'certloom_program_design_forbidden', __( 'You do not have permission to change certificate designs.', 'certloom' ) ); }
+		}
+		$data = $this->batch_request( $existing, $input, $program );
+		if ( is_wp_error( $data ) ) { return $data; }
+		$repo = new BatchRepository();
+		$result = null !== $existing ? $repo->update( $existing['id'], $data ) : $repo->create( $data );
+		if ( is_wp_error( $result ) ) { return $result; }
+		$id = null !== $existing ? (int) $existing['id'] : (int) $result;
+		return array_key_exists( 'batch_template_id', $patch ) ? $this->save_batch_template_assignment( $id, (int) $patch['batch_template_id'] ) : $result;
 	}
 
 	/** @return int|\WP_Error */

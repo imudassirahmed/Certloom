@@ -13,6 +13,7 @@ function fixture(embedded=true,section='') {
   const add = (name,value,type='hidden') => fields[name] = {name,value,type,dispatchEvent(){}};
   add('action','certloom_domain_create_batch');add('program_id','7');add('name','', 'text');
   add('_wpnonce','fresh-action');add('_wp_http_referer','fresh-referrer');
+  add('program_revision','new-server-revision');add('program_workspace_version','1');
   if(embedded) {add('certloom_program_context','7');add('_certloom_program_nonce','fresh-context');add('batch_id','11');}
   if(section)add('program_workspace_section',section);
   const listeners = {};
@@ -31,7 +32,8 @@ function fixture(embedded=true,section='') {
     {name:'name',value:'Recovered cohort'}, {name:'program_id',value:'999'},
     {name:'certloom_program_context',value:'999'}, {name:'batch_id',value:'999'},
     {name:'_wpnonce',value:'expired-action'}, {name:'_certloom_program_nonce',value:'expired-context'},
-    {name:'_wp_http_referer',value:'expired-referrer'}, {name:'program_workspace_section',value:'other-section'}
+    {name:'_wp_http_referer',value:'expired-referrer'}, {name:'program_workspace_section',value:'other-section'},
+    {name:'program_revision',value:'original-edited-revision'}, {name:'program_workspace_version',value:'old-version'}
   ])]]);
   const storage = {getItem:k=>stored.get(k),setItem:(k,v)=>stored.set(k,v),removeItem:k=>stored.delete(k)};
   const window = {sessionStorage:storage,location:{search:'?certloom_retry=1'}};
@@ -51,9 +53,13 @@ assert.equal(scoped.fields.batch_id.value,'11');
 assert.equal(scoped.fields._wpnonce.value,'fresh-action');
 assert.equal(scoped.fields._certloom_program_nonce.value,'fresh-context');
 assert.equal(scoped.fields._wp_http_referer.value,'fresh-referrer');
+assert.equal(scoped.fields.program_revision.value,'original-edited-revision','Recovery retains the originally edited revision so a conflict cannot silently become an overwrite');
+assert.equal(scoped.fields.program_workspace_version.value,'1','Recovery keeps the current transport schema');
 scoped.listeners.submit();
 const persisted = JSON.parse(scoped.stored.get(scoped.key));
 assert.equal(persisted.find(x=>x.name==='name').value,'Recovered cohort');
+assert.equal(persisted.find(x=>x.name==='program_revision').value,'original-edited-revision');
+assert(!persisted.some(x=>x.name==='program_workspace_version'));
 for(const name of ['_wpnonce','_wp_http_referer','_certloom_program_nonce','certloom_program_context','program_id','batch_id'])assert(!persisted.some(x=>x.name===name));
 const legacy = fixture(false);
 assert.equal(legacy.fields.program_id.value,'999','Legacy editable Program selection still recovers its user choice');
@@ -67,4 +73,4 @@ assert(!JSON.parse(fields.stored.get(fields.key)).some(x=>x.name==='program_work
 const window = {location:{search:''}};
 Object.defineProperty(window,'sessionStorage',{get(){throw new Error('Storage denied');}});
 vm.runInNewContext(implementation+'\ninitDomainFormPersistence();',{window});
-console.log('21 checks, 0 failures');
+console.log('25 checks, 0 failures');

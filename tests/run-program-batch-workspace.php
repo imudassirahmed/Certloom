@@ -97,7 +97,7 @@ $admin = new DomainStructureAdmin();
 $_POST = array( 'certloom_program_context' => '7', '_certloom_program_nonce' => 'valid:certloom_program_batches_7' );
 batch_check( true === batch_private( $admin, 'verify_program_context', array( 'program_id' => 7 ), 7 ), 'Matching nonce, permission, Program and batch context are accepted.' );
 $route = batch_private( $admin, 'batch_route_args', array( 'certloom_new' => 1 ) );
-batch_check( DomainAdmin::PROGRAMS_PAGE === $route['page'] && 7 === $route['program_id'] && 'batches' === $route['program_tab'] && isset( $route['batch_new'] ) && ! isset( $route['certloom_new'] ), 'New-batch routing cannot activate the new-Program form.' );
+batch_check( DomainAdmin::PROGRAMS_PAGE === $route['page'] && 7 === $route['program_id'] && ! isset( $route['program_tab'] ) && isset( $route['batch_new'] ) && ! isset( $route['certloom_new'] ), 'New-batch routing opens a popup on the Program page without creating another Program or tab.' );
 batch_check( is_wp_error( batch_private( $admin, 'verify_program_context', array( 'program_id' => 8 ), 7 ) ), 'Batch from another Program is rejected.' );
 batch_check( is_wp_error( batch_private( $admin, 'verify_program_context', null, 8 ) ), 'Tampered hidden Program is rejected.' );
 $_POST['_certloom_program_nonce'] = 'invalid';

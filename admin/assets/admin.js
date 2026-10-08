@@ -1866,7 +1866,7 @@
 			var key = keyFor( form );
 			var hasProgramContext = !! form.querySelector( 'input[name="certloom_program_context"]' );
 			function isTransportField( name ) {
-				return '_wpnonce' === name || '_wp_http_referer' === name || '_certloom_program_nonce' === name || 'program_workspace_section' === name || ( hasProgramContext && ( 'certloom_program_context' === name || 'program_id' === name || 'batch_id' === name ) );
+				return '_wpnonce' === name || '_wp_http_referer' === name || '_certloom_program_nonce' === name || 'program_workspace_section' === name || 'program_workspace_version' === name || ( hasProgramContext && ( 'certloom_program_context' === name || 'program_id' === name || 'batch_id' === name ) );
 			}
 			if ( retry ) {
 				try {
